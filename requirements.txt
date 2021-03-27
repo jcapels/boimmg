@@ -1,0 +1,13 @@
+cobra
+pandas
+numpy==1.16.5
+python-libsbml
+requests
+biopython
+lxml
+openpyxl
+neo4j
+biocyc
+sympy
+neo4j
+cobrababel

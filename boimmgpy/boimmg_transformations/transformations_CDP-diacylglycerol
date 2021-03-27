@@ -1,0 +1,7 @@
+CDPDIGLYSYN-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2ccc(N)nc2=O)[C@H](O)[C@@H]1O)OC([*:2])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)O)OC([*:2])=O
+RXN-9590!!![*:1]C(=O)OP(=O)(O)O>>C(=O)([*:1])S*
+1-ACYLGLYCEROL-3-P-ACYLTRANSFER-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)O)OC([*:2])=O>>C(=O)([*:2])S*.[*:1]C(=O)OC[C@@H](O)COP(=O)(O)O
+RXN-9591!!![*:1]C(=O)OC[C@@H](O)COP(=O)(O)O>>[*:1]C(=O)OP(=O)(O)O
+RXN-1623!!![*:1]C(=O)OC[C@H](COP(=O)(O)O)OC([*:2])=O>>[*:1]C(=O)OC[C@@H](O)COP(=O)(O)O.[*:2]C(=O)SCCNC(=O)CCNC(=O)[C@H](O)C(C)(C)COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1OP(=O)(O)O
+RXN-1381!!![*:1]C(=O)OC[C@@H](O)COP(=O)(O)O>>[*:1]C(=O)SCCNC(=O)CCNC(=O)[C@H](O)C(C)(C)COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1OP(=O)(O)O
+RXN-10462!!![*:1]C(=O)OC[C@@H](O)COP(=O)(O)O>>C(=O)([*:1])S*

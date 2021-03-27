@@ -1,0 +1,47 @@
+services:
+  - docker:dind
+  - postgres:latest
+
+variables:
+  REGISTRY: "registry.bio.di.uminho.pt"
+  IMAGE_PRODUCTION_API:  "${REGISTRY}/jcapela/boimmg"
+  DIR_DOCKER_MANAGER_API: "/builds/jcapela/boimmg"
+  GIT_SUBMODULE_STRATEGY: recursive
+
+before_script:
+  - export SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c 1-8)
+  - export DATE=$(date +"%y%m%d.%H%M")
+  - export TAG=${DATE}.${SHORT_SHA}
+
+stages:
+  - test
+  - build
+
+test-boimmg:
+    stage: test
+    image: informaticsmatters/rdkit-python3-debian
+
+    before_script:
+      - pip3 install -r requirements.txt
+
+    script:
+      - python3 -m boimmgpy.test_case_study $URI_DATABASE $USER_DATABASE $PASSWORD_DATABASE
+
+prod-build-navigation:
+   stage: build
+   tags:
+      - docker-build
+   script:
+      - pwd
+      - ls ${DIR_DOCKER_MANAGER_API} || true
+      - if [ -z "${CI_COMMIT_TAG}" ]; then CI_COMMIT_TAG="latest"; fi;
+      - echo "$CI_COMMIT_TAG" || true
+      - docker build --build-arg app_version=${CI_COMMIT_TAG} -f ${DIR_DOCKER_MANAGER_API}/Dockerfile -t ${IMAGE_PRODUCTION_API} ${DIR_DOCKER_MANAGER_API}
+      - docker tag ${IMAGE_PRODUCTION_API} ${IMAGE_PRODUCTION_API}:${CI_COMMIT_TAG}
+      - docker login -u "gitlab-ci-token" -p "$CI_BUILD_TOKEN" $REGISTRY
+      - docker push ${IMAGE_PRODUCTION_API}
+      - docker push ${IMAGE_PRODUCTION_API}:${CI_COMMIT_TAG}
+   only:
+      - master
+      - tags
+

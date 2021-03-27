@@ -1,0 +1,5 @@
+CARDIOLIPSYN-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCC(O)COP(=O)(O)OC[C@@H](COC([*:2])=O)OC([*:3])=O)OC([*:4])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)CO)OC([*:4])=O.[*:2]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)CO)OC([*:3])=O
+PGPPHOSPHA-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)CO)OC([*:2])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)COP(=O)(O)O)OC([*:2])=O
+PHOSPHAGLYPSYN-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)COP(=O)(O)O)OC([*:2])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2ccc(N)nc2=O)[C@H](O)[C@@H]1O)OC([*:2])=O
+RXN-8141!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCC(O)COP(=O)(O)OC[C@@H](COC([*:2])=O)OC([*:3])=O)OC([*:4])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2ccc(N)nc2=O)[C@H](O)[C@@H]1O)OC([*:4])=O.[*:2]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)CO)OC([*:3])=O
+RXN0-7012!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCC(O)COP(=O)(O)OC[C@@H](COC([*:2])=O)OC([*:3])=O)OC([*:4])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)CO)OC([*:4])=O.[*:2]C(=O)OC[C@H](COP(=O)(O)OCCN)OC([*:3])=O

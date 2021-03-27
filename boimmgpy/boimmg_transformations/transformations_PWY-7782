@@ -1,0 +1,11 @@
+2.7.8.22-RXN!!![*:1]/C=C/OC[C@H](COP(=O)(O)OCC[N+](C)(C)C)OC([*:2])=O>>[*:1]/C=C/OC[C@H](CO)OC([*:2])=O
+RXN-17734!!![*:1]/C=C/OC[C@H](CO)OC([*:2])=O>>[*:1]/C=C/OC[C@H](COP(=O)(O)OCCN)OC([*:2])=O
+RXN-17732!!![*:1]/C=C/OC[C@H](COP(=O)(O)OCCN)OC([*:2])=O>>[*:1]COC[C@H](COP(=O)(O)OCCN)OC([*:2])=O
+RXN-17731!!![*:1]COC[C@H](COP(=O)(O)OCCN)OC([*:2])=O>>[*:1]COC[C@H](CO)OC([*:2])=O
+RXN-17730!!![*:1]COC[C@H](CO)OC([*:2])=O>>[*:1]COC[C@H](COP(=O)(O)O)OC([*:2])=O
+RXN-17729!!![*:1]COC[C@H](COP(=O)(O)O)OC([*:2])=O>>[*:2]C(=O)SCCNC(=O)CCNC(=O)[C@H](O)C(C)(C)COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1OP(=O)(O)O.[*:1]COC[C@@H](O)COP(=O)(O)O
+RXN-17728!!![*:1]COCC(=O)COP(=O)(O)O>>[*:1]COC[C@@H](O)COP(=O)(O)O
+ALKYLGLYCERONE-PHOSPHATE-SYNTHASE-RXN!!![*:1]COCC(=O)COP(=O)(O)O.[*:2]C(=O)O>>[*:2]C(=O)OCC(=O)COP(=O)(O)O.[*:1]CO
+RXN-9344!!![*:1]CO>>[*:1]C(=O)SCCNC(=O)CCNC(=O)[C@H](O)C(C)(C)COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1OP(=O)(O)O
+RXN-17733!!![*:1]COC[C@H](COP(=O)(O)OCC[N+](C)(C)C)OC([*:2])=O>>[*:1]COC[C@H](CO)OC([*:2])=O
+2.3.1.42-RXN!!![*:1]C(=O)OCC(=O)COP(=O)(O)O>>[*:1]C(=O)SCCNC(=O)CCNC(=O)[C@H](O)C(C)(C)COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1OP(=O)(O)O

@@ -1,0 +1,9 @@
+2.7.8.24-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCC[N+](C)(C)C)OC([*:2])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2ccc(N)nc2=O)[C@H](O)[C@@H]1O)OC([*:2])=O
+RXN-5781!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCC[N+](C)(C)C)OC([*:2])=O>>[*:1]C(=O)OC[C@H](CO)OC([*:2])=O
+RXN4FS-2!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCC[N+](C)(C)C)OC([*:2])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OCCN(C)C)OC([*:2])=O
+RXN4FS-4!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCCN(C)C)OC([*:2])=O>>[*:1]C(=O)OC[C@H](CO)OC([*:2])=O
+2.1.1.71-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCCN(C)C)OC([*:2])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OCCNC)OC([*:2])=O
+2.1.1.17-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCCNC)OC([*:2])=O>>[*:1]C(=O)OC[C@H](COP(=O)(O)OCCN)OC([*:2])=O
+2.3.1.23-RXN!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCC[N+](C)(C)C)OC([*:2])=O>>[*:1]C(=O)OC[C@@H](O)COP(=O)(O)OCC[N+](C)(C)C.[*:2]C(=O)SCCNC(=O)CCNC(=O)[C@H](O)C(C)(C)COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1OP(=O)(O)O
+RXN-15380!!![*:1]C(=O)OC[C@@H](O)COP(=O)(O)OCC[N+](C)(C)C>>[*:1]C(=O)SCCNC(=O)CCNC(=O)[C@H](O)C(C)(C)COP(=O)(O)OP(=O)(O)OC[C@H]1O[C@@H](n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1OP(=O)(O)O
+RXN4FS-1!!![*:1]C(=O)OC[C@H](COP(=O)(O)OCCNC)OC([*:2])=O>>[*:1]C(=O)OC[C@H](CO)OC([*:2])=O
