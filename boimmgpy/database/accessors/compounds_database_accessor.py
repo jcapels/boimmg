@@ -275,7 +275,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
 
     def get_predecessors_with_same_component(self, ont_id: int, relationship_type : str) -> list:
-        """Get predecessors with only one component using as parameter the database identifier and the relationship type"""
+        """Get predecessors with only one component using as parameters the database identifier and the relationship type"""
         self.login()
         predecessors = []
         with self.tx.session() as session:
