@@ -1,0 +1,11 @@
+gitpython
+pandas
+cobra
+cobrababel
+neo4j
+sympy
+biocyc
+biopython
+requests
+numpy
+python-libsbml

@@ -1,0 +1,10 @@
+case_studies
+database
+id_converters
+kegg
+model_seed
+models
+ontology_generators
+service
+tests
+utilities

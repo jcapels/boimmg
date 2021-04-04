@@ -6,7 +6,6 @@ requests
 biopython
 lxml
 openpyxl
-neo4j
 biocyc
 sympy
 neo4j
