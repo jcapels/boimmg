@@ -29,6 +29,8 @@ class ReactionsChanger:
             self.__universal_model = Model()
         else:
             self.__universal_model = universal_model
+
+        self.report_material = {}
         self.__type = type
         self.__model_database = model_database
         self.__model = model
@@ -123,16 +125,16 @@ class ReactionsChanger:
         1º start by searching in the ontology whether there is any entity representing the reaction in the model
         2º - if the reaction is found then other reaction in the ontology is searched to replace it
         3º - otherwise the reaction will be searched in a reaction database
-        4º - if the reaction was not found, then an arbitrary name and id will be set.
+        4º - if the reaction was not found, then a cannonical name and id will be set.
 
         :param Model.reaction reaction: reaction to be changed.
 
         """
 
-        if self.__model_database in self.__reactionsAnnotationConfigs:
-            database = self.__reactionsAnnotationConfigs[self.__model_database]
-        else:
-            raise Exception
+        # if self.__model_database in self.__reactionsAnnotationConfigs:
+        #     database = self.__reactionsAnnotationConfigs[self.__model_database]
+        # else:
+        #     raise Exception
 
 
         self.__change_not_found_reaction(reaction)
@@ -158,6 +160,7 @@ class ReactionsChanger:
         metabolites = sorted([metabolite.id for metabolite in metabolites])
         new_id += "_".join(metabolites)
 
+        self.report_material[reaction.id] = new_id
         reaction.id = new_id
 
         return reaction.id

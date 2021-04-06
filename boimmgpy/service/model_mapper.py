@@ -130,9 +130,15 @@ class ModelMapper:
             j+=1
             compound_annotation = compound.annotation
 
-            boimmg_compound_found = False
+            # boimmg_compound_found = False
 
             annotation_keys = ["seed.compound",database_annotation_key,"boimmg.compound","inchi_key"]
+
+            compound_id = compound.id
+
+            compound_id = compound_id.split("_")[0]
+
+            boimmg_compound_found = self.map_compound(compound_id,compound)
 
             for key in annotation_keys:
                 if key in compound_annotation.keys():
@@ -146,28 +152,7 @@ class ModelMapper:
 
                         if not boimmg_compound_found:
 
-                            if "cpd" in annotation_value:
-                                model_seed_id = [annotation_value]
-                            else:
-                                model_seed_id = self.__compoundsIdConverter.convert_db_id_to_model_seed_by_db_id(annotation_value)
-
-                            if model_seed_id:
-                                found = False
-                                i=0
-                                while not found and i<len(model_seed_id):
-                                    node = self.__compounds_ontology.get_node_id_from_model_seed_id(model_seed_id[i])
-                                    i+=1
-                                    if node:
-                                        found = True
-
-                                        boimmg_compound_found = True
-                                        self.boimmg_db_model_map[compound.id] = node
-
-                                        if node in self.boimmg_db_model_map_reverse.keys():
-                                            self.boimmg_db_model_map_reverse[node].append(compound.id)
-
-                                        else:
-                                            self.boimmg_db_model_map_reverse[node] = [compound.id]
+                            boimmg_compound_found = self.map_compound(annotation_value,compound)
 
                         if key not in self.compounds_aliases_indexation:
                             self.compounds_aliases_indexation[key] = {}
@@ -213,6 +198,35 @@ class ModelMapper:
                                 self.compound_inchikey_indexation[value].append(compound.id)
 
         self.mapped = True
+
+    def map_compound(self, annotation_value,compound):
+
+        boimmg_compound_found = False
+
+        if "cpd" in annotation_value:
+            model_seed_id = [annotation_value]
+        else:
+            model_seed_id = self.__compoundsIdConverter.convert_db_id_to_model_seed_by_db_id(annotation_value)
+
+        if model_seed_id:
+            found = False
+            i = 0
+            while not found and i < len(model_seed_id):
+                node = self.__compounds_ontology.get_node_id_from_model_seed_id(model_seed_id[i])
+                i += 1
+                if node:
+                    found = True
+
+                    boimmg_compound_found = True
+                    self.boimmg_db_model_map[compound.id] = node
+
+                    if node in self.boimmg_db_model_map_reverse.keys():
+                        self.boimmg_db_model_map_reverse[node].append(compound.id)
+
+                    else:
+                        self.boimmg_db_model_map_reverse[node] = [compound.id]
+
+        return boimmg_compound_found
 
     def create_map_dump(self,destination):
 

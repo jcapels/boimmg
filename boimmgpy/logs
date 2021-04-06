@@ -1,0 +1,16 @@
+2021-04-06 02:13:15,763 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping finished: 294
+2021-04-06 02:13:45,847 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO Swap performed
+2021-04-06 02:19:43,508 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping model
+2021-04-06 02:20:34,097 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping model
+2021-04-06 02:25:30,454 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO model mapped
+2021-04-06 02:25:30,455 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping finished: 296
+2021-04-06 02:25:59,828 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO Swap performed
+2021-04-06 02:32:07,929 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping model
+2021-04-06 02:37:05,356 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO model mapped
+2021-04-06 02:37:05,357 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping finished: 297
+2021-04-06 02:37:36,904 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO Swap performed
+2021-04-06 02:37:48,275 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping model
+2021-04-06 02:42:40,810 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO model mapped
+2021-04-06 02:42:40,811 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO mapping finished: 292
+2021-04-06 02:42:41,367 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO Swapping Coenzyme Q6 to Coenzyme Q4
+2021-04-06 02:43:10,503 boimmgpy.service.representation_problem_solvers.representation_simple_case_solver INFO Swap performed

@@ -98,11 +98,9 @@ class Granulator:
         self.__reactionsAnnotationConfigs = file_utilities.read_conf_file(
             REACTIONS_ANNOTATION_CONFIGS_PATH)
 
-        print("setting components...")
-        start = time.time()
+        self.metabolite_report_material = {}
+        self.reaction_report_material = {}
         self.__set_components()
-        end = time.time()
-        print("components set: %d" % (end - start))
 
     def set_virtual_model(self,virtual_model, virtual_model_mapper, virtual_compounds_revisor):
 
@@ -225,6 +223,7 @@ class Granulator:
 
             if new_compound_and_parent[0] not in processed_compounds:
 
+
                 new_reactions, added_compounds = self.__process_new_compound(new_compound_and_parent)
 
                 processed_compounds.append(new_compound_and_parent[0])
@@ -279,6 +278,12 @@ class Granulator:
                         if go and model_parent in compounds_ids:
                             new_reaction, added = self._process_reaction(reaction_to_process, new_compound,
                                                                          cobra_model_parent, parent_and_precursors)
+
+
+                            if reaction_to_process.id in self.reaction_report_material:
+                                self.reaction_report_material[reaction_to_process.id].append(new_reaction.id)
+                            else:
+                                self.reaction_report_material[reaction_to_process.id] = [new_reaction.id]
 
                             new_reactions.append(new_reaction)
 
@@ -389,7 +394,12 @@ class Granulator:
 
         coef = new_reaction.get_coefficient(model_parent.id)
 
-        self.add_boimmg_metabolites_to_reaction(new_compound, coef, new_reaction, model_parent.compartment)
+        new_metabolite = self.add_boimmg_metabolites_to_reaction(new_compound, coef, new_reaction, model_parent.compartment)
+
+        if model_parent.id in self.metabolite_report_material:
+            self.metabolite_report_material[model_parent.id].append(new_metabolite.id)
+        else:
+            self.metabolite_report_material[model_parent.id] = [new_metabolite.id]
 
         met_to_subtract = {}
 
@@ -557,6 +567,7 @@ class Granulator:
                 met_to_add[found_model_compound] = coef
                 reaction.add_metabolites(met_to_add)
 
+        return new_model_compound
 
     def __create_boimmg_metabolite(self, boimmg_id:int, compartment:str) -> Metabolite:
 

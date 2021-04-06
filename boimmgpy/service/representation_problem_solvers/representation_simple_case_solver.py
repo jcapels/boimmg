@@ -50,6 +50,7 @@ class SimpleCaseSolver():
         :param modelseed_compoundsdb:
         """
 
+        self.report_material = {}
         self.__universal_model = Model("universal_model")
         self.model = model
         self.__database_format = database_format
@@ -90,8 +91,9 @@ class SimpleCaseSolver():
 
         start = time.time()
         self.write_in_progress_bar("mapping the model... ", 10)
-
+        logger.info("mapping model")
         self.__mapper.map_model(self.__database_format)
+        logger.info("model mapped")
 
         self.write_in_progress_bar("model mapped ", 31)
         finished = time.time()
@@ -230,8 +232,7 @@ class SimpleCaseSolver():
         self.write_in_progress_bar("Swapping "+compound_in_model_node.name
                                    + " to " + compound_to_change_node.name,state)
 
-        logger.info("Swapping "+compound_in_model_node.name
-                                   + " to " + compound_to_change_node.name,state)
+        logger.info("Swapping "+compound_in_model_node.name + " to " + compound_to_change_node.name)
 
         type = 0
 
@@ -277,6 +278,26 @@ class SimpleCaseSolver():
         logger.info("Swap performed")
 
 
+    def write_report(self,file_path):
+
+        metabolites_report_material = self.__swapper.report_material
+        reactions_report_material = self.__swapper.reactions_swapper.report_material
+
+        with open(file_path,"w") as f:
+
+            f.write("--Metabolites--\n")
+            f.write("metabolite in model,replacer metabolite\n")
+
+            for metabolite in metabolites_report_material:
+                f.write(metabolite+",")
+                f.write(metabolites_report_material[metabolite]+"\n")
+
+            f.write("--Reactions--\n")
+            f.write("reaction in model,replacer reaction\n")
+
+            for reaction in reactions_report_material:
+                f.write(reaction+",")
+                f.write(reactions_report_material[reaction]+"\n")
 
 
     def __check_if_compound_exists_in_model_by_ontology_id(self, ontology_id: int) -> list:

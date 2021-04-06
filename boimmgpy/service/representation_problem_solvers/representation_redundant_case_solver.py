@@ -105,6 +105,9 @@ class RedundantCaseSolver(RepresentationProblemSolver):
 
         self.__compounds_revisor.set_model_mapper(self.mapper)
 
+        self.granulator = Granulator(self.model, self.mapper, self.__database_format, self.__compoundsIdConverter,
+                                     self.__compoundsAnnotationConfigs)
+
     def __add_hydrogen_to_virtual_model(self):
         """
         This method set searches for the hydrogen in each compartment of the model.
@@ -136,6 +139,27 @@ class RedundantCaseSolver(RepresentationProblemSolver):
 
     def gap_fill_model_by_target(self,target_ontology_id: int, components_ont_ids: list):
         pass
+
+    def write_reports(self,file_path):
+
+        metabolites_report_material = self.granulator.metabolite_report_material
+        reactions_report_material = self.granulator.reaction_report_material
+
+        with open(file_path, "w") as f:
+
+            f.write("--Metabolites--\n")
+            f.write("metabolite in model,replacer metabolite\n")
+
+            for metabolite in metabolites_report_material:
+                f.write(metabolite + ",")
+                f.write(metabolites_report_material[metabolite] + "\n")
+
+            f.write("--Reactions--\n")
+            f.write("reaction in model,replacer reaction\n")
+
+            for reaction in reactions_report_material:
+                f.write(reaction + ",")
+                f.write(reactions_report_material[reaction] + "\n")
 
     def swap_from_generic(self,targets: list, components: list,same_components = False,
                           progress_bar_processes_left = 1):
@@ -170,16 +194,15 @@ class RedundantCaseSolver(RepresentationProblemSolver):
 
         self.__virtual_compounds_revisor.set_model_mapper(self.__virtual_model_mapper)
 
-        granulator = Granulator(self.model,self.mapper, self.__database_format,self.__compoundsIdConverter,
-                                self.__compoundsAnnotationConfigs)
 
-        granulator.set_virtual_model(self.__virtual_model,self.__virtual_model_mapper,self.__virtual_compounds_revisor)
+
+        self.granulator.set_virtual_model(self.__virtual_model,self.__virtual_model_mapper,self.__virtual_compounds_revisor)
 
 
         for target_generic_ontology_id in targets_generic_ontology_id:
 
 
-            biosynthesis_reactions = granulator.identify_biosynthesis_pathway(target_generic_ontology_id)
+            biosynthesis_reactions = self.granulator.identify_biosynthesis_pathway(target_generic_ontology_id)
 
 
             self.__biosynthesis_reactions = deepcopy(biosynthesis_reactions)
@@ -188,7 +211,7 @@ class RedundantCaseSolver(RepresentationProblemSolver):
 
             self.__model.remove_reactions(biosynthesis_reactions)
 
-            granulator.granulate(target_generic_ontology_id, components_ont_ids, same_components,
+            self.granulator.granulate(target_generic_ontology_id, components_ont_ids, same_components,
                                 progress_bar_processes_left)
 
         self.generateISAreactions()

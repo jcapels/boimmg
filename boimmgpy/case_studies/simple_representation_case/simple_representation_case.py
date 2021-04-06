@@ -11,10 +11,11 @@ def sacc_to_9():
     set_database_information(uri="bolt://palsson.di.uminho.pt:6094",user="neo4j",password="Tuning999")
 
     rep_case_solver = SimpleCaseSolver(model, "ModelSEED")
-    # rep_case_solver.map_model()
+    rep_case_solver.map_model()
     # rep_case_solver.dump_maps(ROOT_DIR + "/dumps/")
     # rep_case_solver.load_maps(ROOT_DIR + "/dumps/")
     rep_case_solver.swap_compound("cpd15290", "679986")
+    rep_case_solver.write_report("test_report.txt")
     cobra.io.write_sbml_model(rep_case_solver.model, "iMM904_9.xml")
 
 def simulate_ecoli_generalize():
@@ -50,8 +51,8 @@ def simulate_sacc_granulate():
     cobra.io.write_sbml_model(rep_case_solver.model, "iMM904_granulated.xml")
 
 if __name__ == "__main__":
-    set_database_information(uri="bolt://palsson.di.uminho.pt:6094", user="neo4j", password="Tuning999")
-    # sacc_to_9()
+    # set_database_information(uri="bolt://palsson.di.uminho.pt:6094", user="neo4j", password="Tuning999")
+    sacc_to_9()
     # simulate_ecoli_generalize()
     # simulate_ecoli_granulate()
     # simulate_ecoli_granulate_boimmg()

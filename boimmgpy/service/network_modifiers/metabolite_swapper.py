@@ -105,6 +105,7 @@ class MetaboliteSwapper:
         :return:
         """
 
+        self.report_material = {}
         self.__compoundsAnnotationConfigs = file_utilities.read_conf_file(
             COMPOUNDS_ANNOTATION_CONFIGS_PATH)
         self.__reactionsAnnotationConfigs = file_utilities.read_conf_file(
@@ -117,9 +118,9 @@ class MetaboliteSwapper:
             TOOL_CONFIG_PATH)
 
         self.changed_reactions = []
-        self.__reactionsChanger = ReactionsChanger(self.model,
-                                                   self.__type, self.__model_database, self.__universal_model,
-                                                   compounds_converter=self.__compoundsIdConverter)
+        self.reactions_swapper = ReactionsChanger(self.model,
+                                                  self.__type, self.__model_database, self.__universal_model,
+                                                  compounds_converter=self.__compoundsIdConverter)
 
     def set_type(self, new_type):
         """
@@ -128,7 +129,7 @@ class MetaboliteSwapper:
         :return:
         """
         self.__type = new_type
-        self.__reactionsChanger.set_type(new_type)
+        self.reactions_swapper.set_type(new_type)
 
     def set_new_compound(self, new_compound):
         """
@@ -208,7 +209,7 @@ class MetaboliteSwapper:
                         self.change_reaction_by_swapping_existing_metabolites(metabolite,met)
                         compounds_with_reactions_to_change.append(met)
 
-        changed_reactions = self.__reactionsChanger.swap_reactions_by_compounds(compounds_with_reactions_to_change)
+        changed_reactions = self.reactions_swapper.swap_reactions_by_compounds(compounds_with_reactions_to_change)
         return changed_reactions
 
 
@@ -256,7 +257,7 @@ class MetaboliteSwapper:
 
                     compounds_with_reactions_to_change.append(metabolite_to_be_changed)
 
-            self.__reactionsChanger.swap_reactions_by_compounds(compounds_with_reactions_to_change)
+            self.reactions_swapper.swap_reactions_by_compounds(compounds_with_reactions_to_change)
 
         else:
             reactions_to_change = []
@@ -306,7 +307,7 @@ class MetaboliteSwapper:
                                 compound_to_be_changed[0], new_compound[0])
 
             if reactions_to_change:
-                self.__reactionsChanger.swap_reactions(reactions_to_change)
+                self.reactions_swapper.swap_reactions(reactions_to_change)
 
 
     def swap_only_metabolites_and_conjugates(self,model_metabolite = None,new_metabolite = None):
@@ -349,7 +350,7 @@ class MetaboliteSwapper:
 
                 compounds_with_reactions_to_change.append(model_metabolite)
 
-                self.__reactionsChanger.swap_reactions_by_compounds(compounds_with_reactions_to_change)
+                self.reactions_swapper.swap_reactions_by_compounds(compounds_with_reactions_to_change)
 
             else:
 
@@ -360,7 +361,7 @@ class MetaboliteSwapper:
                             reactions_to_change = self.change_reaction_by_swapping_existing_metabolites(
                                 model_metabolite, replacer_metabolite)
 
-                            self.__reactionsChanger.swap_reactions(reactions_to_change)
+                            self.reactions_swapper.swap_reactions(reactions_to_change)
 
         elif new_metabolite:
             self.__swap_conjugates(model_metabolite,new_metabolite)
@@ -368,7 +369,7 @@ class MetaboliteSwapper:
             reactions_to_change = self.change_reaction_by_swapping_existing_metabolites(
                 model_metabolite,new_metabolite)
 
-            changed_reactions = self.__reactionsChanger.swap_reactions(reactions_to_change)
+            changed_reactions = self.reactions_swapper.swap_reactions(reactions_to_change)
             self.changed_reactions.extend(changed_reactions)
 
 
@@ -473,6 +474,8 @@ class MetaboliteSwapper:
 
                     self.__check_if_id_is_used_in_model_and_delete_it(bigg_id + "_" + model_metabolite.compartment)
 
+
+                    self.report_material[model_metabolite.id] = bigg_id + "_" + model_metabolite.compartment
                     model_metabolite.id = bigg_id + "_" + model_metabolite.compartment
 
                     self.mapper.update_maps(old_inchikey,new_inchikey,old_id,
@@ -536,6 +539,8 @@ class MetaboliteSwapper:
 
                 self.__check_if_id_is_used_in_model_and_delete_it(kegg_id + "_" + compartment)
 
+                self.report_material[model_metabolite.id] = kegg_id + "_" + compartment
+
                 model_metabolite.id = kegg_id + "_" + compartment
 
                 self.mapper.update_maps(old_inchikey, new_inchikey, old_id,
@@ -595,6 +600,7 @@ class MetaboliteSwapper:
 
         self.__check_if_id_is_used_in_model_and_delete_it(new_metabolite_id)
 
+        self.report_material[model_metabolite.id] = new_metabolite_id
         model_metabolite.id = new_metabolite_id
 
         self.mapper.update_maps(old_inchikey, new_inchikey, old_id,
@@ -645,6 +651,8 @@ class MetaboliteSwapper:
         if db_id:
 
             self.__check_if_id_is_used_in_model_and_delete_it(compound_container.model_seed_id + "_" + compartment)
+
+            self.report_material[model_metabolite.id] = compound_container.model_seed_id + "_" + compartment
 
             model_metabolite.id = compound_container.model_seed_id + "_" + compartment
 
@@ -919,7 +927,7 @@ class MetaboliteSwapper:
 
         game_changer = {}
         isGenericInModel = self._check_if_compound_is_generic(intermediates_in_model[0])
-        self.__reactionsChanger.set_type2_is_generic_in_model(isGenericInModel)
+        self.reactions_swapper.set_type2_is_generic_in_model(isGenericInModel)
 
         if isGenericInModel:
             for met in intermediates_in_model:
@@ -972,7 +980,7 @@ class MetaboliteSwapper:
         :return:
         """
 
-        self.__reactionsChanger.swap_reactions([reaction])
+        self.reactions_swapper.swap_reactions([reaction])
 
 
     def __check_if_compound_exists_in_model_by_ontology_id(self,ontology_id):
@@ -1035,7 +1043,7 @@ class MetaboliteSwapper:
 
 
     def setType2_isGenericInModel(self,isGeneric):
-        self.__reactionsChanger.set_type2_is_generic_in_model(isGeneric)
+        self.reactions_swapper.set_type2_is_generic_in_model(isGeneric)
 
     def set_model_mapper(self, mapper):
         self.mapper = mapper
