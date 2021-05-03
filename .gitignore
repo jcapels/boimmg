@@ -17,5 +17,5 @@
 /boimmg_pipeline.py
 /*.cpython-36.pyc
 /boimmgpy/required_files/LipidMaps
-/boimmgpy/dist/
+/dist/
 

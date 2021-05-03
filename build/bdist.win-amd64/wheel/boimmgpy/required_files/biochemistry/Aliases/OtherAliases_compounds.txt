@@ -1,0 +1,8 @@
+cpd12011	pq	BiGG1
+cpd16486	pqh2	BiGG1
+cpd03092	CPD-21768	MetaCyc
+cpd03151	CPD-21769	MetaCyc
+cpd02419	3nphb	BiGG1
+cpd01351	q9	BiGG1
+cpd25914	q9h2	BiGG1
+cpd05237	ttdcea	BiGG1

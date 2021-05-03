@@ -1,28 +1,32 @@
+import json
 import re
+import time
 from copy import deepcopy
 
+import cobra
 from biocyc import biocyc
 from cobra import Model, Reaction, Metabolite
 from cobra.util import linear_reaction_coefficients
 
-
+from boimmgpy import definitions
 from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 from boimmgpy.service.network_modifiers.granulator import Granulator
 from boimmgpy.service.revisor.compounds_revisor import CompoundsRevisor
 from boimmgpy.service.model_mapper import ModelMapper
 from boimmgpy.service.interfaces.representation_problem_solver import RepresentationProblemSolver
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB, ModelSeedCompoundsDBRaw, \
+    ModelSeedCompoundsDBRest
 from boimmgpy.utilities import file_utilities
 from boimmgpy.definitions import ROOT_DIR, TOOL_CONFIG_PATH, COMPOUNDS_ANNOTATION_CONFIGS_PATH, REACTIONS_ANNOTATION_CONFIGS_PATH
-
+from boimmgpy.utilities.rest_access_utils import RestUtils
 
 PROGRESS_BAR = ROOT_DIR + "/service/logs/progress_bar.txt"
 # PROGRESS_BAR = "/workdir/resultsWorker/progress_bar.txt"
 
 class RedundantCaseSolver(RepresentationProblemSolver):
 
-    def __init__(self, model, database_format):
+    def __init__(self, model, database_format,db_accessor = CompoundsDBAccessor()):
         """
         Class constructor
 
@@ -38,23 +42,53 @@ class RedundantCaseSolver(RepresentationProblemSolver):
         else:
             raise Exception("No objective found")
 
-        self.__compounds_ontology = CompoundsDBAccessor()
+        self.__compounds_ontology = db_accessor
 
         self.model = model
         self.__database_format = database_format
         self.__configs = file_utilities.read_conf_file(TOOL_CONFIG_PATH)
         self.__home_path__ = ROOT_DIR
-
-
-        self.__modelseedCompoundsDb = ModelSeedCompoundsDB()
-
         self.__define_instance_variables()
+
+        if isinstance(db_accessor, CompoundsDBAccessor):
+            self.__modelseedCompoundsDb = ModelSeedCompoundsDBRaw()
+
+        else:
+            self.__modelseedCompoundsDb = ModelSeedCompoundsDBRest()
 
 
         self.write_in_progress_bar("mapping model... ",1)
-        self.mapper.map_model(database_format)
+
         self.write_in_progress_bar("model mapped ", 10)
 
+
+    def map_model(self):
+        """
+        Creates maps for all the metabolites in the model
+
+        :return:
+        """
+
+        self.write_in_progress_bar("mapping the model... ", 10)
+
+        if isinstance(self.__compounds_ontology, CompoundsDBAccessor):
+            self.__mapper.map_model(self.__database_format)
+
+        else:
+            cobra.io.write_sbml_model(self.__model, definitions.ROOT_DIR + "/temp/model_to_be_submitted.xml")
+            response = RestUtils.map_model(definitions.ROOT_DIR + "/temp/model_to_be_submitted.xml", self.__database_format)
+            maps = response.json().get("result")
+
+            self.__mapper.boimmg_db_model_map = maps["boimmg_db_model_map"]
+            self.__mapper.boimmg_db_model_map_reverse = maps["boimmg_db_model_map_reverse"]
+            self.__mapper.compounds_aliases_indexation = maps["compounds_aliases_indexation"]
+            self.__mapper.compounds_aliases_indexation_reverse = maps["compounds_aliases_indexation_reverse"]
+            self.__mapper.compound_inchikey_indexation = maps["compound_inchikey_indexation"]
+
+        self.__mapper.mapped = True
+
+
+        self.write_in_progress_bar("model mapped ", 31)
 
     @property
     def model(self):
@@ -87,7 +121,7 @@ class RedundantCaseSolver(RepresentationProblemSolver):
         self.__universal_model = Model("universal_model")
         self.__swapped = []
 
-        self.__compounds_ontology = CompoundsDBAccessor()
+        #self.__compounds_ontology = CompoundsDBAccessor()
 
         self.__compoundsAnnotationConfigs = file_utilities.read_conf_file(
             COMPOUNDS_ANNOTATION_CONFIGS_PATH)
@@ -101,7 +135,7 @@ class RedundantCaseSolver(RepresentationProblemSolver):
 
         biocyc.set_organism("meta")
 
-        self.mapper = ModelMapper(self.model,self.__compoundsAnnotationConfigs,self.__compoundsIdConverter)
+        self.mapper = ModelMapper(self.model,self.__compoundsIdConverter,self.__compounds_ontology)
 
         self.__compounds_revisor.set_model_mapper(self.mapper)
 

@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import time
@@ -5,6 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 import cobra
 from biocyc import biocyc
+from boimmgpy import definitions
 from cobra import Model, Metabolite, Reaction
 from cobra.flux_analysis.gapfilling import GapFiller
 
@@ -20,9 +22,11 @@ from boimmgpy.service.interfaces.representation_problem_solver import Representa
 from boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
 from boimmgpy.utilities import model_utilities
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB, ModelSeedCompoundsDBRest, \
+    ModelSeedCompoundsDBRaw
 from boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, COMPOUNDS_ANNOTATION_CONFIGS_PATH, REACTIONS_ANNOTATION_CONFIGS_PATH
 from boimmgpy.utilities import file_utilities
+from boimmgpy.utilities.rest_access_utils import RestUtils
 
 logPath = ROOT_DIR + "/logs"
 
@@ -58,7 +62,11 @@ class SimpleCaseSolver():
         self.__home_path__ = ROOT_DIR
         self.__compounds_ontology = db_accessor
 
-        self.__modelseedCompoundsDb = ModelSeedCompoundsDB()
+        if isinstance(db_accessor,CompoundsDBAccessor):
+            self.__modelseedCompoundsDb = ModelSeedCompoundsDBRaw()
+
+        else:
+            self.__modelseedCompoundsDb = ModelSeedCompoundsDBRest()
 
         self.__define_instance_variables()
 
@@ -92,7 +100,23 @@ class SimpleCaseSolver():
         start = time.time()
         self.write_in_progress_bar("mapping the model... ", 10)
         logger.info("mapping model")
-        self.__mapper.map_model(self.__database_format)
+
+        if isinstance(self.__compounds_ontology, CompoundsDBAccessor):
+            self.__mapper.map_model(self.__database_format)
+
+        else:
+            cobra.io.write_sbml_model(self.__model, definitions.ROOT_DIR + "/temp/model_to_be_submitted.xml")
+            response = RestUtils.map_model(definitions.ROOT_DIR + "/temp/model_to_be_submitted.xml", self.__database_format)
+            maps = response.json().get("result")
+
+            self.__mapper.boimmg_db_model_map = maps["boimmg_db_model_map"]
+            self.__mapper.boimmg_db_model_map_reverse = {int(k): maps["boimmg_db_model_map_reverse"][k] for k, v in maps["boimmg_db_model_map_reverse"].items()}
+            self.__mapper.compounds_aliases_indexation = maps["compounds_aliases_indexation"]
+            self.__mapper.compounds_aliases_indexation_reverse = maps["compounds_aliases_indexation_reverse"]
+            self.__mapper.compound_inchikey_indexation = maps["compound_inchikey_indexation"]
+
+        self.__mapper.mapped = True
+
         logger.info("model mapped")
 
         self.write_in_progress_bar("model mapped ", 31)
@@ -175,13 +199,15 @@ class SimpleCaseSolver():
 
         self.__swapper = MetaboliteSwapper(self.model, None, None, 0,
                                            self.__modelseedCompoundsDb,
+                                           self.__compounds_ontology,
                                            model_database=self.__database_format,
                                            compoundsIdConverter=self.__compoundsIdConverter,
                                            universal_model=self.__universal_model,
                                            not_to_change_compounds=self.__not_to_change_compounds
                                            )
 
-        self.__mapper = ModelMapper(self.model, self.__compoundsAnnotationConfigs, self.__compoundsIdConverter)
+        self.__mapper = ModelMapper(self.model,
+                                    self.__compoundsIdConverter,self.__compounds_ontology)
 
         self.__swapper.set_model_mapper(self.__mapper)
         self.__compounds_revisor.set_model_mapper(self.__mapper)
