@@ -8,7 +8,7 @@ with open("boimmgpy/README.md", "r") as fh:
 
 setuptools.setup(
     name="boimmg",
-    version="0.1.8",
+    version="0.1.10",
     author="João Capela",
     author_email="jcapels96@gmail.com",
     description="Find and tag Git commits based on version numbers in commit messages.",

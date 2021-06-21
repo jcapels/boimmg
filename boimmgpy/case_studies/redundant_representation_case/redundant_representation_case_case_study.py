@@ -4,6 +4,21 @@ from cobra.flux_analysis.gapfilling import GapFiller
 
 from boimmgpy.service.representation_problem_solvers.representation_redundant_case_solver import RedundantCaseSolver
 
+def redundant_granulator_yeast():
+    model = cobra.io.read_sbml_model("mapped_yeast.xml")
+    components = ["C08362","C00712","C00249","C01530"]
+
+    solver = RedundantCaseSolver(model, "KEGG")
+    solver.map_model()
+    # solver.load_maps("../../dumps/")
+
+    solver.swap_from_generic(["cpd22513", "C00422"], components, False)
+    solver.generateISAreactions()
+
+    solver.write_reports("new_report.txt")
+    cobra.io.write_sbml_model(solver.model, "granulated_yeast.xml")
+
+
 
 
 def redundant_granulator_ecoli():
@@ -12,10 +27,12 @@ def redundant_granulator_ecoli():
     components = ["cpd00214", "cpd03847", "cpd05274","cpd25615","cpd05237"]
 
     solver = RedundantCaseSolver(model, "BiGG")
+    solver.map_model()
 
     solver.swap_from_generic(["cpd22513", "cpd15649"], components, True)
     solver.generateISAreactions()
 
+    solver.write_reports("new_report.txt")
     cobra.io.write_sbml_model(solver.model, "granulated_iJR904.xml")
 
     PASYN_EC(model)
@@ -273,7 +290,8 @@ def PASYN_EC(model):
     model.add_reactions(r)
 
 if __name__ == "__main__":
-    redundant_granulator_ecoli()
+    redundant_granulator_yeast()
+    # redundant_granulator_ecoli()
     # model = cobra.io.read_sbml_model("granulated_gap_filled_iJR904.xml")
     #
     # reactions = []

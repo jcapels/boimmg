@@ -1,13 +1,12 @@
 import abc
+import time
 
 import requests
 from neo4j import GraphDatabase
-from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles
 
 from boimmgpy import definitions
 from boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
-from boimmgpy.utilities import chemo_utilities, file_utilities
-from boimmgpy.definitions import ROOT_DIR, DATABASE_CONFIGS
+from boimmgpy.utilities import file_utilities
 
 
 class ModelSeedCompoundsDB:
@@ -42,19 +41,21 @@ class ModelSeedCompoundsDBRest(ModelSeedCompoundsDB):
         conf = file_utilities.read_conf_file(definitions.BOIMMG_DATABASE)
         self.rest_uri = conf["rest_uri_model_seed"]
 
+        self.sleep_time = 0.5
+
     def deserialize_compound(self,compound_dict):
 
         return ModelSeedCompound(compound_dict)
 
     def get_compound_by_id(self, id):
-
+        time.sleep(self.sleep_time)
         res = requests.get(self.rest_uri + "db_id/" + id)
 
         return self.deserialize_compound(res)
 
 
     def get_compound_by_inchi_key(self, inchikey):
-
+        time.sleep(self.sleep_time)
         res = requests.get(self.rest_uri + "inchi_key/" + inchikey)
 
         return self.deserialize_compound(res)

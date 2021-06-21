@@ -77,7 +77,7 @@ def redundant_granulator_ecoli_without_components():
     solver = RepresentationRedundantCaseSolver(model, "BiGG")
 
     solver.swap_from_generic(["cpd22513", "cpd15649"], components, True)
-    solver.generateISAreactions()
+    solver.generate_isa_reactions()
 
     cobra.io.write_sbml_model(solver.model, "redundant_representation_case/enhanced_model_ecoli_without_components.xml")
     cobra.io.save_json_model(solver.model, "enhanced_model_ecoli.json")

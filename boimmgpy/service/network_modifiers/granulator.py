@@ -162,7 +162,7 @@ class Granulator:
 
         for target in targets_to_replace:
 
-            self.write_in_progress_bar("generating network for C_BOIMMG_"+ str(target),state)
+            self.write_in_progress_bar("generating network for BMGC"+ str(target),state)
             self.handle_target_in_virtual_model(target, target_generic_ontology_id)
             state += for_each_iteration
 
@@ -535,6 +535,7 @@ class Granulator:
             met_to_add[new_model_compound] = coef
             reaction.add_metabolites(met_to_add)
 
+
         else:
             found = False
             i = 0
@@ -564,6 +565,7 @@ class Granulator:
             else:
                 met_to_add = {}
 
+                new_model_compound = found_model_compound
                 met_to_add[found_model_compound] = coef
                 reaction.add_metabolites(met_to_add)
 

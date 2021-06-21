@@ -6,7 +6,7 @@
 /neo4j_boimmg.py
 /chemoinformatics_tests.ipynb
 /OntologyClasses
-/boimmgpy/configs/database_settings.conf
+/boimmgpy/configs/my_database_settings.conf
 /database_integration
 /GapFilling
 /curation

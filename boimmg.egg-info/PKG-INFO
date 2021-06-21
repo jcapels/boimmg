@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: boimmg
-Version: 0.1.8
+Version: 0.1.10
 Summary: Find and tag Git commits based on version numbers in commit messages.
 Home-page: https://initialcommit.com/projects/git-tagup
 Author: João Capela

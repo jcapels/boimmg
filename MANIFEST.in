@@ -1,3 +1,4 @@
 recursive-include boimmgpy/configs *
 recursive-include boimmgpy/required_files *
 include boimmgpy/README.md
+exclude boimmgpy/configs/my_database_settings.conf
