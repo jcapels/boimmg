@@ -18,23 +18,11 @@ class RepresentationProblemSolver(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def swap_and_gap_fill(self, target_ontology_id):
-        """This method aims at swapping all the biosynthetic precursors, and the conjugated acid and base of a given target.
-        It only accepts type 1 changes."""
+        """This method aims at swapping all the biosynthetic precursors, and the conjugated acid and base of a given
+        target. It only accepts type 1 changes. """
         raise NotImplementedError
 
     @abc.abstractmethod
     def generalize_model(self, target_ontology_id):
         """generalize the model"""
         raise NotImplementedError
-
-
-
-    # @abc.abstractmethod
-    # def swap_from_generic(self, target_generic_ontology_id: int, **kwargs):
-    #     """
-    #
-    #     :param target_ontology_id:
-    #     :param components:
-    #     :return:
-    #     """
-    #     raise NotImplementedError

@@ -4,13 +4,12 @@ import re
 
 class KeggCompound(KeggEntity):
 
-    def __init__(self,entry):
+    def __init__(self, entry):
         super().__init__(entry)
-        self.smiles=""
-        self.inchikey=""
+        self.smiles = ""
+        self.inchikey = ""
         self.formula = ""
         self.__get_all_information()
-
 
     def __get_all_information(self):
         info = self.get_raw_data()
@@ -35,10 +34,8 @@ class KeggCompound(KeggEntity):
     def get_kegg_id(self):
         return self.id
 
-
     def get_smiles(self):
         return self.smiles
 
     def get_inchikey(self):
         return self.inchikey
-

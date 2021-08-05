@@ -5,7 +5,7 @@ from boimmgpy.kegg.kegg_entity import KeggEntity
 
 class KeggModule(KeggEntity):
 
-    def __init__(self,entry):
+    def __init__(self, entry):
         super().__init__(entry)
         self.__get_all_information()
 
@@ -22,8 +22,8 @@ class KeggModule(KeggEntity):
         for text in info:
 
             if re.search("\AREACTION", text):
-                reaction_seen=True
-                new_line = re.sub('\s+', "\t", text )
+                reaction_seen = True
+                new_line = re.sub('\s+', "\t", text)
                 reaction = new_line.split("\t")[1]
                 self.reactions.append(reaction)
 
@@ -43,19 +43,18 @@ class KeggModule(KeggEntity):
             elif compound_seen:
 
                 if re.search("\A///", text):
-                    compound_seen=False
+                    compound_seen = False
 
                 else:
                     new_line = re.sub('\s+', "\t", text)
                     compound = new_line.split("\t")[1]
-                    if re.search("\AC",compound):
+                    if re.search("\AC", compound):
                         self.compounds.append(compound)
                     else:
-                        compound_seen=False
+                        compound_seen = False
 
     def get_reactions(self):
         return self.reactions
 
     def get_compounds(self):
         return self.compounds
-

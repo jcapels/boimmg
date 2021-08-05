@@ -23,7 +23,7 @@ class BOIMMGDatabaseAccessor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_predecessors_by_ont_id_rel_type(self, ont_id: int, relationship_type : str) -> list:
+    def get_predecessors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str) -> list:
         """Get predecessors using as parameter the database identifier and the relationship type"""
 
         raise NotImplementedError
@@ -34,12 +34,12 @@ class BOIMMGDatabaseAccessor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_node_from_model_seed_id(self,model_seed_id: str) -> node:
+    def get_node_from_model_seed_id(self, model_seed_id: str) -> node:
         """Get node using as parameter the model seed id"""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_node_id_from_model_seed_id(self,model_seed_id: str) -> int:
+    def get_node_id_from_model_seed_id(self, model_seed_id: str) -> int:
         """Get database id using as parameter the model seed id"""
         raise NotImplementedError
 
@@ -49,12 +49,12 @@ class BOIMMGDatabaseAccessor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_compounds_with_only_one_component(self,onto_id: int, components: list):
+    def get_compounds_with_only_one_component(self, onto_id: int, components: list):
         """Get compounds database identifiers using as parameter a list of components"""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_compounds_with_specific_parent_within_set_of_components(self,onto_id:id, components: list):
+    def get_compounds_with_specific_parent_within_set_of_components(self, onto_id: id, components: list):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -70,5 +70,5 @@ class BOIMMGDatabaseAccessor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_successors_by_ont_id_rel_type(self,onto_id: id, components: list):
+    def get_successors_by_ont_id_rel_type(self, onto_id: id, relationship_type: str):
         raise NotImplementedError

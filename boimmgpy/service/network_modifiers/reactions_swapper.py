@@ -3,20 +3,22 @@ from cobra import Model, Reaction
 from boimmgpy.service.revisor.compounds_revisor import CompoundsRevisor
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
 from boimmgpy.utilities import file_utilities
-from boimmgpy.definitions import TOOL_CONFIG_PATH,ROOT_DIR,REACTIONS_ANNOTATION_CONFIGS_PATH,COMPOUNDS_ANNOTATION_CONFIGS_PATH
+from boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, REACTIONS_ANNOTATION_CONFIGS_PATH, \
+    COMPOUNDS_ANNOTATION_CONFIGS_PATH
+
 
 class ReactionsChanger:
 
-    def __init__(self, model : Model, type:int , model_database : str,
-                 universal_model: Model,compounds_converter=None):
+    def __init__(self, model: Model, swap_type: int, model_database: str,
+                 universal_model: Model, compounds_converter=None):
         """
         Class constructor
 
         :param cobrapy.Model model: COBRApy model
-        :param int type: type of change (0,1,2 or 3)
+        :param int swap_type: type of change (0,1,2 or 3)
         :param string model_database: database format of metabolites and reactions
         :param cobrapy.Model universal_model: universal model
-        :param (optional) ReactionsIDConverter reactions_converter: a reaction identifier converter
+        :param compounds_converter CompoundsIDConverter: object to convert metabolites identifiers
         """
 
         if not compounds_converter:
@@ -31,7 +33,7 @@ class ReactionsChanger:
             self.__universal_model = universal_model
 
         self.report_material = {}
-        self.__type = type
+        self.__type = swap_type
         self.__model_database = model_database
         self.__model = model
         self.__modelseed_hydrogen = "cpd00067"
@@ -47,17 +49,15 @@ class ReactionsChanger:
         self.__reactionsAnnotationConfigs = file_utilities.read_conf_file(
             REACTIONS_ANNOTATION_CONFIGS_PATH)
 
-
     @property
     def model(self):
         return self.__model
 
     @model.setter
-    def model(self,value):
+    def model(self, value):
         self.__model = value
 
-
-    def swap_reactions_by_compounds(self, compounds_with_reactions_to_change : list) -> list:
+    def swap_reactions_by_compounds(self, compounds_with_reactions_to_change: list) -> list:
         """
         This method swap all the reactions associated to a list of compounds.
         Firstly, it tries to balance the reactions and then tries to change the reaction.
@@ -72,7 +72,6 @@ class ReactionsChanger:
             for reaction in reactions:
                 if reaction not in past and reaction.annotation.get("sbo") != "SBO:0000629" \
                         and "Biomass" not in reaction.id:
-
                     past.append(reaction)
 
                     self.change_reaction(reaction)
@@ -81,14 +80,14 @@ class ReactionsChanger:
 
         return reaction_changed
 
-    def get_reactions_by_compound(self,compound):
+    def get_reactions_by_compound(self, compound):
         """
         Return all the reactions associated with a given compound
 
         :param Metabolite compound:
         :return list<Reaction>: all the reactions associated with a given compound
         """
-        res=[]
+        res = []
         for reaction in self.__model.reactions:
             metabolites_ids = [m.id for m in reaction.metabolites]
 
@@ -108,7 +107,8 @@ class ReactionsChanger:
         past = []
         reaction_changed = []
         for reaction in reactions_to_change:
-            if reaction not in past and reaction.annotation.get("sbo") != "SBO:0000629" and "Biomass" not in reaction.id:
+            if reaction not in past and reaction.annotation.get(
+                    "sbo") != "SBO:0000629" and "Biomass" not in reaction.id:
                 past.append(reaction.copy())
 
                 self.change_reaction(reaction)
@@ -116,7 +116,6 @@ class ReactionsChanger:
                 reaction_changed.append(reaction)
 
         return reaction_changed
-
 
     def change_reaction(self, reaction):
         """
@@ -136,7 +135,6 @@ class ReactionsChanger:
         # else:
         #     raise Exception
 
-
         self.__change_not_found_reaction(reaction)
 
     def __change_not_found_reaction(self, reaction):
@@ -149,10 +147,10 @@ class ReactionsChanger:
 
         self.change_boimmg_reaction_id(reaction)
 
-        reaction.name = "Changed - "+ reaction.name
+        reaction.name = "Changed - " + reaction.name
         reaction.annotation = {}
 
-    def change_boimmg_reaction_id(self,reaction : Reaction):
+    def change_boimmg_reaction_id(self, reaction: Reaction):
 
         new_id = self.__reactionsAnnotationConfigs["BOIMMG_ID_CONSTRUCTION"]
         metabolites = reaction.metabolites
@@ -165,8 +163,7 @@ class ReactionsChanger:
 
         return reaction.id
 
-
-    def get_database_ids_compounds_in_model(self,compounds_in_model):
+    def get_database_ids_compounds_in_model(self, compounds_in_model):
         """
         This method searchs in a given database the ids of the compounds in the model
 
@@ -181,46 +178,46 @@ class ReactionsChanger:
             modelseed_id_annotation = compound.annotation.get("seed.compound")
 
             if modelseed_id_annotation and type(modelseed_id_annotation) == str:
-                modelseed_id=[modelseed_id_annotation]
+                modelseed_ids = [modelseed_id_annotation]
 
             else:
-                modelseed_id=modelseed_id_annotation
+                modelseed_ids = modelseed_id_annotation
 
-            if self.__model_database!="ModelSEED" and not modelseed_id:
+            if self.__model_database != "ModelSEED" and not modelseed_ids:
                 db_id = compound.annotation.get(self.__compoundsAnnotationConfigs[self.__model_database])
                 if type(db_id) == list:
 
-                    i=0
-                    found=False
+                    i = 0
+                    found = False
 
-                    while not found and i<len(db_id):
-                        modelseed_id = self.__compoundsIDConverter.convert_dbID_into_modelSeedId(self.__model_database,
-                                                                                                 db_id[i])
+                    while not found and i < len(db_id):
+                        modelseed_ids = self.__compoundsIDConverter.convert_dbID_into_modelSeedId(self.__model_database,
+                                                                                                  db_id[i])
 
-                        if modelseed_id:
-                            found=True
+                        if modelseed_ids:
+                            found = True
                 else:
-                    modelseed_id = self.__compoundsIDConverter.convert_dbID_into_modelSeedId(self.__model_database,
-                                                                                             db_id)
+                    modelseed_ids = self.__compoundsIDConverter.convert_dbID_into_modelSeedId(self.__model_database,
+                                                                                              db_id)
 
-            if not modelseed_id:
+            if not modelseed_ids:
                 return []
 
             else:
                 if not res:
-                    for id in modelseed_id:
-                        res.append([id])
+                    for modelseed_id in modelseed_ids:
+                        res.append([modelseed_id])
                 else:
-                    if len(modelseed_id) == 1:
+                    if len(modelseed_ids) == 1:
                         for reaction in res:
-                            reaction.append(modelseed_id[0])
+                            reaction.append(modelseed_ids[0])
                     else:
                         previous = res.copy()
-                        res=[]
-                        for id in modelseed_id:
+                        res = []
+                        for modelseed_id in modelseed_ids:
                             for reaction in previous:
                                 new_reaction = reaction.copy()
-                                new_reaction.append(id)
+                                new_reaction.append(modelseed_id)
                                 res.append(new_reaction)
 
         final_res = []
@@ -246,7 +243,3 @@ class ReactionsChanger:
         """
 
         self.__type = new_type
-
-
-
-

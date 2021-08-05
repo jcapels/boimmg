@@ -1,16 +1,19 @@
 def is_in_tuple_list(tl, val):
     res = False
     for (x, y) in tl:
-        if val == x:    return True
+        if val == x:
+            return True
     return res
 
 
 class Graph:
 
-    def __init__(self, g={}):
+    def __init__(self, g=None):
+        if g is None:
+            g = {}
         self.graph = g
 
-    def delete_node(self,node):
+    def delete_node(self, node):
         predecessors = self.get_predecessors(node)
         for pre in predecessors:
             self.graph[pre].remove(node)
@@ -75,10 +78,10 @@ class Graph:
     def reachable_bfs(self, v):
         l = [v]
         res = [v]
-        dist = 0
         while len(l) > 0:
             node = l.pop(0)
-            if node != v: res.append(node)
+            if node != v:
+                res.append(node)
             for elem in self.graph[node]:
                 if elem not in res and elem not in l and elem != node:
                     l.append(elem)
@@ -89,7 +92,8 @@ class Graph:
         res = []
         while len(l) > 0:
             node = l.pop(0)
-            if node != v: res.append(node)
+            if node != v:
+                res.append(node)
             for elem in self.graph[node]:
                 if elem not in res and elem not in l:
                     l.insert(0, elem)
@@ -115,7 +119,8 @@ class Graph:
         l = [(s, 0)]
         while len(l) > 0:
             node, dist = l.pop(0)
-            if node != s:    res.append((node, dist))
+            if node != s:
+                res.append((node, dist))
             for elem in self.graph[node]:
                 if not is_in_tuple_list(l, elem) and not is_in_tuple_list(res, elem):
                     l.append((elem, dist + 1))
@@ -153,7 +158,8 @@ class Graph:
     def has_cycle(self):
         res = False
         for v in self.graph.keys():
-            if self.node_has_cycle(v):    return True
+            if self.node_has_cycle(v):
+                return True
         return res
 
     def all_degrees(self, deg_type="inout"):
@@ -186,21 +192,10 @@ class Graph:
             res[k] /= float(len(degs))
         return res
 
-    def mean_distance(self):
-        tot = 0
-        num_reachable = 0
-        for k in self.graph.keys():
-            distk = self.reachable_with_dist(k)
-            for _, dist in distk:
-                tot += dist
-            num_reachable += len(distk)
-        meandist = float(tot) / num_reachable
-        n = len(self.getNodes())
-        return meandist, float(num_reachable) / ((n - 1) * n)
-
     def clustering_coef(self, v):
         adjs = self.get_adjacents(v)
-        if len(adjs) <= 1:    return 0.0
+        if len(adjs) <= 1:
+            return 0.0
         ligs = 0
         for i in adjs:
             for j in adjs:
@@ -231,12 +226,14 @@ class Graph:
         ck = {}
         for k in degs_k.keys():
             tot = 0
-            for v in degs_k[k]:    tot += ccs[v]
+            for v in degs_k[k]:
+                tot += ccs[v]
             ck[k] = float(tot) / len(degs_k[k])
         return ck
 
     def check_if_valid_path(self, p):
-        if p[0] not in self.graph.keys():    return False
+        if p[0] not in self.graph.keys():
+            return False
         for i in range(1, len(p)):
             if p[i] not in self.graph.keys() or p[i] not in self.graph[p[i - 1]]:
                 return False
@@ -265,7 +262,8 @@ class Graph:
 
     def check_balanced_graph(self):
         for n in self.graph.keys():
-            if not self.check_balanced_node(n):    return False
+            if not self.check_balanced_node(n):
+                return False
         return True
 
     def eulerian_cycle(self):
@@ -276,7 +274,7 @@ class Graph:
         while edges_visit:
             pair = edges_visit[0]
             i = 1
-            if res != []:
+            if res:
                 while pair[0] not in res:
                     pair = edges_visit[i]
                     i = i + 1
@@ -297,7 +295,8 @@ class Graph:
             else:
                 pos = res.index(cycle[0])
                 print("res: ", res, pos)
-                for i in range(len(cycle) - 1): res.insert(pos + i + 1, cycle[i + 1])
+                for i in range(len(cycle) - 1):
+                    res.insert(pos + i + 1, cycle[i + 1])
                 print("res: ", res)
         return res
 
@@ -317,8 +316,10 @@ class Graph:
         return res
 
     def eulerian_path(self):
+        i = None
         unb = self.check_nearly_balanced_graph()
-        if unb[0] is None or unb[1] is None: return None
+        if unb[0] is None or unb[1] is None:
+            return None
         self.graph[unb[1]].append(unb[0])
         cycle = self.eulerian_cycle()
         for i in range(len(cycle) - 1):
@@ -329,14 +330,17 @@ class Graph:
 
     def closeness_centrality(self, node):
         dist = self.reachable_with_dist(node)
-        if len(dist) == 0: return 0.0
+        if len(dist) == 0:
+            return 0.0
         s = 0.0
-        for d in dist: s += d[1]
+        for d in dist:
+            s += d[1]
         return len(dist) / s
 
     def highest_closeness(self, top=10):
         cc = {}
-        for k in self.graph.keys(): cc[k] = self.closeness_centrality(k)
+        for k in self.graph.keys():
+            cc[k] = self.closeness_centrality(k)
         ord_cl = sorted(list(cc.items()), key=lambda x: x[1], reverse=True)
         return list(map(lambda x: x[0], ord_cl[:top]))
 
@@ -349,29 +353,6 @@ class Graph:
                     sp = self.shortest_path(s, t)
                     if sp is not None:
                         total_sp += 1
-                        if node in sp: sps_with_node += 1
+                        if node in sp:
+                            sps_with_node += 1
         return sps_with_node / total_sp
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

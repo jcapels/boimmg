@@ -1,12 +1,10 @@
-from abc import ABC
 
 from neo4j import GraphDatabase
 
 from boimmgpy.database.interfaces import node
-from boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
 
 
-class ReactionsDBAccessor():
+class ReactionsDBAccessor:
 
     def login(self):
         uri = "bolt://palsson.di.uminho.pt:6094"

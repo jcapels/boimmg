@@ -2,13 +2,13 @@ import cobra
 from cobra import Reaction, Model
 from cobra.flux_analysis.gapfilling import GapFiller
 
-from boimmgpy.service.representation_problem_solvers.representation_redundant_case_solver import RedundantCaseSolver
+from boimmgpy.representation_changers import LipidGranulator
 
 def redundant_granulator_yeast():
     model = cobra.io.read_sbml_model("mapped_yeast.xml")
     components = ["C08362","C00712","C00249","C01530"]
 
-    solver = RedundantCaseSolver(model, "KEGG")
+    solver = LipidGranulator(model, "KEGG")
     solver.map_model()
     # solver.load_maps("../../dumps/")
 

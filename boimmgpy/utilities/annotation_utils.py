@@ -1,8 +1,8 @@
 from boimmgpy.utilities import file_utilities
-from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH,REACTIONS_ANNOTATION_CONFIGS_PATH
+from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH, REACTIONS_ANNOTATION_CONFIGS_PATH
+
 
 class AnnotationUtils(object):
-
 
     @staticmethod
     def get_compound_annotation_format_by_aliases(aliases):
@@ -39,7 +39,7 @@ class AnnotationUtils(object):
 
                 aliases = compound.annotation[annotation_key]
 
-                if isinstance(aliases,list):
+                if isinstance(aliases, list):
                     res[boimmg_database] = aliases
                 else:
                     res[boimmg_database] = [aliases]

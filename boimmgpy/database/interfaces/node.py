@@ -1,5 +1,6 @@
 import abc
 
+
 class OntologyNode(metaclass=abc.ABCMeta):
 
     @classmethod
@@ -20,5 +21,5 @@ class OntologyNode(metaclass=abc.ABCMeta):
                 NotImplemented)
 
     @abc.abstractmethod
-    def extract_node_properties(self,node_properties: dict,other_aliases: dict):
+    def extract_node_properties(self, node_properties: dict, other_aliases: dict):
         raise NotImplementedError

@@ -9,22 +9,21 @@ class ModelSeedReactionsDB:
 
     def __init__(self):
 
+        self.model_seed_reactions_database = {}
         self.__database_config = file_utilities.read_conf_file(DATABASE_CONFIGS)
         path = ROOT_DIR + self.__database_config["path_model_seed_db_reactions"]
-        # scraper = ModelSeedReactionsDBScraper()
-        # path = scraper()
         self.read_model_seed_reactions_database(path)
 
-    def getReaction(self,id:str) -> ModelSeedReaction:
-        return self.model_seed_reactions_database.get(id)
+    def getReaction(self, reaction_id: str) -> ModelSeedReaction:
+        return self.model_seed_reactions_database.get(reaction_id)
 
     def getDb(self):
         return self.model_seed_reactions_database
 
-    def getReactionsProducingCompound(self,compound):
+    def getReactionsProducingCompound(self, compound):
         reactions = self.getReactionsByCompound(compound)
 
-        res=[]
+        res = []
         for reaction in reactions:
             products = reaction.getProducts()
 
@@ -33,9 +32,8 @@ class ModelSeedReactionsDB:
 
         return res
 
-
-    def getReactionsByCompounds(self,reactants,products):
-        res=[]
+    def getReactionsByCompounds(self, reactants, products):
+        res = []
         if reactants and products:
             for reaction in self.model_seed_reactions_database:
                 reaction_container = self.model_seed_reactions_database[reaction]
@@ -43,7 +41,7 @@ class ModelSeedReactionsDB:
                 reaction_reactants = []
                 reaction_products = []
                 for comp in reaction_stoich:
-                    if reaction_stoich[comp]<0:
+                    if reaction_stoich[comp] < 0:
                         reaction_reactants.append(comp)
                     else:
                         reaction_products.append(comp)
@@ -52,21 +50,20 @@ class ModelSeedReactionsDB:
                 found_products = 0
                 for reactant in reactants:
                     if reactant in reaction_reactants:
-                        found_reactants+=1
+                        found_reactants += 1
                     else:
                         break
 
                 for product in products:
                     if product in reaction_products:
-                        found_products+=1
+                        found_products += 1
 
                 if found_reactants == len(reactants) and found_products == len(products):
                     res.append(reaction)
 
             return res
 
-
-    def getReactionsByCompound(self,compound):
+    def getReactionsByCompound(self, compound):
         res = []
         for reaction in self.model_seed_reactions_database:
             reaction_container = self.model_seed_reactions_database[reaction]
@@ -76,7 +73,6 @@ class ModelSeedReactionsDB:
         return res
 
     def read_model_seed_reactions_database(self, path):
-        self.model_seed_reactions_database = {}
 
         with open(path, "r") as reaction_file:
             reaction_file.readline()
@@ -90,9 +86,9 @@ class ModelSeedReactionsDB:
 
                     reaction_id = line_lst[0]
                     compounds_list = line_lst[16].split(";")
-                    compounds=[]
+                    compounds = []
                     for compound in compounds_list:
-                        compound = re.sub("\[.\]","",compound)
+                        compound = re.sub("\[.\]", "", compound)
                         compounds.append(compound)
                     if line_lst[12] != "null":
                         aliases = line_lst[12].split("|")
@@ -123,7 +119,6 @@ class ModelSeedReactionsDB:
                             paths = database_name_and_path[1]
                             pathways_dict[database_name] = paths
 
-
                     equation = re.sub("\[[0-9]\]", "", line_lst[6])
                     name = line_lst[2]
                     direction = line_lst[9]
@@ -133,13 +128,6 @@ class ModelSeedReactionsDB:
                     aliases = aliases_dict
                     stoichiometry = stoich_dict
 
-                    # if line_lst[19] != "null":
-                    #     linked_reactions = line_lst[19].split(";")
-                    # else:
-                    #     linked_reactions = []
-
-
-
                     self.model_seed_reactions_database[reaction_id] = \
-                        ModelSeedReaction(reaction_id,name, equation,direction,ec_numbers, deltag,pathways,compounds,aliases,stoichiometry)
-
+                        ModelSeedReaction(reaction_id, name, equation, direction, ec_numbers, deltag, pathways,
+                                          compounds, aliases, stoichiometry)

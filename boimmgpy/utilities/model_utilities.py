@@ -3,6 +3,7 @@ from cobrababel import bigg
 
 from boimmgpy.database.containers.compound_node import CompoundNode
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
 from boimmgpy.utilities.annotation_utils import AnnotationUtils
 from boimmgpy.kegg.kegg_compound import KeggCompound
 from boimmgpy.kegg.kegg_reaction import KeggReaction
@@ -10,7 +11,7 @@ from boimmgpy.kegg.kegg_reaction import KeggReaction
 import numpy as np
 
 
-def check_if_elem_exist_in_list_of_cobra_containers(lst,elem):
+def check_if_elem_exist_in_list_of_cobra_containers(lst, elem):
     """
     Function to check if a given element is in a list with cobrapy containers (Metabolite, Reaction, etc)
     :param list lst: list of cobrapy containers
@@ -19,18 +20,18 @@ def check_if_elem_exist_in_list_of_cobra_containers(lst,elem):
     """
 
     for el in lst:
-       if elem.id == el.id:
-           return True
+        if elem.id == el.id:
+            return True
 
     return False
 
-def set_objective_function(model, reaction_id):
 
+def set_objective_function(model, reaction_id):
     reaction = model.reactions.get_by_id(reaction_id)
     model.objective = reaction
 
-def evalSlimSol(solution, tol):
 
+def evalSlimSol(solution, tol):
     if np.isnan(solution): return False
 
     if abs(solution) < tol: return False
@@ -47,22 +48,22 @@ def get_unique_list_of_cobra_containers(lst):
     :return list: list with unique cobrapy containers
     """
 
-    res= []
+    res = []
     for elem in lst:
-        if not check_if_elem_exist_in_list_of_cobra_containers(res,elem):
+        if not check_if_elem_exist_in_list_of_cobra_containers(res, elem):
             res.append(elem)
     return res
+
 
 #################################################### Generate model compounds ###############################################
 
 
-
-def generate_model_compounds_by_database_format(model, modelseedid,
-                                                compoundsIdConverter,
-                                                modelseedCompoundsDb,
-                                                database_format,
+def generate_model_compounds_by_database_format(model: Model,
+                                                modelseedid: str,
+                                                compoundsIdConverter: CompoundsIDConverter,
+                                                modelseedCompoundsDb: ModelSeedCompoundsDB,
+                                                database_format: str,
                                                 compartment=""):
-
     """
     This function allows the generation of a given compound in the chosen database format.
 
@@ -119,7 +120,7 @@ def generate_model_compounds_by_database_format(model, modelseedid,
             return new_compounds
 
 
-def generate_bigg_compound(model,model_seed_id,compoundsIdConverter,modelseedCompoundsDb,compartment=""):
+def generate_bigg_compound(model, model_seed_id, compoundsIdConverter, modelseedCompoundsDb, compartment=""):
     """
     Method to generate metabolites for each compartment of the model in the BiGG database format.
     This method tries to find the BiGG format of the new compounds. If it does not find, it will change it into the
@@ -133,14 +134,14 @@ def generate_bigg_compound(model,model_seed_id,compoundsIdConverter,modelseedCom
     :return list: new compounds list
     """
 
-    if model_seed_id and "BiGG" in compoundsIdConverter.get_modelSeedIdToDb().get(model_seed_id)\
+    if model_seed_id and "BiGG" in compoundsIdConverter.get_modelSeedIdToDb().get(model_seed_id) \
             or "BiGG1" in compoundsIdConverter.get_modelSeedIdToDb().get(model_seed_id):
         if "BiGG" in compoundsIdConverter.get_modelSeedIdToDb().get(model_seed_id):
             bigg_ids = compoundsIdConverter.convert_modelSeedId_into_other_dbID(model_seed_id, "BiGG")
         else:
             bigg_ids = compoundsIdConverter.convert_modelSeedId_into_other_dbID(model_seed_id, "BiGG1")
 
-        bigg_metabolite  = None
+        bigg_metabolite = None
         bigg_id = None
         found = False
         i = 0
@@ -166,7 +167,7 @@ def generate_bigg_compound(model,model_seed_id,compoundsIdConverter,modelseedCom
                             model_metabolite.annotation["inchikey"] = bigg_inchikey
 
                     model_metabolite.formula = bigg_metabolite.get("formulae")[0]
-                    model_metabolite.charge =  bigg_metabolite.get("charges")[0]
+                    model_metabolite.charge = bigg_metabolite.get("charges")[0]
                     model_metabolite.name = bigg_metabolite.get("name")
                     model_metabolite.compartment = compartment
                     compounds.append(model_metabolite)
@@ -185,18 +186,16 @@ def generate_bigg_compound(model,model_seed_id,compoundsIdConverter,modelseedCom
                 model_metabolite.compartment = compartment
                 compounds.append(model_metabolite)
 
-
             return compounds
 
         else:
-            return generate_modelseed_compound(model,model_seed_id,compoundsIdConverter,modelseedCompoundsDb)
+            return generate_modelseed_compound(model, model_seed_id, compoundsIdConverter, modelseedCompoundsDb)
 
     else:
-        return generate_modelseed_compound(model,model_seed_id,compoundsIdConverter,modelseedCompoundsDb)
+        return generate_modelseed_compound(model, model_seed_id, compoundsIdConverter, modelseedCompoundsDb)
 
 
-
-def generate_modelseed_compound(model,model_seed_id,compoundsIdConverter,modelseedCompoundsDb, compartment=""):
+def generate_modelseed_compound(model, model_seed_id, compoundsIdConverter, modelseedCompoundsDb, compartment=""):
     """
     Method to generate metabolites for each compartment of the model in the Model SEED database format.
     This method tries to find the Model SEED format of the new compounds.
@@ -225,7 +224,7 @@ def generate_modelseed_compound(model,model_seed_id,compoundsIdConverter,modelse
             model_metabolite.formula = modelseed_compound.getFormula()
             model_metabolite.charge = modelseed_compound.getCharge()
             model_metabolite.name = modelseed_compound.getName()
-            model_metabolite.compartment=compartment
+            model_metabolite.compartment = compartment
             compounds.append(model_metabolite)
 
     else:
@@ -241,8 +240,9 @@ def generate_modelseed_compound(model,model_seed_id,compoundsIdConverter,modelse
 
     return compounds
 
-def generate_boimmg_metabolites(model : Model, compound : CompoundNode,
-                                database_format: str, compoundsIdConverter : CompoundsIDConverter,
+
+def generate_boimmg_metabolites(model: Model, compound: CompoundNode,
+                                database_format: str, compoundsIdConverter: CompoundsIDConverter,
                                 compoundsAnnotationConfigs) -> list:
     """
     Generate an arbitrary format for the metabolites
@@ -257,7 +257,7 @@ def generate_boimmg_metabolites(model : Model, compound : CompoundNode,
     compounds = []
     modelseedid = compound.model_seed_id
 
-    id = compoundsAnnotationConfigs["BOIMMG_ID_CONSTRUCTION"]+ str(compound.id)
+    id = compoundsAnnotationConfigs["BOIMMG_ID_CONSTRUCTION"] + str(compound.id)
 
     formula = compound.formula
     name = compound.name
@@ -268,7 +268,7 @@ def generate_boimmg_metabolites(model : Model, compound : CompoundNode,
     model_compartments = model.compartments
 
     for compartment in model_compartments:
-        new_metabolite = Metabolite(id=id+"_"+compartment, name=name, charge=charge, formula=formula)
+        new_metabolite = Metabolite(id=id + "_" + compartment, name=name, charge=charge, formula=formula)
         annotation = {}
         if modelseedid:
             aliases = compoundsIdConverter.get_all_aliases_by_modelSeedID(modelseedid)
@@ -286,9 +286,10 @@ def generate_boimmg_metabolites(model : Model, compound : CompoundNode,
 
     return compounds
 
-def generate_boimmg_metabolites_in_compartment(compound : CompoundNode,
-                                compartment: str, compoundsIdConverter : CompoundsIDConverter,
-                                compoundsAnnotationConfigs) -> Metabolite:
+
+def generate_boimmg_metabolites_in_compartment(compound: CompoundNode,
+                                               compartment: str, compoundsIdConverter: CompoundsIDConverter,
+                                               compoundsAnnotationConfigs) -> Metabolite:
     """
     Generate an arbitrary format for the metabolites
 
@@ -301,7 +302,7 @@ def generate_boimmg_metabolites_in_compartment(compound : CompoundNode,
 
     modelseedid = compound.model_seed_id
 
-    id = compoundsAnnotationConfigs["BOIMMG_ID_CONSTRUCTION"]+ str(compound.id)
+    id = compoundsAnnotationConfigs["BOIMMG_ID_CONSTRUCTION"] + str(compound.id)
 
     formula = compound.formula
     name = compound.name
@@ -312,7 +313,7 @@ def generate_boimmg_metabolites_in_compartment(compound : CompoundNode,
     else:
         charge = 0
 
-    new_metabolite = Metabolite(id=id+"_"+compartment, name=name, charge=charge, formula=formula)
+    new_metabolite = Metabolite(id=id + "_" + compartment, name=name, charge=charge, formula=formula)
 
     aliases = compound.aliases
     annotation = AnnotationUtils.get_compound_annotation_format_by_aliases(aliases)
@@ -332,7 +333,7 @@ def generate_boimmg_metabolites_in_compartment(compound : CompoundNode,
     return new_metabolite
 
 
-def generate_kegg_compound(model,modelseedid,compoundsIdConverter,modelseedCompoundsDb, compartment=""):
+def generate_kegg_compound(model, modelseedid, compoundsIdConverter, modelseedCompoundsDb, compartment=""):
     """
     Method to generate metabolites for each compartment of the model in the KEGG database format.
     This method tries to find the KEGG format of the new compounds. If it does not find, it will change it into the
@@ -356,7 +357,6 @@ def generate_kegg_compound(model,modelseedid,compoundsIdConverter,modelseedCompo
         compounds = []
         if not compartment:
             for compartment in model.compartments:
-
                 model_metabolite = Metabolite(kegg_id + "_" + compartment)
                 model_metabolite.annotation = annotation
                 model_metabolite.annotation["inchikey"] = kegg_metabolite.get_inchikey()
@@ -383,17 +383,15 @@ def generate_kegg_compound(model,modelseedid,compoundsIdConverter,modelseedCompo
 
 
     else:
-        return generate_modelseed_compound(model, modelseedid, compoundsIdConverter,modelseedCompoundsDb)
-
+        return generate_modelseed_compound(model, modelseedid, compoundsIdConverter, modelseedCompoundsDb)
 
 
 #################################################### Generate model reactions ###############################################
 
 
 def generate_reactions_to_model(model, reactions, babel, compartment,
-                                compoundsIdConverter,modelseedCompoundsDb,
-                                reactionsIdConverter,database_format, compoundsAnnotationConfigs):
-
+                                compoundsIdConverter, modelseedCompoundsDb,
+                                reactionsIdConverter, database_format, compoundsAnnotationConfigs):
     """
     This function will generate model reactions taking into account the :param reactions and the :param babel.
     The :param babel is a dictionary carrying the information about the compounds swapped in the model.
@@ -421,16 +419,17 @@ def generate_reactions_to_model(model, reactions, babel, compartment,
             modelseed_compound = modelseedCompoundsDb.get_compound_by_id(compound)
             inchikey = modelseed_compound.getInchikey()
 
-            compounds_in_model = check_if_metabolite_exists_in_model(model,inchikey,aliases,compoundsAnnotationConfigs)
+            compounds_in_model = check_if_metabolite_exists_in_model(model, inchikey, aliases,
+                                                                     compoundsAnnotationConfigs)
             if compounds_in_model:
-                i=0
-                found=False
+                i = 0
+                found = False
                 compartment_compound = None
-                while not found and i<len(compounds_in_model):
+                while not found and i < len(compounds_in_model):
                     if compounds_in_model[i].compartment == compartment:
-                        found =True
+                        found = True
                         compartment_compound = compounds_in_model[i]
-                    i+=1
+                    i += 1
 
                 if compartment_compound:
                     reaction_found_compounds[compound] = compounds_in_model
@@ -438,12 +437,12 @@ def generate_reactions_to_model(model, reactions, babel, compartment,
         if len(reaction_found_compounds.keys()) == len(compounds):
             print(modelseed_reaction.getName())
             translation = reactionsIdConverter.get_modelSeedIdToDb().get(modelseed_reaction.getDbId())
-            new_reaction=None
+            new_reaction = None
             if translation:
                 if database_format == "BiGG" and \
                         ("BiGG" in translation.keys() or "BiGG1" in translation.keys()):
-                    new_reaction = generate_bigg_reaction(modelseed_reaction,reaction_found_compounds,
-                                                          compartment,reactionsIdConverter,compoundsIdConverter)
+                    new_reaction = generate_bigg_reaction(modelseed_reaction, reaction_found_compounds,
+                                                          compartment, reactionsIdConverter, compoundsIdConverter)
                     if new_reaction:
                         reactions_to_add.append(new_reaction)
 
@@ -452,7 +451,7 @@ def generate_reactions_to_model(model, reactions, babel, compartment,
                     new_reaction = generate_kegg_reaction(modelseed_reaction,
                                                           reaction_found_compounds,
                                                           compartment,
-                                                          reactionsIdConverter,compoundsIdConverter)
+                                                          reactionsIdConverter, compoundsIdConverter)
                     if new_reaction:
                         reactions_to_add.append(new_reaction)
 
@@ -475,7 +474,7 @@ def generate_reactions_to_model(model, reactions, babel, compartment,
     model.add_reactions(reactions_to_add)
 
 
-def generate_modelseed_reaction(modelseed_reaction,reaction_found_compounds,compartment,reactionsIdConverter):
+def generate_modelseed_reaction(modelseed_reaction, reaction_found_compounds, compartment, reactionsIdConverter):
     """
     This function generates a new Model SEED format reaction in a given compartment.
 
@@ -504,10 +503,10 @@ def generate_modelseed_reaction(modelseed_reaction,reaction_found_compounds,comp
             new_stoichiometry[compound] = new_stoichiometry[compound] * -1
 
     if reversibility:
-        new_model_reaction = Reaction(id,name,lower_bound=None)
+        new_model_reaction = Reaction(id, name, lower_bound=None)
 
     else:
-        new_model_reaction = Reaction(id,name)
+        new_model_reaction = Reaction(id, name)
 
     aliases = reactionsIdConverter.get_all_aliases_by_modelSeedID(modelseed_reaction.getDbId())
 
@@ -518,8 +517,8 @@ def generate_modelseed_reaction(modelseed_reaction,reaction_found_compounds,comp
     return new_model_reaction
 
 
-def generate_bigg_reaction(modelseed_reaction,reaction_found_compounds,
-                           compartment,reactionsIdConverter,
+def generate_bigg_reaction(modelseed_reaction, reaction_found_compounds,
+                           compartment, reactionsIdConverter,
                            compoundsIdConverter):
     """
     This function generates a new BiGG format reaction in a given compartment.
@@ -534,7 +533,7 @@ def generate_bigg_reaction(modelseed_reaction,reaction_found_compounds,
     """
 
     bigg_reaction_ids = \
-    reactionsIdConverter.convert_modelSeedId_into_other_dbID(modelseed_reaction.getDbId(), "BiGG")
+        reactionsIdConverter.convert_modelSeedId_into_other_dbID(modelseed_reaction.getDbId(), "BiGG")
 
     bigg_reaction = None
     bigg_id = None
@@ -575,8 +574,8 @@ def generate_bigg_reaction(modelseed_reaction,reaction_found_compounds,
         return new_reaction_model
 
 
-def generate_kegg_reaction(modelseed_reaction,reaction_found_compounds,
-                             compartment,reactionsIdConverter,compoundsIdConverter):
+def generate_kegg_reaction(modelseed_reaction, reaction_found_compounds,
+                           compartment, reactionsIdConverter, compoundsIdConverter):
     """
     This function generates a new KEGG format reaction in a given compartment.
 
@@ -589,7 +588,7 @@ def generate_kegg_reaction(modelseed_reaction,reaction_found_compounds,
     :return cobrapy.Reaction: the new model reaction
     """
 
-    kegg_reaction_id = reactionsIdConverter.convert_modelSeedId_into_other_dbID(modelseed_reaction.getDbId(),"KEGG")[0]
+    kegg_reaction_id = reactionsIdConverter.convert_modelSeedId_into_other_dbID(modelseed_reaction.getDbId(), "KEGG")[0]
     try:
         kegg_reaction = KeggReaction(kegg_reaction_id)
 
@@ -597,17 +596,17 @@ def generate_kegg_reaction(modelseed_reaction,reaction_found_compounds,
         new_stoichiometry = {}
 
         for compound_id in stoichiometry:
-            modelseedids = compoundsIdConverter.convert_dbID_into_modelSeedId("KEGG",compound_id)
+            modelseedids = compoundsIdConverter.convert_dbID_into_modelSeedId("KEGG", compound_id)
 
             found = False
-            i=0
+            i = 0
             found_compound = None
-            while not found and i<len(modelseedids):
+            while not found and i < len(modelseedids):
                 if modelseedids[i] in reaction_found_compounds.keys():
                     found = True
                     found_compound = modelseedids[i]
 
-                i+=1
+                i += 1
 
             if found:
                 model_compound = reaction_found_compounds[found_compound]
@@ -646,7 +645,6 @@ def generate_kegg_reaction(modelseed_reaction,reaction_found_compounds,
 def generate_reaction_in_compartimentalized_model(modelseed_reaction,
                                                   compartment, babel, reactionsIdConverter,
                                                   compoundsIdConverter, database_format):
-
     """
     This function will generate a model reaction taking into account the :param reactions and the :param babel.
     The :param babel is a dictionary carrying the information about the compounds swapped in the model.
@@ -669,41 +667,40 @@ def generate_reaction_in_compartimentalized_model(modelseed_reaction,
                 ("BiGG" in translation.keys() or "BiGG1" in translation.keys()):
 
             new_reaction = generate_bigg_reaction(modelseed_reaction,
-                                                                 babel,
-                                                                 compartment,
-                                                                 reactionsIdConverter,
-                                                                 compoundsIdConverter)
+                                                  babel,
+                                                  compartment,
+                                                  reactionsIdConverter,
+                                                  compoundsIdConverter)
             if new_reaction:
                 return new_reaction
 
         elif database_format == "KEGG" and \
                 "KEGG" in translation.keys():
-            new_reaction = generate_kegg_reaction(modelseed_reaction,babel,compartment,
-                                                                 reactionsIdConverter,
-                                                                 compoundsIdConverter)
+            new_reaction = generate_kegg_reaction(modelseed_reaction, babel, compartment,
+                                                  reactionsIdConverter,
+                                                  compoundsIdConverter)
             if new_reaction:
                 return new_reaction
 
         if not new_reaction:
             new_reaction = generate_modelseed_reaction(modelseed_reaction,
-                                                                      babel,compartment,
-                                                                      reactionsIdConverter)
+                                                       babel, compartment,
+                                                       reactionsIdConverter)
             if new_reaction:
                 return new_reaction
 
     else:
         new_reaction = generate_modelseed_reaction(modelseed_reaction,
-                                                                  babel,
-                                                                  compartment,
-                                                                  reactionsIdConverter)
+                                                   babel,
+                                                   compartment,
+                                                   reactionsIdConverter)
         if new_reaction:
             return new_reaction
 
 
-
 ########################################################## Checkers ####################################################
 
-def check_if_reaction_exists_in_model(model, modelseed_reaction,reactionsIdConverter,reactionsAnnotationConfigs):
+def check_if_reaction_exists_in_model(model, modelseed_reaction, reactionsIdConverter, reactionsAnnotationConfigs):
     """
     This function checks whether a given reaction is present in a given model or not.
     It returns the model reaction or None if not found
@@ -736,7 +733,7 @@ def check_if_reaction_exists_in_model(model, modelseed_reaction,reactionsIdConve
     return None
 
 
-def check_if_metabolite_exists_in_model(model, inchikey, aliases, compoundsAnnotationConfigs, boimmg_container =None):
+def check_if_metabolite_exists_in_model(model, inchikey, aliases, compoundsAnnotationConfigs, boimmg_container=None):
     """
     This method searches for a given metabolite in the Model
 
@@ -746,7 +743,6 @@ def check_if_metabolite_exists_in_model(model, inchikey, aliases, compoundsAnnot
     :return Model.metabolite: if the metabolite is found returns the metabolite, otherwise returns None
     """
 
-
     metabolites = []
     for metabolite in model.metabolites:
         found = False
@@ -754,7 +750,7 @@ def check_if_metabolite_exists_in_model(model, inchikey, aliases, compoundsAnnot
         if inchikey:
             if "inchikey" in metabolite.annotation.keys():
                 inchi_key = metabolite.annotation.get("inchikey")
-                if inchi_key and inchi_key!="":
+                if inchi_key and inchi_key != "":
                     if inchi_key[:-1] == inchikey[:-1]:
                         # found_inchi_key_metabolite = True
                         if metabolite not in metabolites:
@@ -786,12 +782,12 @@ def check_if_metabolite_exists_in_model(model, inchikey, aliases, compoundsAnnot
 
             if new_alias in metabolite.annotation.keys():
                 aliases_in_model = metabolite.annotation.get(new_alias)
-                boimmg_id = compoundsAnnotationConfigs["BOIMMG_ID_CONSTRUCTION"]+str(boimmg_container.id)
+                boimmg_id = compoundsAnnotationConfigs["BOIMMG_ID_CONSTRUCTION"] + str(boimmg_container.id)
                 if aliases_in_model == boimmg_id:
                     metabolites.append(metabolite)
 
-
     return metabolites
+
 
 ############################################################################ Other ################################################################################
 
@@ -808,24 +804,25 @@ def get_compartments_babel(babel):
         compartment = compound_in_model.compartment
 
         compartment_dict = {}
-        compartment_dict[modelseedids[0]]=compound_in_model
-        for i in range(1,len(modelseedids)):
+        compartment_dict[modelseedids[0]] = compound_in_model
+        for i in range(1, len(modelseedids)):
 
             found = False
             j = 0
             compounds_in_model2 = babel[modelseedids[i]]
-            while not found and j <len(compounds_in_model2):
+            while not found and j < len(compounds_in_model2):
                 compound_compartment = compounds_in_model2[j].compartment
                 if compound_compartment is None:
                     compound_compartment = "c"
                 if compound_compartment == compartment:
                     compartment_dict[modelseedids[i]] = compounds_in_model2[j]
-                    found=True
-                j+=1
+                    found = True
+                j += 1
 
         if len(compartment_dict.keys()) == len(modelseedids):
             res[compartment] = compartment_dict
     return res
+
 
 def check_if_is_exchange_reaction(reaction):
     """
@@ -834,7 +831,7 @@ def check_if_is_exchange_reaction(reaction):
     :param reaction:
     :return boolean:
     """
-    reactants=False
+    reactants = False
     products = False
     stoich = reaction.metabolites
     for metabolite in stoich:
@@ -846,6 +843,7 @@ def check_if_is_exchange_reaction(reaction):
         return False
     else:
         return True
+
 
 def swap_only_metabolites_in_reaction(metabolite, other, reaction):
     """
@@ -866,14 +864,15 @@ def swap_only_metabolites_in_reaction(metabolite, other, reaction):
     reaction.subtract_metabolites(met_to_subtract)
     reaction.add_metabolites(met_to_add)
 
-def get_model_metabolites_by_name(model,names):
-    res=[]
+
+def get_model_metabolites_by_name(model, names):
+    res = []
     for name in names:
         res.extend(model.metabolites.query(name, attribute='name'))
     return res
 
-def get_model_seed_id_by_model_compound(compound,configs,converter) -> list:
 
+def get_model_seed_id_by_model_compound(compound, configs, converter) -> list:
     annotation = compound.annotation
     model_seed_annotation_key = configs.get("ModelSEED")
     if model_seed_annotation_key in annotation.keys():
@@ -894,27 +893,26 @@ def get_model_seed_id_by_model_compound(compound,configs,converter) -> list:
                 alias = annotation.get(annotation_value)
 
                 if type(alias) == str:
-                    model_seed_id =  converter.convert_db_id_to_model_seed_by_db_id(alias)
+                    model_seed_id = converter.convert_db_id_to_model_seed_by_db_id(alias)
                     if model_seed_id:
                         return model_seed_id
 
                 else:
-                    i=0
-                    while i<len(alias):
+                    i = 0
+                    while i < len(alias):
                         db_id = alias[i]
                         model_seed_id = converter.convert_db_id_to_model_seed_by_db_id(db_id)
                         if model_seed_id:
                             return model_seed_id
-                        i+=1
+                        i += 1
     return None
 
-def convert_model_seed_reactions_into_model_reactions(model,reactions,
-                                                      reactionsIdConverter,reactionsAnnotationConfigs,
-                                                      compoundsIdConverter,modelseedCompoundsDb,
-                                                      compoundsAnnotationConfigs,database_format,
-                                                      model_container=None,modelseedid = None):
 
-
+def convert_model_seed_reactions_into_model_reactions(model, reactions,
+                                                      reactionsIdConverter, reactionsAnnotationConfigs,
+                                                      compoundsIdConverter, modelseedCompoundsDb,
+                                                      compoundsAnnotationConfigs, database_format,
+                                                      model_container=None, modelseedid=None):
     filtered_reactions = []
     for reaction in reactions:
         inModel = check_if_reaction_exists_in_model(model,
@@ -955,23 +953,18 @@ def convert_model_seed_reactions_into_model_reactions(model,reactions,
                     compartment_babel = get_compartments_babel(reaction_found_compounds)
                     for compartment in compartment_babel:
                         new_reaction = generate_reaction_in_compartimentalized_model(reaction,
-                                                                                compartment,
-                                                                                compartment_babel[
-                                                                                compartment],
-                                                                                reactionsIdConverter,
-                                                                                compoundsIdConverter,
-                                                                                database_format)
+                                                                                     compartment,
+                                                                                     compartment_babel[
+                                                                                         compartment],
+                                                                                     reactionsIdConverter,
+                                                                                     compoundsIdConverter,
+                                                                                     database_format)
 
                         if new_reaction and not check_if_is_exchange_reaction(new_reaction):
-
                             # try:
                             #     model.reactions.get_by_id(new_reaction.id)
                             # except:
 
-
                             filtered_reactions.append(new_reaction)
 
     return filtered_reactions
-
-
-

@@ -110,11 +110,6 @@ class CompoundNode(OntologyNode):
     def model_seed_id(self,value):
         self.__model_seed_id = value
 
-    # def get_boimmg_aliases(self,accessor):
-    #     aliases = accessor.get_all_aliases(self.id)
-    #
-    #     node_aliases = self.aliases
-
 
 
     def extract_node_properties(self, node_properties,other_aliases):

@@ -1,9 +1,9 @@
-from abc import ABC
 from copy import deepcopy
 
 from cobra import Reaction
 from cobra.util import linear_reaction_coefficients
 
+from boimmgpy.database.accessors.compounds_rest_accessor import CompoundsRestAccessor
 from boimmgpy.service.network_modifiers.granulator import Granulator
 from boimmgpy.service.interfaces.representation_problem_solver import RepresentationProblemSolver
 
@@ -53,7 +53,7 @@ def write_in_progress_bar(message, value):
         file.write(message + ":" + str(value))
 
 
-class RedundantCaseSolver(RepresentationProblemSolver):
+class LipidGranulator(RepresentationProblemSolver):
 
     def __init__(self, model, database_format, db_accessor=CompoundsDBAccessor()):
         """
@@ -442,9 +442,9 @@ class RedundantCaseSolver(RepresentationProblemSolver):
 
 
 # TODO: implement interface
-class SimpleCaseSolver:
+class CofactorSwapper:
 
-    def __init__(self, model: Model, database_format: str, db_accessor=CompoundsDBAccessor()):
+    def __init__(self, model: Model, database_format: str, db_accessor=CompoundsRestAccessor()):
         """
         Class constructor
 

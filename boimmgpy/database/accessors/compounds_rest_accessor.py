@@ -6,18 +6,18 @@ from boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabase
 from boimmgpy.utilities import file_utilities
 import requests
 
+
 class CompoundsRestAccessor(BOIMMGDatabaseAccessor):
 
     def __init__(self):
 
-        conf = file_utilities.read_conf_file(definitions.BOIMMG_DATABASE)
+        conf = file_utilities.read_conf_file(definitions.REST_ACCESS_DATABASE)
         self.rest_uri = conf["rest_uri"]
         self.sleep_time = 0.5
 
-    def deserialize_compound(self,compound_dict):
+    def deserialize_compound(self, compound_dict):
         time.sleep(self.sleep_time)
-        return CompoundNode(compound_dict.get("id"),compound_dict,{})
-
+        return CompoundNode(compound_dict.get("id"), compound_dict, {})
 
     def get_node_from_model_seed_id(self, modelseed_id):
         time.sleep(self.sleep_time)
@@ -64,10 +64,10 @@ class CompoundsRestAccessor(BOIMMGDatabaseAccessor):
 
         return []
 
-    def get_compounds_with_only_one_component(self, lipid_id,component):
+    def get_compounds_with_only_one_component(self, lipid_id, component):
         time.sleep(self.sleep_time)
         res = requests.post(self.rest_uri + "rest/compounds/same_components/" + str(lipid_id),
-                            data={"components" : component})
+                            data={"components": component})
 
         if res.status_code == 200:
             res_dict = res.json()
@@ -76,10 +76,10 @@ class CompoundsRestAccessor(BOIMMGDatabaseAccessor):
 
         return []
 
-    def get_compounds_with_specific_parent_within_set_of_components(self, lipid_id,components):
+    def get_compounds_with_specific_parent_within_set_of_components(self, lipid_id, components):
         time.sleep(self.sleep_time)
         res = requests.post(self.rest_uri + "rest/compounds/diff_components/" + str(lipid_id),
-                            data={"components":str(components)})
+                            data={"components": str(components)})
 
         if res.status_code == 200:
             res_dict = res.json()
@@ -110,7 +110,6 @@ class CompoundsRestAccessor(BOIMMGDatabaseAccessor):
 
         return []
 
-
     def get_node_by_ont_id(self, lipid_id):
         time.sleep(self.sleep_time)
         res = requests.get(self.rest_uri + "rest/compounds/" + str(lipid_id))
@@ -123,7 +122,7 @@ class CompoundsRestAccessor(BOIMMGDatabaseAccessor):
 
         return None
 
-    def get_compounds_with_specific_parent_set_of_components(self, parent,components):
+    def get_compounds_with_specific_parent_set_of_components(self, parent, components):
         time.sleep(self.sleep_time)
         res = requests.post(self.rest_uri + "rest/compounds/set_components/" + str(parent),
                             data={"components": components})

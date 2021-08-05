@@ -1,13 +1,13 @@
 import json
 
-from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.database.containers.compound_node import CompoundNode
 from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH
 from boimmgpy.utilities import file_utilities
 
 
 class ModelMapper:
 
-    def __init__(self,model,compoundsIdConverter,accessor):
+    def __init__(self, model, compoundsIdConverter, accessor):
 
         self.model = model
         self.__compoundsAnnotationConfigs = file_utilities.read_conf_file(
@@ -51,7 +51,7 @@ class ModelMapper:
         return self.__boimmg_db_model_map_reverse
 
     @boimmg_db_model_map_reverse.setter
-    def boimmg_db_model_map_reverse(self,value):
+    def boimmg_db_model_map_reverse(self, value):
         if isinstance(value, dict):
             self.__boimmg_db_model_map_reverse = value
         else:
@@ -95,10 +95,11 @@ class ModelMapper:
         return self._mapped
 
     @mapped.setter
-    def mapped(self,value: bool):
+    def mapped(self, value: bool):
         self._mapped = value
 
-    def printProgressBar(self,iteration, total, prefix='', suffix='', decimals=1, length=100, fill='|', printEnd="\r"):
+    @staticmethod
+    def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='|'):
         """
       Call in a loop to create terminal progress bar
       @params:
@@ -119,30 +120,28 @@ class ModelMapper:
         if iteration == total:
             print()
 
-    def map_model(self,database):
+    def map_model(self, database):
 
         if database in self.__compoundsAnnotationConfigs.keys():
             database_annotation_key = self.__compoundsAnnotationConfigs[database]
         else:
             raise ValueError("introduce a valid database name")
 
-        j=0
+        j = 0
         model_metabolites = list(self.model.metabolites)
         for compound in self.model.metabolites:
 
-            self.printProgressBar(j,len(model_metabolites))
-            j+=1
+            self.printProgressBar(j, len(model_metabolites))
+            j += 1
             compound_annotation = compound.annotation
 
-            # boimmg_compound_found = False
-
-            annotation_keys = ["seed.compound",database_annotation_key,"boimmg.compound","inchi_key"]
+            annotation_keys = ["seed.compound", database_annotation_key, "boimmg.compound", "inchi_key"]
 
             compound_id = compound.id
 
             compound_id = compound_id.split("_")[0]
 
-            boimmg_compound_found = self.map_compound(compound_id,compound)
+            boimmg_compound_found = self.map_compound(compound_id, compound)
 
             for key in annotation_keys:
                 if key in compound_annotation.keys():
@@ -155,8 +154,7 @@ class ModelMapper:
                     for annotation_value in annotation_values:
 
                         if not boimmg_compound_found:
-
-                            boimmg_compound_found = self.map_compound(annotation_value,compound)
+                            boimmg_compound_found = self.map_compound(annotation_value, compound)
 
                         if key not in self.compounds_aliases_indexation:
                             self.compounds_aliases_indexation[key] = {}
@@ -168,7 +166,7 @@ class ModelMapper:
                             self.compounds_aliases_indexation_reverse[compound.id] = {}
 
                         if key not in self.compounds_aliases_indexation_reverse[compound.id]:
-                            self.compounds_aliases_indexation_reverse[compound.id] = {key:[]}
+                            self.compounds_aliases_indexation_reverse[compound.id] = {key: []}
 
                         if annotation_value not in self.compounds_aliases_indexation_reverse[compound.id][key]:
                             self.compounds_aliases_indexation_reverse[compound.id][key].append(annotation_value)
@@ -203,7 +201,7 @@ class ModelMapper:
 
         self.mapped = True
 
-    def map_compound(self, annotation_value,compound):
+    def map_compound(self, annotation_value, compound):
 
         boimmg_compound_found = False
 
@@ -232,10 +230,10 @@ class ModelMapper:
 
         return boimmg_compound_found
 
-    def create_map_dump(self,destination):
+    def create_map_dump(self, destination):
 
         out_file = open(destination + "boimmg_db_model_map.json", "w")
-        json.dump(self.boimmg_db_model_map,out_file)
+        json.dump(self.boimmg_db_model_map, out_file)
         out_file.close()
 
         out_file = open(destination + "boimmg_db_model_map_reverse.json", "w")
@@ -254,8 +252,7 @@ class ModelMapper:
         json.dump(self.compound_inchikey_indexation, out_file)
         out_file.close()
 
-
-    def upload_maps(self,folder):
+    def upload_maps(self, folder):
 
         in_file = open(folder + "boimmg_db_model_map.json", "r")
         self.boimmg_db_model_map = json.load(in_file)
@@ -280,14 +277,12 @@ class ModelMapper:
 
         self.mapped = True
 
-    def add_new_reactions_to_model(self,new_reactions):
+    def add_new_reactions_to_model(self, new_reactions):
 
         for reaction in new_reactions:
-
             self.add_new_metabolites_to_maps(reaction.metabolites)
 
-
-    def __add_metabolites_to_boimmg_indexation(self,key,annotation_value,metabolite):
+    def __add_metabolites_to_boimmg_indexation(self, key, annotation_value, metabolite):
 
         if key == self.__compoundsAnnotationConfigs.get("ModelSEED"):
             model_seed_id = [annotation_value]
@@ -318,7 +313,7 @@ class ModelMapper:
 
         return False
 
-    def __add_metabolites_to_aliases_indexation(self,annotation_pair,annotation_value,metabolite):
+    def __add_metabolites_to_aliases_indexation(self, annotation_pair, annotation_value, metabolite):
 
         if annotation_pair not in self.compounds_aliases_indexation:
             self.compounds_aliases_indexation[annotation_pair] = {}
@@ -338,7 +333,7 @@ class ModelMapper:
         if metabolite not in self.compounds_aliases_indexation[annotation_pair][annotation_value]:
             self.compounds_aliases_indexation[annotation_pair][annotation_value].append(metabolite.id)
 
-    def add_new_metabolites_to_maps(self,new_metabolites):
+    def add_new_metabolites_to_maps(self, new_metabolites):
 
         for metabolite in new_metabolites:
 
@@ -357,14 +352,11 @@ class ModelMapper:
                     for annotation_value in annotation_values:
 
                         if not boimmg_compound_found:
-
-
                             boimmg_compound_found = self.__add_metabolites_to_boimmg_indexation(key,
                                                                                                 annotation_value,
                                                                                                 metabolite)
 
-                        self.__add_metabolites_to_aliases_indexation(annotation_pair,annotation_value,metabolite)
-
+                        self.__add_metabolites_to_aliases_indexation(annotation_pair, annotation_value, metabolite)
 
                     if not boimmg_compound_found:
 
@@ -397,7 +389,7 @@ class ModelMapper:
             del self.boimmg_db_model_map[old_id]
             self.boimmg_db_model_map[new_id] = new_ontology_id
 
-        for key,value in self.boimmg_db_model_map_reverse.items():
+        for key, value in self.boimmg_db_model_map_reverse.items():
             if old_id in value:
                 del self.boimmg_db_model_map_reverse[key]
                 break
@@ -407,8 +399,6 @@ class ModelMapper:
 
         elif compound_container.id not in self.boimmg_db_model_map_reverse[new_ontology_id]:
             self.boimmg_db_model_map_reverse[new_ontology_id].append(compound_container.id)
-
-
 
         if old_inchikey:
             if old_inchikey[:-1] in self.compound_inchikey_indexation:
@@ -420,10 +410,9 @@ class ModelMapper:
             else:
                 self.compound_inchikey_indexation[new_inchikey[:-1]] = [compound_container.id]
 
-        self.__update_aliases_indexation(old_id,new_aliases,compound_container)
+        self.__update_aliases_indexation(old_id, new_aliases, compound_container)
 
-
-    def __update_aliases_indexation(self,old_id,new_aliases,compound_container):
+    def __update_aliases_indexation(self, old_id, new_aliases, compound_container):
 
         if old_id in self.compounds_aliases_indexation_reverse:
             old_aliases = self.compounds_aliases_indexation_reverse[old_id]
@@ -445,7 +434,8 @@ class ModelMapper:
                     else:
                         self.compounds_aliases_indexation[key][alias] = [compound_container.id]
 
-    def check_metabolites_in_model(self, inchikey: str, aliases: dict, boimmg_container=None, boimmg_id = None) -> list:
+    def check_metabolites_in_model(self, inchikey: str, aliases: dict, boimmg_container: CompoundNode = None,
+                                   boimmg_id: int = None) -> list:
         """
         This method checks whether a given metabolite with the :param inchikey and the :param aliases.
         If a BOIMMG node is available the search starts with it.
@@ -453,6 +443,7 @@ class ModelMapper:
         :param str inchikey: InchiKey of the metabolite to be searched.
         :param dict aliases: databases links of the metabolite to be searched.
         :param CompoundNode boimmg_container: BOIMMG node
+        :param int boimmg_id: boimmg identifier
         :return list: metabolites in model
         """
 
@@ -475,7 +466,6 @@ class ModelMapper:
                 if key in self.compounds_aliases_indexation:
                     for alias in aliases[key]:
                         if alias in self.compounds_aliases_indexation.get(key):
-
                             compound_ids = self.compounds_aliases_indexation[key].get(alias)
                             compounds_in_model = [self.model.metabolites.get_by_id(compound_id)
                                                   for compound_id in compound_ids]
@@ -485,7 +475,6 @@ class ModelMapper:
                 elif new_key and new_key in self.compounds_aliases_indexation:
                     for alias in aliases[key]:
                         if alias in self.compounds_aliases_indexation.get(new_key):
-
                             compound_ids = self.compounds_aliases_indexation[new_key].get(alias)
                             compounds_in_model = [self.model.metabolites.get_by_id(compound_id)
                                                   for compound_id in compound_ids]
@@ -513,8 +502,10 @@ class ModelMapper:
 
         return []
 
-    def check_if_boimmg_metabolite_in_model(self, boimmg_id, aliases = {} ):
+    def check_if_boimmg_metabolite_in_model(self, boimmg_id, aliases=None):
 
+        if aliases is None:
+            aliases = {}
         if boimmg_id in self.boimmg_db_model_map_reverse.keys():
             return self.boimmg_db_model_map_reverse[boimmg_id]
 
@@ -532,10 +523,9 @@ class ModelMapper:
 
         return None
 
-    def get_boimmg_id_from_model_compound_id(self,model_id):
+    def get_boimmg_id_from_model_compound_id(self, model_id):
 
         if model_id in self.boimmg_db_model_map.keys():
             return self.boimmg_db_model_map[model_id]
 
         return None
-

@@ -9,7 +9,8 @@ from boimmgpy.definitions import ROOT_DIR, DATABASE_CONFIGS
 class ReactionsIDConverterScraper:
 
     def __init__(self):
-        self.url_db = "https://raw.githubusercontent.com/ModelSEED/ModelSEEDDatabase/master/Biochemistry/Aliases/Unique_ModelSEED_Reaction_Aliases.txt"
+        self.url_db = "https://raw.githubusercontent.com/ModelSEED/ModelSEEDDatabase/master/Biochemistry/Aliases" \
+                      "/Unique_ModelSEED_Reaction_Aliases.txt "
 
         self.__database_config = file_utilities.read_conf_file(DATABASE_CONFIGS)
         up_to_date = self.__check_time()
@@ -28,8 +29,9 @@ class ReactionsIDConverterScraper:
 
     def __download_modelseed_database(self):
 
-        with urllib.request.urlopen(self.url_db) as response, open(ROOT_DIR + self.__database_config["path_model_seed_reactions_aliases"],
-                                                                'wb') as out_file:
+        with urllib.request.urlopen(self.url_db) as response, open(
+                ROOT_DIR + self.__database_config["path_model_seed_reactions_aliases"],
+                'wb') as out_file:
             shutil.copyfileobj(response, out_file)
 
         self.__database_config["time_model_seed_reactions_aliases"] = str(datetime.now()).split(" ")[0]

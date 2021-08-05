@@ -13,11 +13,11 @@ from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH
 
 class CompoundsRevisor:
 
-    def __init__(self,model,universal_model = None,compoundsAnnotationConfigs = None):
+    def __init__(self, model, universal_model=None, compoundsAnnotationConfigs=None):
         if not universal_model:
             self.__universal_model = Model()
         else:
-            self.__universal_model=universal_model
+            self.__universal_model = universal_model
 
         if not compoundsAnnotationConfigs:
             self.compoundsAnnotationConfigs = file_utilities.read_conf_file(COMPOUNDS_ANNOTATION_CONFIGS_PATH)
@@ -29,7 +29,8 @@ class CompoundsRevisor:
         self.__get_hydrogen_from_model()
         self.__changed_reaction = None
 
-    def __lp_to_balance_reaction(self,eq):
+    @staticmethod
+    def __lp_to_balance_reaction(eq):
 
         Ls = list('abcdefghijklmnopqrstuvwxyz')
 
@@ -44,7 +45,6 @@ class CompoundsRevisor:
                     d = [c[0], c[1] * m * i]
                     Ss[e][:0], Es[:0] = [d], [[e, d]]
             i = -1
-
 
         Ys = dict((s, eval('Symbol("' + s + '")')) for s in Os if s not in Ls)
 
@@ -93,16 +93,17 @@ class CompoundsRevisor:
 
         return new_k, Ys
 
-    def balance_reaction(self,reaction: Reaction):
+    def balance_reaction(self, reaction: Reaction):
 
         eq = self.__get_reaction_equation(reaction)
 
         try:
-            k,Ys = self.__lp_to_balance_reaction(eq)
+            k, Ys = self.__lp_to_balance_reaction(eq)
         except:
             return False
 
         isHydrogenInReaction = True
+        hydrogen = None
 
         if len(reaction.compartments) == 1:
             hydrogen = self.__hydrogens_in_model.get(list(reaction.compartments)[0])
@@ -111,8 +112,8 @@ class CompoundsRevisor:
         if len(k) == len(Ys) and 0 not in k.values():
 
             try:
-                stoich = self.__process_result_of_new_balanced_reaction(k,Ys,eq,reaction)
-                reaction.add_metabolites(stoich,combine=False)
+                stoich = self.__process_result_of_new_balanced_reaction(k, Ys, eq, reaction)
+                reaction.add_metabolites(stoich, combine=False)
                 return True
 
             except:
@@ -174,7 +175,7 @@ class CompoundsRevisor:
                 reactants.remove("H")
 
                 new_reactants = "+".join(reactants)
-                new_eq = "->".join([new_reactants,reactants_products[1]])
+                new_eq = "->".join([new_reactants, reactants_products[1]])
 
                 k, Ys = self.__lp_to_balance_reaction(new_eq)
 
@@ -215,11 +216,10 @@ class CompoundsRevisor:
                     except:
                         return False
 
-
         return False
 
-
-    def __process_result_of_new_balanced_reaction(self,k,Ys,eq,reaction):
+    @staticmethod
+    def __process_result_of_new_balanced_reaction(k, Ys, eq, reaction):
 
         N = []
         for s in sorted(Ys):
@@ -269,33 +269,30 @@ class CompoundsRevisor:
 
         return res
 
-
-    def __get_reaction_equation(self,reaction):
+    @staticmethod
+    def __get_reaction_equation(reaction):
         reactants = reaction.reactants
         products = reaction.products
         eq = ""
 
-        i=0
-        while i<len(reactants)-1:
+        i = 0
+        while i < len(reactants) - 1:
+            reactant_formula = reactants[i].formula.replace("+", "").replace("-", "")
+            eq += reactant_formula + "+"
 
-            reactant_formula = reactants[i].formula.replace("+","").replace("-","")
-            eq+=reactant_formula+"+"
-
-            i+=1
-
+            i += 1
 
         eq += reactants[i].formula + "->"
 
-        j=0
+        j = 0
         while j < len(products) - 1:
-            product_formula = products[j].formula.replace("+","").replace("-","")
+            product_formula = products[j].formula.replace("+", "").replace("-", "")
             eq += product_formula + "+"
 
             j += 1
 
         eq += products[j].formula
         return eq
-
 
     def __balance_reaction(self, reaction, diff):
         """
@@ -315,7 +312,7 @@ class CompoundsRevisor:
             new_reaction = reaction.copy()
             if diff < 0:
 
-                isHydrogenInReaction = self.__check_if_compound_in_reaction(reaction,hydrogen)
+                isHydrogenInReaction = self.__check_if_compound_in_reaction(reaction, hydrogen)
                 if isHydrogenInReaction:
                     stoich_subtr[hydrogen] = diff
                     new_reaction.subtract_metabolites(stoich_subtr)
@@ -337,12 +334,10 @@ class CompoundsRevisor:
                 self.__changed_reaction = new_reaction
                 return True
 
-
         return False
 
-
-
-    def __check_if_compound_in_reaction(self,reaction,compound):
+    @staticmethod
+    def __check_if_compound_in_reaction(reaction, compound):
         for metabolite_in_reaction in reaction.metabolites:
             if metabolite_in_reaction.id == compound.id:
                 return True
@@ -363,13 +358,13 @@ class CompoundsRevisor:
         metabolites_in_model = self.__model.metabolites
 
         i = 0
-        while i<len(metabolites_in_model):
+        while i < len(metabolites_in_model):
 
             metabolite = metabolites_in_model[i]
             if metabolite.formula == "H" and metabolite.compartment in compartments:
                 self.__hydrogens_in_model[metabolite.compartment] = metabolite
 
-            i+=1
+            i += 1
 
     def check_balanced_reaction(self, reaction):
 
@@ -381,7 +376,6 @@ class CompoundsRevisor:
         :returns boolean: whether a reaction is balanced or not
         """
 
-
         isBalanced = self.__check_if_reaction_is_balanced(reaction)
 
         if not isBalanced:
@@ -390,7 +384,6 @@ class CompoundsRevisor:
 
         else:
             return True
-
 
     def balance_and_clean_unbalanced_reactions(self):
 
@@ -404,9 +397,8 @@ class CompoundsRevisor:
                 # self.__universal_model.add_reactions([reaction.copy()])
                 self.__model.remove_reactions([reaction])
 
-
-    def __check_if_reaction_is_balanced(self,reaction):
-        (reactants,products) = self.__extract_elements_of_reactions_compounds(reaction)
+    def __check_if_reaction_is_balanced(self, reaction):
+        (reactants, products) = self.__extract_elements_of_reactions_compounds(reaction)
         for element in reactants:
             if element in products.keys():
                 diff = reactants[element] - products[element]
@@ -421,8 +413,8 @@ class CompoundsRevisor:
 
         return True
 
-
-    def __extract_elements_of_reactions_compounds(self, reaction):
+    @staticmethod
+    def __extract_elements_of_reactions_compounds(reaction):
         """
        This method extracts the atomic elements of each compound in reaction
 
@@ -448,7 +440,8 @@ class CompoundsRevisor:
 
                 if stoi:
                     if coef < 0:
-                        reactants_elements[element[0]] = int(stoi[0]) * coef * -1 + reactants_elements.get(element[0], 0)
+                        reactants_elements[element[0]] = int(stoi[0]) * coef * -1 + reactants_elements.get(element[0],
+                                                                                                           0)
                     else:
                         products_elements[element[0]] = int(stoi[0]) * coef + products_elements.get(element[0], 0)
                 else:
@@ -457,10 +450,9 @@ class CompoundsRevisor:
                     else:
                         products_elements[element[0]] = coef + products_elements.get(element[0], 0)
 
-        return (reactants_elements,products_elements)
+        return reactants_elements, products_elements
 
-
-    def check_compounds_representation_and_balance_reactions(self, reactions:list):
+    def check_compounds_representation_and_balance_reactions(self, reactions: list):
 
         res = []
         self.__get_hydrogen_from_model()
@@ -481,8 +473,8 @@ class CompoundsRevisor:
                         new_key = self.compoundsAnnotationConfigs.get(key)
 
                         if key == "BOIMMG":
-                            id = self.get_boimmg_id_from_annotation(aliases[key])
-                            container = compounds_ontology.get_node_by_ont_id(id)
+                            boimmg_id = self.get_boimmg_id_from_annotation(aliases[key])
+                            container = compounds_ontology.get_node_by_ont_id(boimmg_id)
 
                             reaction_ontology_reactants.append(container)
                             found = True
@@ -495,7 +487,6 @@ class CompoundsRevisor:
                                     entity_id = entity.id
 
                                     if entity_id in self.__mapper.boimmg_db_model_map:
-
                                         ont_id = self.__mapper.boimmg_db_model_map.get(entity_id)
                                         entity_container = compounds_ontology.get_node_by_ont_id(ont_id)
                                         reaction_ontology_reactants.append(entity_container)
@@ -503,7 +494,6 @@ class CompoundsRevisor:
                                         break
                     if found:
                         break
-
 
             for compound in reaction.products:
 
@@ -515,9 +505,9 @@ class CompoundsRevisor:
 
                         if key == "BOIMMG":
 
-                            id = self.get_boimmg_id_from_annotation(aliases[key])
+                            boimmg_id = self.get_boimmg_id_from_annotation(aliases[key])
 
-                            container = compounds_ontology.get_node_by_ont_id(id)
+                            container = compounds_ontology.get_node_by_ont_id(boimmg_id)
 
                             reaction_ontology_products.append(container)
                             found = True
@@ -532,7 +522,6 @@ class CompoundsRevisor:
                                     entity_id = entity.id
 
                                     if entity_id in self.__mapper.boimmg_db_model_map:
-
                                         ont_id = self.__mapper.boimmg_db_model_map.get(entity_id)
                                         entity_container = compounds_ontology.get_node_by_ont_id(ont_id)
                                         reaction_ontology_products.append(entity_container)
@@ -561,7 +550,7 @@ class CompoundsRevisor:
         self.__model.remove_reactions(to_remove)
         return res
 
-    def balance_reactions(self,reactions):
+    def balance_reactions(self, reactions):
         to_remove = []
         res = []
         for reaction in reactions:
@@ -575,18 +564,18 @@ class CompoundsRevisor:
         self.__model.remove_reactions(to_remove)
         return res
 
-    def get_boimmg_id_from_annotation(self,boimmg_id):
+    def get_boimmg_id_from_annotation(self, boimmg_id):
 
-        if isinstance(boimmg_id,list):
+        if isinstance(boimmg_id, list):
             boimmg_id = boimmg_id[0]
 
         boimmg_construction = self.compoundsAnnotationConfigs.get("BOIMMG_ID_CONSTRUCTION")
 
-        id = int(boimmg_id.replace(boimmg_construction,""))
+        boimmg_id = int(boimmg_id.replace(boimmg_construction, ""))
 
-        return id
+        return boimmg_id
 
-    def __check_generic_complete_relationship(self,reactants,products,reaction):
+    def __check_generic_complete_relationship(self, reactants, products, reaction):
 
         generic_reactants = []
         complete_reactants = []
@@ -617,25 +606,25 @@ class CompoundsRevisor:
             reactants_components_dict = {}
             products_components_dict = {}
 
-
             for complete_reactant in complete_reactants:
-                reactant_components = compounds_ontology.get_predecessors_by_ont_id_rel_type(complete_reactant.id,"component_of")
+                reactant_components = compounds_ontology.get_predecessors_by_ont_id_rel_type(complete_reactant.id,
+                                                                                             "component_of")
                 reactants_components.append(reactant_components)
                 reactants_components_dict[complete_reactant.id] = reactant_components
 
-
             for complete_product in complete_products:
-                product_components = compounds_ontology.get_predecessors_by_ont_id_rel_type(complete_product.id,"component_of")
+                product_components = compounds_ontology.get_predecessors_by_ont_id_rel_type(complete_product.id,
+                                                                                            "component_of")
                 products_components.append(product_components)
                 products_components_dict[complete_product.id] = products_components
 
             reactants_components = sorted(reactants_components)
             products_components = sorted(products_components)
 
-            if reactants_components!=products_components:
+            if reactants_components != products_components:
                 deleted = self.__delete_components_from_reaction(reactants_components,
-                                                       products_components,reactants_components_dict,
-                                                       products_components_dict,reaction)
+                                                                 products_components, reactants_components_dict,
+                                                                 products_components_dict, reaction)
 
                 if deleted:
                     return True
@@ -645,9 +634,10 @@ class CompoundsRevisor:
 
         return True
 
-    def __delete_components_from_reaction(self,reactants_components,
-                                                products_components,reactants_components_dict,
-                                                products_components_dict,reaction):
+    @staticmethod
+    def __delete_components_from_reaction(reactants_components,
+                                          products_components, reactants_components_dict,
+                                          products_components_dict, reaction):
 
         to_delete = []
 
@@ -673,7 +663,7 @@ class CompoundsRevisor:
                 return False
 
             for metabolite in to_delete:
-                reaction.subtract_metabolites({metabolite:1})
+                reaction.subtract_metabolites({metabolite: 1})
 
         else:
             reaction_reactants = reaction.reactants
@@ -700,7 +690,6 @@ class CompoundsRevisor:
                 reaction.subtract_metabolites({metabolite: 1})
 
         return True
-
 
     def set_model_mapper(self, mapper):
         self.__mapper = mapper

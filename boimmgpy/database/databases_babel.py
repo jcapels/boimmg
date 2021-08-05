@@ -13,6 +13,7 @@ class BOIMMGDatabases(Enum):
     BIGG = "bigg_id"
     PUBMED = "pubmed_cid"
 
+
 class ModelSEEDDatabases(Enum):
     MODEL_SEED = "ModelSEED"
     BIGG = "BiGG"
@@ -21,6 +22,7 @@ class ModelSEEDDatabases(Enum):
     METANETX_ID = "metanetx.chemical"
     SWISS_LIPIDS = "SWISS_LIPIDS"
     LIPID_MAPS = "LIPID_MAPS"
+
 
 class AliasesTransformer:
 
@@ -56,5 +58,3 @@ class AliasesTransformer:
         for database in ModelSEEDDatabases:
             if database.value == database_name:
                 return BOIMMGDatabases[database.name].value
-
-        return

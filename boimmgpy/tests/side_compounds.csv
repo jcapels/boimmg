@@ -1,0 +1,124 @@
+name,kegg,modelseed,bigg
+Oxidizedferredoxin,C00139,cpd11621,fdxox
+Ferricytochrome,C00923,cpd00685,ficytC	ficytc	ficytcc553
+NADP,C00006,cpd00006,nadp
+Coenzyme F420-0,C19153,cpd20413,f420_0
+Coenzyme F420-3,C19151,cpd20411,f420_3
+Ferricytochrome c-553,C01070,cpd19010,
+Ferricytochrome b,C06260,cpd12852,ficytb
+Ferricytochrome c-552.5,C05310,cpd12696,
+Ferricytochrome b-561,C05305,cpd12694,
+Ferricytochrome c3,C02682,cpd12157,
+Ferricytochrome c2,C00997,cpd11796,
+Ferricytochrome b5,C00996,cpd11795,ficytb5
+Ferricytochrome b1,C00995,cpd00733,
+FMN,C00061,cpd00050,fmn
+Riboflavin,C00255,cpd00220,ribflv
+FAD,C00016,cpd00015,fad
+Caldariellaquinone,C20624,cpd25750,
+Plastoquinone,C02061,cpd12011,
+Menaquinone,C00828,cpd11451,
+Ubiquinone,C00399,cpd11669,q
+phylloquinone,C02059,cpd01401,phllqne
+Plastoquinone A,C10385,cpd27797,
+Plastoquinone (1 repeating units),C01731,cpd16491,
+Coenzyme Q9,C01967,cpd01351,
+Coenzyme Q6,C17568,cpd15290,q6
+Coenzyme Q8,C17569,cpd15560,q8	q8h2
+Coenzyme Q10,C11378,cpd08232,q10
+Ferrocytochrome,C00924,cpd00686,focytC	focytc	focytcc553
+Reducedferredoxin,C00138,cpd11620,fdxrd
+Caldariellaquinol,C20623,cpd31235,
+Plastoquinol,C16693,cpd16486,
+Menaquinol,C05819,cpd12783,
+Ubiquinol,C00390,cpd11665,qh2
+NADPH,C00005,cpd00005,nadph
+Ferrocytochrome b1,C00998,cpd00734,
+Ferrocytochrome b5,C00999,cpd11797,focytb5
+Ferrocytochrome c2,C01000,cpd11798,
+Ferrocytochrome c3,C02684,cpd12159,
+Ferrocytochrome b-561,C05183,cpd12669,
+Ferrocytochrome c-552.5,C05184,cpd12670,
+Ferrocytochrome b,C06259,cpd12851,
+Ferrocytochrome c-553,C01071,cpd19011,
+FADH2,C01352,cpd00982,fadh2
+Reduced riboflavin,C01007,cpd00739,rbflvrd
+FMNH2,C01847,cpd01270,fmnh2
+Reduced coenzyme F420,C01080,cpd00792,
+Plastoquinone A,C10385,cpd27797,
+Plastoquinone (1 repeating units),C01731,cpd16491,
+H2O,C00001,cpd00001,h2o	oh1
+PPI,C00013,cpd00012,ppi
+NAD,C00003,cpd00003,nad
+CoA,C00010,cpd00010,coa
+THF,C00101,cpd00087,thf
+SAM,C00019,cpd00017,amet
+Pyridoxal phosphate,C00018,cpd00016,pydx5p
+thiamine,C00378,cpd00305,thm
+Glutathione,C00051,cpd00042,gthrd
+heme,C00032,cpd00028,pheme
+ATP;,C00002,cpd00002,atp
+NADH;,C00004,cpd00004,nadh
+Oxygen;,C00007,cpd00007,o2
+ADP;,C00008,cpd00008,adp
+Orthophosphate;,C00009,cpd00009,pi
+CO2;,C00011,cpd00011,co2
+Peptide,C00012,cpd11608,pepd
+Ammonia;,C00014,cpd00013,nh3	nh4
+UDP;,C00015,cpd00014,udp
+Protein,C00017,cpd11463,
+AMP;,C00020,cpd00018,amp
+S-Adenosyl-L-homocysteine;,C00021,cpd00019,ahcys
+Pyruvate;,C00022,cpd00020,pyr
+Iron,C00023,cpd00021,
+Acetyl-CoA;,C00024,cpd00022,accoa
+L-Glutamate;,C00025,cpd00023,glu__L
+2-Oxoglutarate;,C00026,cpd00024,akg
+Hydrogen,C00027,cpd00025,h2o2
+Acceptor;,C00028,cpd11609,
+UDP-glucose;,C00029,cpd00026,udpg
+Reduced,C00030,cpd11610,
+D-Glucose;,C00031,cpd00027,glc__D
+Acetate;,C00033,cpd00029,ac
+Manganese,C00034,cpd37272,
+GDP;,C00035,cpd00031,gdp
+Oxaloacetate;,C00036,cpd00032,oaa
+Glycine;,C00037,cpd00033,gly
+Zinc,C00038,cpd00034,zn2
+DNA;,C00039,cpd11461,dna
+Acyl-CoA;,C00040,cpd11611,acoa
+L-Alanine;,C00041,cpd00035,ala__L
+Succinate;,C00042,cpd00036,succ
+UDP-N-acetyl-alpha-D-glucosamine;,C00043,cpd00037,uacgam
+GTP;,C00044,cpd00038,gtp
+Amino,C00045,cpd11612,
+RNA;,C00046,cpd11613,
+L-Lysine;,C00047,cpd00039,lys__L
+Glyoxylate;,C00048,cpd00040,glx
+L-Aspartate;,C00049,cpd00041,asp__L
+Metal,C00050,cpd11614,
+UDP-alpha-D-galactose;,C00052,cpd00043,udpgal
+3'-Phosphoadenylyl,C00053,cpd00044,paps
+Adenosine,C00054,cpd00045,pap
+CMP;,C00055,cpd00046,cmp
+Formate;,C00058,cpd00047,for
+Sulfate;,C00059,cpd00048,so4
+Carboxylate;,C00060,cpd00049,
+L-Arginine;,C00062,cpd00051,arg__L
+CTP;,C00063,cpd00052,ctp
+L-Glutamine;,C00064,cpd00053,gln__L
+L-Serine;,C00065,cpd00054,ser__L
+tRNA;,C00066,cpd11615,
+Formaldehyde;,C00067,cpd00055,fald
+Thiamin,C00068,cpd00056,thmpp
+Alcohol,C00069,cpd00057,trnagln
+Copper;,C00070,cpd37270,
+Aldehyde;,C00071,cpd11616,
+Ascorbate;,C00072,cpd00059,ascb__L
+L-Methionine;,C00073,cpd00060,met__L
+Phosphoenolpyruvate;,C00074,cpd00061,pep
+UTP;,C00075,cpd00062,utp
+Calcium,C00076,cpd00063,ca2
+L-Ornithine;,C00077,cpd00064,orn	orn__L
+L-Tryptophan;,C00078,cpd00065,trp__L
+L-Phenylalanine;,C00079,cpd00066,phe__L

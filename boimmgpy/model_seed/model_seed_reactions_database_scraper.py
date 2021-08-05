@@ -29,8 +29,9 @@ class ModelSeedReactionsDBScraper:
 
     def __download_modelseed_database(self):
 
-        with request.urlopen(self.url_db) as response, open(ROOT_DIR + self.__database_config["path_model_seed_db_reactions"],
-                                                                'wb') as out_file:
+        with request.urlopen(self.url_db) as response, open(ROOT_DIR +
+                                                            self.__database_config["path_model_seed_db_reactions"],
+                                                            'wb') as out_file:
             shutil.copyfileobj(response, out_file)
 
         self.__database_config["time_model_seed"] = str(datetime.now()).split(" ")[0]
@@ -39,7 +40,7 @@ class ModelSeedReactionsDBScraper:
     def __call__(self):
         return ROOT_DIR + self.__database_config["path_model_seed_db_reactions"]
 
-if __name__=="__main__":
 
+if __name__ == "__main__":
     scraper = ModelSeedReactionsDBScraper()
     scraper()

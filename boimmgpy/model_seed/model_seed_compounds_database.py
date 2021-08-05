@@ -25,7 +25,7 @@ class ModelSeedCompoundsDB:
                 NotImplemented)
 
     @abc.abstractmethod
-    def get_compound_by_id(self, ont_id: int) -> list:
+    def get_compound_by_id(self, ont_id: int) -> ModelSeedCompound:
         """Get predecessors using as parameter the database identifier"""
         raise NotImplementedError
 
@@ -34,17 +34,16 @@ class ModelSeedCompoundsDB:
         """Get predecessors using as parameter the database identifier"""
         raise NotImplementedError
 
+
 class ModelSeedCompoundsDBRest(ModelSeedCompoundsDB):
 
     def __init__(self):
-
         conf = file_utilities.read_conf_file(definitions.BOIMMG_DATABASE)
         self.rest_uri = conf["rest_uri_model_seed"]
 
         self.sleep_time = 0.5
 
-    def deserialize_compound(self,compound_dict):
-
+    def deserialize_compound(self, compound_dict):
         return ModelSeedCompound(compound_dict)
 
     def get_compound_by_id(self, id):
@@ -52,7 +51,6 @@ class ModelSeedCompoundsDBRest(ModelSeedCompoundsDB):
         res = requests.get(self.rest_uri + "db_id/" + id)
 
         return self.deserialize_compound(res)
-
 
     def get_compound_by_inchi_key(self, inchikey):
         time.sleep(self.sleep_time)
@@ -63,8 +61,7 @@ class ModelSeedCompoundsDBRest(ModelSeedCompoundsDB):
 
 class ModelSeedCompoundsDBRaw(ModelSeedCompoundsDB):
 
-    def __init__(self,uri="",user="",password=""):
-
+    def __init__(self, uri="", user="", password=""):
 
         if not uri or not user or not password:
             uri, user, password = self.read_config_file()
@@ -92,12 +89,10 @@ class ModelSeedCompoundsDBRaw(ModelSeedCompoundsDB):
         return self._tx
 
     @tx.setter
-    def tx(self,tx):
+    def tx(self, tx):
         self._tx = tx
 
-
-
-    def get_compound_by_id(self,id):
+    def get_compound_by_id(self, id):
 
         self.login()
         with self.tx.session() as session:
@@ -115,8 +110,7 @@ class ModelSeedCompoundsDBRaw(ModelSeedCompoundsDB):
 
         return None
 
-
-    def get_compound_by_inchi_key(self,inchikey):
+    def get_compound_by_inchi_key(self, inchikey):
 
         self.login()
         with self.tx.session() as session:
@@ -130,7 +124,6 @@ class ModelSeedCompoundsDBRaw(ModelSeedCompoundsDB):
                 node_properties = data.get("p")
 
                 return ModelSeedCompound(node_properties)
-
 
         return None
 
@@ -150,7 +143,6 @@ class ModelSeedCompoundsDBRaw(ModelSeedCompoundsDB):
     #             if db_compound_inchikey[:-2] == inchikey[:-2]:
     #                 return compound_container
     #     return None
-
 
     # def __set_inchi_key_and_smiles_database(self,compound):
     #
@@ -242,5 +234,3 @@ class ModelSeedCompoundsDBRaw(ModelSeedCompoundsDB):
     #
     #             self.__compounds_database[features[0]] = modelseedCompound
     #             self.__compounds.append(modelseedCompound)
-
-

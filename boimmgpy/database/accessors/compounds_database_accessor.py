@@ -1,4 +1,6 @@
+import pathlib
 import re
+from typing import Union
 
 from neo4j import GraphDatabase
 
@@ -8,28 +10,31 @@ from boimmgpy.database.databases_babel import AliasesTransformer
 from boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
 from boimmgpy.utilities import file_utilities
 
-def set_database_information(uri,user,password):
 
+def set_database_information(uri, user, password):
     uri_bool = False
     user_bool = False
     pass_bool = False
-
-    with open(definitions.BOIMMG_DATABASE, "r") as f:
-        lines = f.readlines()
+    lines = []
+    if pathlib.Path(definitions.BOIMMG_DATABASE).exists():
+        with open(definitions.BOIMMG_DATABASE, "r") as f:
+            lines = f.readlines()
 
     with open(definitions.BOIMMG_DATABASE, "w") as f:
-        for line in lines:
-            if re.match("^uri=",line):
-                uri_bool = True
-                f.write("uri=" + uri + "\n")
-            elif re.match("^user=",line):
-                user_bool = True
-                f.write("user=" + user + "\n")
-            elif re.match("^password=",line):
-                pass_bool = True
-                f.write("password=" + password + "\n")
-            else:
-                f.write(line)
+
+        if lines:
+            for line in lines:
+                if re.match("^uri=", line):
+                    uri_bool = True
+                    f.write("uri=" + uri + "\n")
+                elif re.match("^user=", line):
+                    user_bool = True
+                    f.write("user=" + user + "\n")
+                elif re.match("^password=", line):
+                    pass_bool = True
+                    f.write("password=" + password + "\n")
+                else:
+                    f.write(line)
 
         if not uri_bool:
             f.write("uri=" + uri + "\n")
@@ -40,10 +45,10 @@ def set_database_information(uri,user,password):
         if not pass_bool:
             f.write("password=" + password + "\n")
 
+
 class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
     def __init__(self):
-
 
         uri, user, password = self.read_config_file()
 
@@ -51,21 +56,22 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         self.__user = user
         self.__password = password
 
-    def read_config_file(self):
+    @staticmethod
+    def read_config_file():
 
-        configs = file_utilities.read_conf_file(definitions.BOIMMG_DATABASE)
+        if pathlib.Path(definitions.BOIMMG_DATABASE).exists():
+            configs = file_utilities.read_conf_file(definitions.BOIMMG_DATABASE)
 
-        if "uri" in configs.keys() and "user" in configs.keys() and "password" in configs.keys():
+            if "uri" in configs.keys() and "user" in configs.keys() and "password" in configs.keys():
+                uri = configs["uri"]
+                user = configs["user"]
+                password = configs["password"]
 
-            uri = configs["uri"]
-            user = configs["user"]
-            password = configs["password"]
-
-            return uri, user, password
+                return uri, user, password
 
         else:
 
-            raise Exception("Please insert the required database information")
+            raise Exception("Please insert the required database information using set_database_information function")
 
     def login(self):
 
@@ -77,95 +83,92 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         return self._tx
 
     @tx.setter
-    def tx(self,tx):
+    def tx(self, tx):
         self._tx = tx
 
-
-    def add_relationship(self,origin : int, target : int, type : str):
+    def add_relationship(self, origin: int, target: int, relationship_type: str):
         self.login()
         with self.tx.session() as session:
             session.run("MATCH (c:Compound), (p:Compound)"
                         "WHERE c.boimmg_id = $target and p.boimmg_id = $origin "
-                        "MERGE (c)<-[r:" + type+ "]-(p) "
-                        "ON CREATE SET r.timestamp = timestamp() ",
-                        origin = origin, target= target, type = type)
+                        "MERGE (c)<-[r:" + relationship_type + "]-(p) "
+                                                               "ON CREATE SET r.timestamp = timestamp() ",
+                        origin=origin, target=target, type=relationship_type)
 
-    def add_biosynthetic_relationship(self,origin : int, target : int, **kwargs):
+    def add_biosynthetic_relationship(self, origin: int, target: int, **kwargs):
         self.login()
         properties = []
         for key in kwargs:
-            properties.append( key + ":'"+ kwargs.get(key)+"'")
+            properties.append(key + ":'" + kwargs.get(key) + "'")
 
         properties_cypher = ",".join(properties)
 
         with self.tx.session() as session:
             session.run("MATCH (c:Compound), (p:Compound)"
-                    "WHERE c.boimmg_id = $target and p.boimmg_id = $origin "
-                    "MERGE (c)<-[r:precursor_of {" + properties_cypher + "} ]-(p) "
-                    "ON CREATE SET r.timestamp = timestamp()", origin = origin,target=target
-                    )
-
-
+                        "WHERE c.boimmg_id = $target and p.boimmg_id = $origin "
+                        "MERGE (c)<-[r:precursor_of {" + properties_cypher + "} ]-(p) "
+                                                                             "ON CREATE SET r.timestamp = timestamp()",
+                        origin=origin, target=target
+                        )
 
     def get_predecessors_by_swiss_lipids_id(self, db_id) -> list:
         self.login()
         predecessors = []
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound)<-[r]-(p:Compound) "
-                        "WHERE c.swiss_lipids_id = $db_id "
-                        "RETURN p, p.boimmg_id as id",
-                        db_id=db_id)
-
+                                 "WHERE c.swiss_lipids_id = $db_id "
+                                 "RETURN p, p.boimmg_id as id",
+                                 db_id=db_id)
 
             data = result.data()
             for node in data:
                 node_properties = node.get("p")
                 node_id = node.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id,node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
                 predecessors.append(node)
 
         return predecessors
 
-    def get_predecessors_by_model_seed_id(self, db_id:str) -> list:
+    def get_predecessors_by_model_seed_id(self, db_id: str) -> list:
         self.login()
         predecessors = []
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound)<-[r]-(p:Compound) "
-                        "WHERE c.model_seed_id = $db_id "
-                        "RETURN p, p.boimmg_id as id",
-                        db_id=db_id)
-
+                                 "WHERE c.model_seed_id = $db_id "
+                                 "RETURN p, p.boimmg_id as id",
+                                 db_id=db_id)
 
             data = result.data()
             for node in data:
                 node_properties = node.get("p")
                 node_id = node.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id,node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
                 predecessors.append(node)
 
         return predecessors
 
-    def get_node_from_model_seed_id(self, model_seed_id:str) -> CompoundNode:
+    def get_node_from_model_seed_id(self, model_seed_id: str) -> Union[CompoundNode, None]:
         self.login()
         with self.tx.session() as session:
             result = session.run("MATCH (c:ModelSeedCompound)-[:is_db_link_of]->(d:Compound) "
                                  "USING INDEX c:ModelSeedCompound(model_seed_id) "
                                  "WHERE c.model_seed_id = $model_seed_id "
                                  "RETURN d, d.boimmg_id as id",
-                                  model_seed_id=model_seed_id)
+                                 model_seed_id=model_seed_id)
 
             data = result.single()
             if data:
                 node_properties = data.get("d")
                 node_id = data.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id, node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
 
                 return node
 
-            else: return None
+            else:
+                return None
 
     def get_all_aliases(self, node_id):
         self.login()
@@ -176,16 +179,15 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                                  node_id=node_id)
 
             data = result.data()
-            res=[]
+            res = []
             if data:
                 for node in data:
                     node_properties = node.get("c")
                     res.append(node_properties)
 
-
             return res
 
-    def get_node_id_from_model_seed_id(self, model_seed_id: str) -> int:
+    def get_node_id_from_model_seed_id(self, model_seed_id: str) -> Union[int, None]:
         self.login()
         with self.tx.session() as session:
 
@@ -210,18 +212,19 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
             result = session.run("MATCH (c:Compound) "
                                  "WHERE c.lipidmaps_id = $lipid_maps_id "
                                  "RETURN c, c.boimmg_id as id",
-                                  lipid_maps_id=lipid_maps_id)
+                                 lipid_maps_id=lipid_maps_id)
 
             data = result.single()
             if data:
                 node_properties = data.get("c")
                 node_id = data.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id, node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
 
                 return node
 
-            else: return None
+            else:
+                return None
 
     def get_node_by_alias(self, key, alias) -> int:
         self.login()
@@ -236,7 +239,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                 #                      alias=alias)
 
                 result = session.run("MATCH (c:Compound {" + boimmg_property + ": $alias}) "
-                                     "RETURN c.boimmg_id as id",
+                                                                               "RETURN c.boimmg_id as id",
                                      alias=alias)
 
                 data = result.single()
@@ -250,15 +253,15 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return
 
-    def get_conjugates(self,ont_id : int) -> list:
+    def get_conjugates(self, ont_id: int) -> list:
         """Get conjugated acids and bases predecessors using as parameter the ontology identifier"""
 
         res = []
         conjugated_bases = \
-            self.get_predecessors_by_ont_id_rel_type(ont_id,"conjugated_base_of")
+            self.get_predecessors_by_ont_id_rel_type(ont_id, "conjugated_base_of")
 
-        conjugated_acids =  \
-            self.get_predecessors_by_ont_id_rel_type(ont_id,"conjugated_acid_of")
+        conjugated_acids = \
+            self.get_predecessors_by_ont_id_rel_type(ont_id, "conjugated_acid_of")
 
         res.extend(conjugated_bases)
         res.extend(conjugated_acids)
@@ -273,8 +276,6 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         res.extend(conjugated_acids)
 
         return res
-
-
 
     def get_predecessors_by_ont_id(self, ont_id: int) -> list:
         """Get predecessors using as parameter the ontology identifier"""
@@ -293,7 +294,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return predecessors
 
-    def get_predecessors_only_from_lipid_maps_and_ms(self,ont_id: int):
+    def get_predecessors_only_from_lipid_maps_and_ms(self, ont_id: int):
         self.login()
         predecessors = []
 
@@ -311,17 +312,17 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return predecessors
 
-
-    def get_predecessors_with_same_component(self, ont_id: int, relationship_type : str) -> list:
+    def get_predecessors_with_same_component(self, ont_id: int, relationship_type: str) -> list:
         """Get predecessors with only one component using as parameters the database identifier and the relationship type"""
         self.login()
         predecessors = []
         with self.tx.session() as session:
-            result = session.run("match (c:Compound)<-[:"+relationship_type+"]-(d:Compound)<-[:component_of]-(g) where c.boimmg_id = $ont_id "
-                                "with collect(g) as components, d ,c "
-                                 "where size(components) = 1 return d.boimmg_id as id",
-                                 ont_id=ont_id,
-                                 rel_type =relationship_type)
+            result = session.run(
+                "match (c:Compound)<-[:" + relationship_type + "]-(d:Compound)<-[:component_of]-(g) where c.boimmg_id = $ont_id "
+                                                               "with collect(g) as components, d ,c "
+                                                               "where size(components) = 1 return d.boimmg_id as id",
+                ont_id=ont_id,
+                rel_type=relationship_type)
 
             data = result.data()
             if data:
@@ -336,13 +337,14 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         self.login()
         predecessors = []
         with self.tx.session() as session:
-            result = session.run("match (c:Compound)<-[:is_a]-(d:Compound)<-[:component_of]-(g) where c.boimmg_id = $ont_id "
-                                "with collect(g) as components, d "
-                                "where size(components) = 1 with d as result "
-                                "match (result)<-[:component_of]-(t) where t.boimmg_id in $components_ids_list "
-                                "return result.boimmg_id as id ",
-                                 ont_id=ont_id,
-                                 components_ids_list =components_ids_list)
+            result = session.run(
+                "match (c:Compound)<-[:is_a]-(d:Compound)<-[:component_of]-(g) where c.boimmg_id = $ont_id "
+                "with collect(g) as components, d "
+                "where size(components) = 1 with d as result "
+                "match (result)<-[:component_of]-(t) where t.boimmg_id in $components_ids_list "
+                "return result.boimmg_id as id ",
+                ont_id=ont_id,
+                components_ids_list=components_ids_list)
 
             data = result.data()
             if data:
@@ -352,7 +354,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return predecessors
 
-    def get_all_model_seed_ids(self,ont_id):
+    def get_all_model_seed_ids(self, ont_id):
         self.login()
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound)<-[r:is_db_link_of]-(p:ModelSeedCompound) "
@@ -370,8 +372,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return model_seed_ids
 
-
-    def get_predecessors_by_ont_id_rel_type(self, ont_id: int, relationship_type : str) -> list:
+    def get_predecessors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str) -> list:
         """Get predecessors using as parameter the database identifier and the relationship type"""
         self.login()
         predecessors = []
@@ -380,7 +381,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                                  "WHERE c.boimmg_id = $ont_id AND TYPE(r) = $rel_type "
                                  "RETURN p.boimmg_id as id",
                                  ont_id=ont_id,
-                                 rel_type =relationship_type)
+                                 rel_type=relationship_type)
 
             data = result.data()
             if data:
@@ -399,7 +400,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                                  "WHERE c.boimmg_id = $ont_id AND r.reaction = $reaction_id "
                                  "RETURN p.boimmg_id as id",
                                  ont_id=ont_id,
-                                 reaction_id =reaction_id)
+                                 reaction_id=reaction_id)
 
             data = result.data()
             if data:
@@ -409,7 +410,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return predecessors
 
-    def get_all_successors_by_ont_id_rel_type(self,ont_id: int, relationship_type : str,threshold=50) -> list:
+    def get_all_successors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str, threshold=50) -> list:
         self.login()
 
         parent_container = self.get_node_by_ont_id(ont_id)
@@ -426,7 +427,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                     l.append(elem)
         return res
 
-    def get_all_predecessors_by_ont_id_rel_type(self, ont_id: int, relationship_type : str) -> list:
+    def get_all_predecessors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str) -> list:
         self.login()
 
         parent_container = self.get_node_by_ont_id(ont_id)
@@ -442,8 +443,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                     l.append(elem)
         return res
 
-
-    def get_compound_by_inchikey(self,inchikey):
+    def get_compound_by_inchikey(self, inchikey):
         self.login()
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound) "
@@ -457,12 +457,13 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                 node_properties = data.get("c")
                 node_id = data.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id, node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
                 return node
 
-            else: return None
+            else:
+                return None
 
-    def get_compound_by_smiles_and_abstraction(self,smiles,generic):
+    def get_compound_by_smiles_and_abstraction(self, smiles, generic):
         self.login()
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound) "
@@ -470,7 +471,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                                  "RETURN c, c.boimmg_id as id "
                                  ,
                                  smiles=smiles,
-                                 generic = generic)
+                                 generic=generic)
 
             data = result.single()
             if data:
@@ -478,34 +479,33 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                 node_properties = data.get("c")
                 node_id = data.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id, node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
                 return node
 
             else:
                 return None
 
-    def get_compound_by_smiles(self,smiles):
+    def get_compound_by_smiles(self, smiles):
         self.login()
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound) "
                                  "WHERE c.smiles = $smiles "
                                  "RETURN c, c.boimmg_id as id "
                                  ,
-                                 smiles = smiles)
+                                 smiles=smiles)
             data = result.single()
             if data:
 
                 node_properties = data.get("c")
                 node_id = data.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id, node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
                 return node
 
             else:
                 return None
 
-
-    def create_compound(self,**kwargs) -> CompoundNode:
+    def create_compound(self, **kwargs) -> CompoundNode:
 
         name = kwargs.get("name")
         formula = kwargs.get("formula")
@@ -523,37 +523,36 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
             last_id = data.get("max_id")
 
-            new_id = last_id +1
+            new_id = last_id + 1
 
         if aliases:
-            return self.__create_compound_with_aliases_boimmg_format(boimmg_id = new_id, name = name, formula = formula,
-                                                                     smiles = smiles,
-                                                                     generic = generic,
-                                                                     charge = charge,
-                                                                     inchikey = inchikey, annotated = annotated,
-                                                                     inchi = inchi, aliases = aliases)
+            return self.__create_compound_with_aliases_boimmg_format(boimmg_id=new_id, name=name, formula=formula,
+                                                                     smiles=smiles,
+                                                                     generic=generic,
+                                                                     charge=charge,
+                                                                     inchikey=inchikey, annotated=annotated,
+                                                                     inchi=inchi, aliases=aliases)
 
         else:
             self.login()
             with self.tx.session() as session:
                 result = session.run("MERGE (c:Compound {name : $name,"
-                            "formula : $formula, smiles: $smiles,"
-                            "generic: $generic ,"
-                            "charge: $charge, inchikey:$inchikey, "
-                            "annotated:$annotated }) "
-                            "on create set c.boimmg_id = $id "
-                            "RETURN c, c.boimmg_id as id"
-                            ,
-                             name = name, formula = formula, smiles = smiles,
-                            generic = generic, charge = charge, inchikey = inchikey,
-                            annotated=annotated,id = new_id)
-
+                                     "formula : $formula, smiles: $smiles,"
+                                     "generic: $generic ,"
+                                     "charge: $charge, inchikey:$inchikey, "
+                                     "annotated:$annotated }) "
+                                     "on create set c.boimmg_id = $id "
+                                     "RETURN c, c.boimmg_id as id"
+                                     ,
+                                     name=name, formula=formula, smiles=smiles,
+                                     generic=generic, charge=charge, inchikey=inchikey,
+                                     annotated=annotated, id=new_id)
 
                 data = result.single()
                 node_properties = data.get("c")
                 node_id = data.get("id")
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id, node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
 
                 return node
 
@@ -571,7 +570,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
             node_id = data.get("id")
 
             other_aliases = self.get_all_aliases(node_id)
-            node = CompoundNode(node_id, node_properties,other_aliases)
+            node = CompoundNode(node_id, node_properties, other_aliases)
 
         return node
 
@@ -585,7 +584,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                                  "all (x in components where x.boimmg_id in $components_par) "
                                  "return c.boimmg_id as id ",
                                  components_par=components,
-                                 parent = parent
+                                 parent=parent
                                  )
 
             data = result.data()
@@ -632,9 +631,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         #             res.append(child)
         # return res
 
-
-
-    def get_leaves_from_ont_id(self,ont_id:int) -> list:
+    def get_leaves_from_ont_id(self, ont_id: int) -> list:
 
         parent_container = self.get_node_by_ont_id(ont_id)
         if parent_container.generic:
@@ -653,7 +650,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         else:
             return []
 
-    def get_all_parents(self,leaf):
+    def get_all_parents(self, leaf):
 
         l = [leaf]
         res = []
@@ -671,7 +668,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return res
 
-    def check_if_node_exist_by_model_seed_id(self,model_seed_id):
+    def check_if_node_exist_by_model_seed_id(self, model_seed_id):
         self.login()
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound) "
@@ -686,11 +683,11 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                 node_id = data.get("id")
 
                 other_aliases = self.get_all_aliases(node_id)
-                node = CompoundNode(node_id, node_properties,other_aliases)
+                node = CompoundNode(node_id, node_properties, other_aliases)
 
         return node
 
-    def get_successors_by_ont_id_rel_type(self, ont_id:int, relationship_type:str) -> list:
+    def get_successors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str) -> list:
         self.login()
         successors = []
         with self.tx.session() as session:
@@ -708,14 +705,14 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                     successors.append(node_id)
         return successors
 
-    def get_successors_and_biosynthetic_relationship_info_by_ont_id_rel_type(self, ont_id:int, relationship_type:str):
+    def get_successors_and_biosynthetic_relationship_info_by_ont_id_rel_type(self, ont_id: int, relationship_type: str):
         self.login()
         successors = []
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound)<-[r]-(p:Compound) "
                                  "WHERE p.boimmg_id = $ont_id AND TYPE(r) = $rel_type "
                                  "return r.pathway as pathway, r.reaction as reaction, c.boimmg_id as id ",
-                                 ont_id = ont_id, rel_type=relationship_type)
+                                 ont_id=ont_id, rel_type=relationship_type)
 
             data = result.data()
             if data:
@@ -723,23 +720,21 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                     node_id = node.get("id")
                     pathway = node.get("pathway")
                     reaction = node.get("reaction")
-                    successors.append((node_id,pathway,reaction))
+                    successors.append((node_id, pathway, reaction))
 
         return successors
 
-
-
-    def establish_structural_relationship(self,origin,target):
+    def establish_structural_relationship(self, origin, target):
         self.login()
 
         with self.tx.session() as session:
-            session.run("MATCH (c:Compound),(p:Compound) " 
+            session.run("MATCH (c:Compound),(p:Compound) "
                         "where c.boimmg_id = $target and p.boimmg_id = $origin "
                         "MERGE (c)<-[r:is_a]-(p) "
-                         "on create set r.time_stamp = TIMESTAMP()",
-                        target = target, origin = origin)
+                        "on create set r.time_stamp = TIMESTAMP()",
+                        target=target, origin=origin)
 
-    def __create_compound_with_aliases_boimmg_format(self,**kwargs):
+    def __create_compound_with_aliases_boimmg_format(self, **kwargs):
 
         name = kwargs.get("name")
         formula = kwargs.get("formula")
@@ -751,7 +746,6 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         inchi = kwargs.get("inchi")
         aliases = kwargs.get("aliases")
         boimmg_id = kwargs.get("boimmg_id")
-
 
         self.login()
         with self.tx.session() as session:
@@ -766,7 +760,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                                  ,
                                  name=name, formula=formula, smiles=smiles,
                                  generic=generic, charge=charge, inchikey=inchikey,
-                                 annotated=annotated, inchi = inchi, boimmg_id=boimmg_id)
+                                 annotated=annotated, inchi=inchi, boimmg_id=boimmg_id)
 
             data = result.single()
             node_properties = data.get("c")
@@ -774,15 +768,32 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
             for alias in aliases:
                 session.run("MATCH (c:Compound) "
                             "where c.boimmg_id = $id "
-                            "SET c."+alias+" = $alias_value ",
-                            alias_value = aliases[alias],
-                            id = node_id)
+                            "SET c." + alias + " = $alias_value ",
+                            alias_value=aliases[alias],
+                            id=node_id)
 
             other_aliases = self.get_all_aliases(node_id)
-            node = CompoundNode(node_id, node_properties,other_aliases)
+            node = CompoundNode(node_id, node_properties, other_aliases)
 
             return node
 
-
-
-
+    # def get_structural_children_by_sources(self, node_id, sources):
+    #     """Get predecessors using as parameter the database identifier and the relationship type"""
+    #     self.login()
+    #     predecessors = []
+    #
+    #     with self.tx.session() as session:
+    #         result = session.run("MATCH (d:Compound)-[:is_a]->(n:Compound) "
+    #                              "where n.boimmg_id=$ont_id and "
+    #                              "exists(d.lipidmaps_id) "
+    #                              "return d",
+    #                              ont_id=node_id,
+    #                              reaction_id=reaction_id)
+    #
+    #         data = result.data()
+    #         if data:
+    #             for node in data:
+    #                 node_id = node.get("id")
+    #                 predecessors.append(node_id)
+    #
+    #     return predecessors

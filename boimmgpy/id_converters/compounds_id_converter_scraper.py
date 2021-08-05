@@ -1,5 +1,4 @@
 import shutil
-import urllib
 from datetime import datetime
 from urllib import request
 
@@ -29,8 +28,9 @@ class CompoundsIDConverterScraper:
 
     def __download_modelseed_database(self):
 
-        with request.urlopen(self.url_db) as response, open(ROOT_DIR +  self.__database_config["path_model_seed_compounds_aliases"],
-                                                                'wb') as out_file:
+        with request.urlopen(self.url_db) as response, open(ROOT_DIR +
+                                                            self.__database_config["path_model_seed_compounds_aliases"],
+                                                            'wb') as out_file:
             shutil.copyfileobj(response, out_file)
 
         self.__database_config["time_model_seed_compounds_aliases"] = str(datetime.now()).split(" ")[0]
@@ -38,6 +38,7 @@ class CompoundsIDConverterScraper:
 
     def __call__(self):
         return ROOT_DIR + self.__database_config["path_model_seed_compounds_aliases"]
+
 
 if __name__ == "__main__":
     scraper = CompoundsIDConverterScraper()
