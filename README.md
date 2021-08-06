@@ -97,7 +97,7 @@ git clone xx
 python setup.py install
 ```
 
-##Getting Started
+## Getting Started
 
 BOIMMG is a package that compiles representation problems solutions for Genome Scale Metabolic Models (GSMM).
 Currently, we provide tools to granulate lipids (LipidGranulator) and swap co-factors (CofactorSwapper).
@@ -106,13 +106,13 @@ BOIMMG framework is still under development and it is currently at a
 pre-release version. New models and features will be added in the future.
 
 
-###Access to the database
+### Access to the database
 
 BOIMMG provides an integrated database that compiles LIPID MAPS, Swiss Lipids and ModelSEED information. 
 As for the access to the database, you can either use our rest API (default) or use a local database. 
 The latter can be set up following the instructions bellow. 
 
-####Set up a local BOIMMG's database from the command line
+#### Set up a local BOIMMG's database from the command line
 
 1. Download and install neo4j in https://neo4j.com/download/.
 2. Download the database dump in https://zenodo.org/record/5163250/files/boimmg.dump.
