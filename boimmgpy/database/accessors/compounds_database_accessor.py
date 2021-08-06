@@ -318,7 +318,8 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         predecessors = []
         with self.tx.session() as session:
             result = session.run(
-                "match (c:Compound)<-[:" + relationship_type + "]-(d:Compound)<-[:component_of]-(g) where c.boimmg_id = $ont_id "
+                "match (c:Compound)<-[:" + relationship_type + "]-(d:Compound)<-[:component_of]-(g) where c.boimmg_id "
+                                                               "= $ont_id "
                                                                "with collect(g) as components, d ,c "
                                                                "where size(components) = 1 return d.boimmg_id as id",
                 ont_id=ont_id,
@@ -333,7 +334,8 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         return predecessors
 
     def get_compounds_with_only_one_component(self, ont_id: int, components_ids_list: list) -> list:
-        """Get predecessors with only one component using as parameter the database identifier and the relationship type"""
+        """Get predecessors with only one component using as parameter the database identifier and the relationship
+        type """
         self.login()
         predecessors = []
         with self.tx.session() as session:
@@ -410,7 +412,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return predecessors
 
-    def get_all_successors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str, threshold=50) -> list:
+    def get_all_successors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str) -> list:
         self.login()
 
         parent_container = self.get_node_by_ont_id(ont_id)
@@ -574,14 +576,32 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
         return node
 
-    def get_compounds_with_specific_parent_within_set_of_components(self, parent, components):
+    def get_compounds_with_specific_parent_within_set_of_components(self, parent, components, sources):
 
         self.login()
+
+        # TODO: add enumerators (martelado claramente)
+        query_exists_list = []
+        for source in sources:
+            if source == "LIPID MAPS":
+                query_exists_list.append("exists(c.lipidmaps_id)")
+            elif source == "ModelSEED":
+                query_exists_list.append("exists(c.model_seed_id)")
+            elif source == "SwissLipids":
+                query_exists_list.append("exists(c.swiss_lipids_id)")
+
+        if query_exists_list:
+            query_exists = " AND ".join(query_exists_list) + "AND"
+
+        else:
+            query_exists = ""
+
         with self.tx.session() as session:
             result = session.run("match (e:Compound)<-[:is_a]-(c:Compound)<-[:component_of]-(d:Compound) "
                                  "with collect(d) as components,e,c "
-                                 "where e.boimmg_id = $parent and "
-                                 "all (x in components where x.boimmg_id in $components_par) "
+                                 "where e.boimmg_id = $parent and " +
+                                 query_exists +
+                                 " all (x in components where x.boimmg_id in $components_par) "
                                  "return c.boimmg_id as id ",
                                  components_par=components,
                                  parent=parent
@@ -777,23 +797,34 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
             return node
 
-    # def get_structural_children_by_sources(self, node_id, sources):
-    #     """Get predecessors using as parameter the database identifier and the relationship type"""
-    #     self.login()
-    #     predecessors = []
-    #
-    #     with self.tx.session() as session:
-    #         result = session.run("MATCH (d:Compound)-[:is_a]->(n:Compound) "
-    #                              "where n.boimmg_id=$ont_id and "
-    #                              "exists(d.lipidmaps_id) "
-    #                              "return d",
-    #                              ont_id=node_id,
-    #                              reaction_id=reaction_id)
-    #
-    #         data = result.data()
-    #         if data:
-    #             for node in data:
-    #                 node_id = node.get("id")
-    #                 predecessors.append(node_id)
-    #
-    #     return predecessors
+    def get_structural_children_by_sources(self, node_id, sources):
+        """Get predecessors using as parameter the database identifier and the relationship type"""
+        self.login()
+        predecessors = []
+
+        # TODO: add enumerators (martelado claramente)
+        query_exists_list = []
+        for source in sources:
+            if source == "LIPID MAPS":
+                query_exists_list.append("exists(d.lipidmaps_id)")
+            elif source == "ModelSEED":
+                query_exists_list.append("exists(d.model_seed_id)")
+            elif source == "SwissLipids":
+                query_exists_list.append("exists(d.swiss_lipids_id)")
+
+        query_exists = " AND ".join(query_exists_list)
+
+        with self.tx.session() as session:
+            result = session.run("MATCH (d:Compound)-[:is_a]->(n:Compound) "
+                                 "where n.boimmg_id=$ont_id and "
+                                 + query_exists +
+                                 "return d",
+                                 ont_id=node_id)
+
+            data = result.data()
+            if data:
+                for node in data:
+                    node_id = node.get("id")
+                    predecessors.append(node_id)
+
+        return predecessors

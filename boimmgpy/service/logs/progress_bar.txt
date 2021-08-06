@@ -1,1 +1,1 @@
-mapping the model... :10
+generating network for BMGC322795:36.53333333333334

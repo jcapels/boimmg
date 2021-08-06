@@ -97,6 +97,7 @@ class LipidGranulator(RepresentationProblemSolver):
         """
 
         write_in_progress_bar("mapping the model... ", 10)
+        print("############# Starting to map the model ################")
 
         if isinstance(self.__compounds_ontology, CompoundsDBAccessor):
             self.__mapper.map_model(self.__database_format)
@@ -116,6 +117,9 @@ class LipidGranulator(RepresentationProblemSolver):
         self.__mapper.mapped = True
 
         write_in_progress_bar("model mapped ", 31)
+
+        print()
+        print("################ model mapped ####################")
 
     @property
     def model(self):
@@ -218,7 +222,7 @@ class LipidGranulator(RepresentationProblemSolver):
     def gap_fill_model_by_target(self, target_ontology_id: int, components_ont_ids: list):
         pass
 
-    def write_reports(self, file_path):
+    def write_report(self, file_path):
 
         metabolites_report_material = self.granulator.metabolite_report_material
         reactions_report_material = self.granulator.reaction_report_material
@@ -240,7 +244,7 @@ class LipidGranulator(RepresentationProblemSolver):
                 f.write(str(reactions_report_material[reaction]) + "\n")
 
     def swap_from_generic(self, targets: list, components: list, same_components=False,
-                          progress_bar_processes_left=1):
+                          progress_bar_processes_left=1, sources=None):
         """
         Swap compounds from a generic target and components. The algorithm acts as follows:
 
@@ -254,9 +258,12 @@ class LipidGranulator(RepresentationProblemSolver):
         :param list<str> components: list of components
         :param bool same_components: boolean for same or mix of components
         :param int progress_bar_processes_left:
+        :param list sources: list with the sources of the structural defined lipids (ModelSEED, LIPID MAPS, SwissLipids)
         :return:
         """
 
+        if sources is None:
+            sources = []
         if not self.mapper.mapped:
             self.map_model()
 
@@ -289,11 +296,12 @@ class LipidGranulator(RepresentationProblemSolver):
 
             write_in_progress_bar("starting granulation ", 32)
             self.granulator.granulate(target_generic_ontology_id, components_ont_ids, same_components,
-                                      progress_bar_processes_left)
+                                      progress_bar_processes_left, sources)
 
         self.generate_isa_reactions()
 
-    def __subtract_reactions_in_list(self, reactions, reactions_to_subtract):
+    @staticmethod
+    def __subtract_reactions_in_list(reactions, reactions_to_subtract):
 
         res = []
 
@@ -763,6 +771,7 @@ class CofactorSwapper:
                 found_leaf = False
                 i = 0
                 while not found_leaf and i < len(leaves):
+                    # TODO: test this
                     parents = self.__compounds_ontology.get_all_parents(leaves[i])
                     if electron_transfer_quinol not in parents:
 
@@ -907,11 +916,12 @@ class CofactorSwapper:
                                                                             self.__modelseedCompoundsDb,
                                                                             self.__database_format)
         elif isinstance(compound_container, CompoundNode):
-            model_metabolites = model_utilities.generate_model_compounds_by_database_format(self.model,
-                                                                                            compound_container.model_seed_id,
-                                                                                            self.__compoundsIdConverter,
-                                                                                            self.__modelseedCompoundsDb,
-                                                                                            self.__database_format)
+            model_metabolites = \
+                model_utilities.generate_model_compounds_by_database_format(self.model,
+                                                                            compound_container.model_seed_id,
+                                                                            self.__compoundsIdConverter,
+                                                                            self.__modelseedCompoundsDb,
+                                                                            self.__database_format)
 
         else:
             raise ValueError("Not expected type")

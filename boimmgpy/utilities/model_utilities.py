@@ -32,9 +32,11 @@ def set_objective_function(model, reaction_id):
 
 
 def evalSlimSol(solution, tol):
-    if np.isnan(solution): return False
+    if np.isnan(solution):
+        return False
 
-    if abs(solution) < tol: return False
+    if abs(solution) < tol:
+        return False
 
     return True
 
@@ -251,6 +253,7 @@ def generate_boimmg_metabolites(model: Model, compound: CompoundNode,
     :param compound:
     :param database_format:
     :param compoundsIdConverter:
+    :param compoundsAnnotationConfigs:
     :return:
     """
 

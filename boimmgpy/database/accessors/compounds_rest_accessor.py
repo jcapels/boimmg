@@ -76,7 +76,9 @@ class CompoundsRestAccessor(BOIMMGDatabaseAccessor):
 
         return []
 
-    def get_compounds_with_specific_parent_within_set_of_components(self, lipid_id, components):
+    def get_compounds_with_specific_parent_within_set_of_components(self, lipid_id, components, sources=None):
+        if sources is None:
+            sources = []
         time.sleep(self.sleep_time)
         res = requests.post(self.rest_uri + "rest/compounds/diff_components/" + str(lipid_id),
                             data={"components": str(components)})

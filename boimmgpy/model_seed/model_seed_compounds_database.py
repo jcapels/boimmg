@@ -1,5 +1,6 @@
 import abc
 import time
+from typing import Union
 
 import requests
 from neo4j import GraphDatabase
@@ -25,7 +26,7 @@ class ModelSeedCompoundsDB:
                 NotImplemented)
 
     @abc.abstractmethod
-    def get_compound_by_id(self, ont_id: int) -> ModelSeedCompound:
+    def get_compound_by_id(self, ont_id: Union[int, str]) -> ModelSeedCompound:
         """Get predecessors using as parameter the database identifier"""
         raise NotImplementedError
 

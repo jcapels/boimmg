@@ -54,7 +54,7 @@ class BOIMMGDatabaseAccessor(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_compounds_with_specific_parent_within_set_of_components(self, onto_id: id, components: list):
+    def get_compounds_with_specific_parent_within_set_of_components(self, onto_id: id, components: list, sources: list):
         raise NotImplementedError
 
     @abc.abstractmethod

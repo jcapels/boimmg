@@ -22,9 +22,11 @@ However, a web-service is available [here](https://boimmg.bio.di.uminho.pt/).
     - [Pip](#pip)
     - [Docker](#docker)
 - [Getting Started](#getting-started)
-    - [Access to the database](#)
-    - [Compound Standardization](#compound-standardization)
-    - [Compound Featurization](#compound-featurization)
+    - [Access to the database](#access-to-the-database)
+    - [LipidGranulator](#lipidgranulator)
+      - [Granulate only with lipids from specific sources](#granulate-only-with-lipids-from-specific-sources)
+    - [CofactorSwapper](#cofactorswapper)
+    - [Write reports](#write-reports)
     
 - [About Us](#about-us)
 - [Citing DeepMol](#citing-deepmol)
@@ -52,7 +54,7 @@ However, a web-service is available [here](https://boimmg.bio.di.uminho.pt/).
 
 ### Pip
 
-Install DeepMol via pip or conda:
+Install BOIMMG via pip or conda:
 
 ```bash
 pip install boimmg
@@ -82,8 +84,6 @@ docker run ...
 ```
 
 ### Manually
-
-(IN PREPARATION - NOT FUNCTIONAL YET!)
 
 Alternatively, install dependencies and BOIMMG manually.
 
@@ -167,13 +167,64 @@ set_database_information(uri="bolt://localhost:<bolt port>", user="neo4j", passw
 The LipidGranulator allows you to convert your model's lipids from a generic to a structurally defined version
 
 ```python
+import cobra
+from boimmgpy.representation_changers import LipidGranulator
 
-model = cobra.io.read_sbml_model(definitions.ROOT_DIR + "/models/iMM904.xml")
+model = cobra.io.read_sbml_model("iJR904_mapped.xml")
 
+# specify the components (fatty acids or alcohol chains) for the granulation 
+# the lipids that the LipidGranulator will generate will directly depend on this list
+# note that the identifiers do not have to be the ones in the model,
+# just ModelSEED, BiGG, KEGG or BOIMMG identifiers so that the compounds can be identified
+components = ["cpd00214", "cpd03847", "cpd05274", "cpd25615", "cpd05237"]
+
+# function call
+solver = LipidGranulator(model, "BiGG")
+
+# Map the model so that internal processes can recognize which metabolites are in the model 
+solver.map_model()
+
+# swap from generic: the first parameter is a list of generic lipids to be granulated,
+# the second is a list with the components and the last is a boolean that tells whether 
+# you want to combine components or use the same without combinations in each lipid
+solver.swap_from_generic(["cpd22513", "cpd15649"], components, True)
+
+# generate ISA reactions for each biomass contributor lipid
+solver.generate_isa_reactions()
+
+cobra.io.write_sbml_model(solver.model, "granulated_iJR904.xml")
+
+```
+
+#### Granulate only with lipids from specific sources
+```python
+import cobra
+from boimmgpy.representation_changers import LipidGranulator
+
+model = cobra.io.read_sbml_model("iJR904_mapped.xml")
+
+# specify the components (fatty acids or alcohol chains) for the granulation 
+# the lipids that the LipidGranulator will generate will directly depend on this list
+# note that the identifiers do not have to be the ones in the model,
+# just ModelSEED, BiGG, KEGG or BOIMMG identifiers so that the compounds can be identified
+components = ["cpd00214", "cpd03847", "cpd05274", "cpd25615", "cpd05237"]
+
+# function call
+solver = LipidGranulator(model, "BiGG")
+
+# Map the model so that internal processes can recognize which metabolites are in the model 
+solver.map_model()
+
+# here we will only granulate a generic lipid with the ones from LIPID MAPS
+solver.swap_from_generic(["cpd22513", "cpd15649"], components, False, sources=["LIPID MAPS"])
+
+#here we will only granulate a generic lipid with the ones from LIPID MAPS AND Swiss Lipids
+solver.swap_from_generic(["cpd22513", "cpd15649"], components, False, sources=["LIPID MAPS", "SwissLipids"])
 
 
 
 ```
+
 
 ### CofactorSwapper
 
@@ -192,6 +243,74 @@ rep_case_solver.map_model()
 rep_case_solver.swap_compound("cpd15290", "cpd11669")
 ```
 
+### Write reports
+
+```python
+import cobra
+from boimmgpy.representation_changers import CofactorSwapper
+
+model = cobra.io.read_sbml_model("/models/iMM904.xml")
+
+rep_case_solver = CofactorSwapper(model, "ModelSEED")
+rep_case_solver.map_model()
+rep_case_solver.swap_compound("cpd15290", "cpd11669")
+
+rep_case_solver.write_report("new_report.txt")
+
+import cobra
+from boimmgpy.representation_changers import LipidGranulator
+
+model = cobra.io.read_sbml_model("iJR904_mapped.xml")
+
+components = ["cpd00214", "cpd03847", "cpd05274", "cpd25615", "cpd05237"]
+
+solver = LipidGranulator(model, "BiGG")
+solver.map_model()
+solver.swap_from_generic(["cpd22513", "cpd15649"], components, True)
+solver.generate_isa_reactions()
+
+# write the report
+solver.write_report("new_report.txt")
+
+cobra.io.write_sbml_model(solver.model, "granulated_iJR904.xml")
+
+
+```
+
+The **report** will look like this:
+
+```
+--Metabolites--
+metabolite in model,replacer metabolite
+q6_m,cpd23449_m
+2hpmhmbq_m,BMGC749195_m
+2hpmmbq_m,BMGC749194_m
+2hp6mbq_m,BMGC749193_m
+2hp6mp_m,BMGC749192_m
+3hph5mb_m,BMGC749243_m
+3dh5hpb_c,BMGC749242_c
+3dh5hpb_m,BMGC749242_m
+q6h2_m,BMGC749241_m
+--Reactions--
+reaction in model,replacer reaction
+2HMHMBQMTm,BMGR_BMGC749195_m_ahcys_m_amet_m_cpd23449_m_h_m
+CYOR_u6m,BMGR_BMGC749241_m_cpd23449_m_ficytc_m_focytc_m_h_c_h_m
+DHORD4i,BMGR_BMGC749241_m_cpd23449_m_dhor__S_c_orot_c
+DXHPScm,BMGR_13dampp_c_4abutn_c_BMGC749241_m_cpd23449_m_h2o_c_spmd_c
+FDNG,BMGR_BMGC749241_m_co2_c_cpd23449_m_for_c_h_c
+NADH2_u6cm,BMGR_BMGC749241_m_cpd23449_m_h_c_nad_c_nadh_c
+NADH2_u6m,BMGR_BMGC749241_m_cpd23449_m_h_m_nad_m_nadh_m
+SUCD2_u6m,BMGR_BMGC749241_m_cpd23449_m_fum_m_succ_m
+SUCD3_u6m,BMGR_BMGC749241_m_cpd23449_m_fad_m_fadh2_m
+2HPMMBQMOm,BMGR_BMGC749194_m_BMGC749195_m_o2_m
+2HPMBQMTm,BMGR_BMGC749193_m_BMGC749194_m_ahcys_m_amet_m_h_m
+2HP6MPMOm,BMGR_BMGC749192_m_BMGC749193_m_h2o_m_o2_m
+3HPH5MBDCm,BMGR_BMGC749192_m_BMGC749243_m_co2_m
+3DH5HPBMTm,BMGR_BMGC749242_m_BMGC749243_m_ahcys_m_amet_m_h_m
+3DH5HPBtm,BMGR_BMGC749242_c_BMGC749242_m
+3OPHB5Hm,BMGR_3ophb_5_c_BMGC749242_c_o2_c
+
+```
 
 
 ## About Us

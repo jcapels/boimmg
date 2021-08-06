@@ -124,7 +124,7 @@ class Granulator:
 
         return for_each_iteration
 
-    def granulate(self, target_generic_ontology_id, components, same_components, progress_bar_processes_left):
+    def granulate(self, target_generic_ontology_id, components, same_components, progress_bar_processes_left, sources):
         """
         Operation to granulate a given compound:
 
@@ -138,6 +138,7 @@ class Granulator:
         :param list<int> components: list of BOIMMG identifiers of all the requested components
         :param bool same_components:
         :param int progress_bar_processes_left:
+        :param list sources: list with the sources of the structural defined lipids (ModelSEED, LIPID MAPS, SwissLipids)
         :return:
         """
 
@@ -149,7 +150,7 @@ class Granulator:
             targets_to_replace = \
                 self.__compounds_ontology.get_compounds_with_specific_parent_within_set_of_components(
                     target_generic_ontology_id,
-                    components)
+                    components, sources)
 
         targets_to_replace = self.filter_targets_to_replace(targets_to_replace, target_generic_ontology_id)
 
@@ -157,7 +158,16 @@ class Granulator:
         for_each_iteration = self.calculate_division_for_progress_bar(
             state, len(targets_to_replace), progress_bar_processes_left)
 
+        j = 0
+        generic_target = self.__compounds_ontology.get_node_by_ont_id(target_generic_ontology_id)
+        print("Starting to granulate %s" % generic_target.name)
+        print()
         for target in targets_to_replace:
+            j += 1
+            print("############### Generating network for BMGC%s (%s) ############### (%d out of %d)" %
+                  (str(target), "https://boimmg.bio.di.uminho.pt/navigation/lipid/" + str(target), j,
+                   len(targets_to_replace)))
+
             self.write_in_progress_bar("generating network for BMGC" + str(target), state)
             self.handle_target_in_virtual_model(target, target_generic_ontology_id)
             state += for_each_iteration

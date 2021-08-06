@@ -4,33 +4,32 @@ from cobra.flux_analysis.gapfilling import GapFiller
 
 from boimmgpy.representation_changers import LipidGranulator
 
+
 def redundant_granulator_yeast():
     model = cobra.io.read_sbml_model("mapped_yeast.xml")
-    components = ["C08362","C00712","C00249","C01530"]
+    components = ["C08362", "C00712", "C00249", "C01530"]
 
     solver = LipidGranulator(model, "KEGG")
     solver.map_model()
     # solver.load_maps("../../dumps/")
 
-    solver.swap_from_generic(["cpd22513", "C00422"], components, False)
-    solver.generateISAreactions()
+    solver.swap_from_generic(["cpd22513", "C00422"], components, False, sources=["LIPID MAPS", "SwissLipids"])
+    solver.generate_isa_reactions()
 
     solver.write_reports("new_report.txt")
     cobra.io.write_sbml_model(solver.model, "granulated_yeast.xml")
 
 
-
-
 def redundant_granulator_ecoli():
     # model = map_iJR904()
     model = cobra.io.read_sbml_model("iJR904_mapped.xml")
-    components = ["cpd00214", "cpd03847", "cpd05274","cpd25615","cpd05237"]
+    components = ["cpd00214", "cpd03847", "cpd05274", "cpd25615", "cpd05237"]
 
-    solver = RedundantCaseSolver(model, "BiGG")
+    solver = LipidGranulator(model, "BiGG")
     solver.map_model()
 
-    solver.swap_from_generic(["cpd22513", "cpd15649"], components, True)
-    solver.generateISAreactions()
+    solver.swap_from_generic(["cpd22513", "cpd15649"], components, False, sources=["LIPID MAPS"])
+    solver.generate_isa_reactions()
 
     solver.write_reports("new_report.txt")
     cobra.io.write_sbml_model(solver.model, "granulated_iJR904.xml")
@@ -42,6 +41,7 @@ def redundant_granulator_ecoli():
     PLIPA1(model)
 
     cobra.io.write_sbml_model(solver.model, "granulated_gap_filled_iJR904.xml")
+
 
 def new_test_server():
     model = cobra.io.read_sbml_model("new_model.xml")
@@ -138,6 +138,7 @@ def PLIPA1(model):
 
     model.add_reactions(r)
 
+
 def LPLIPA1(model):
     s1 = {model.metabolites.get_by_id("BMGC314_c"): -1,
           model.metabolites.get_by_id("hdca_c"): 1}
@@ -175,6 +176,7 @@ def LPLIPA1(model):
         ri.add_metabolites(si)
 
     model.add_reactions(r)
+
 
 def LPLIPA3(model):
     s1 = {model.metabolites.get_by_id("BMGC223_c"): -1,
@@ -214,6 +216,7 @@ def LPLIPA3(model):
 
     model.add_reactions(r)
 
+
 def LPLIPA2(model):
     s1 = {model.metabolites.get_by_id("BMGC291_c"): -1,
           model.metabolites.get_by_id("hdca_c"): 1}
@@ -252,6 +255,7 @@ def LPLIPA2(model):
 
     model.add_reactions(r)
 
+
 def PASYN_EC(model):
     s1 = {model.metabolites.get_by_id("palmACP_c"): -1,
           model.metabolites.get_by_id("BMGC423_c"): 1}
@@ -289,6 +293,7 @@ def PASYN_EC(model):
 
     model.add_reactions(r)
 
+
 if __name__ == "__main__":
     redundant_granulator_yeast()
     # redundant_granulator_ecoli()
@@ -312,8 +317,6 @@ if __name__ == "__main__":
     # reactions.append(reaction)
 
     # cobra.io.save_json_model(model,"new_model_2.json")
-
-
 
     # model.solver = 'cplex'
 
