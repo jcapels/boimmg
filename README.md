@@ -9,10 +9,6 @@ BOIMMG is a novel and modular approach aiming at tackling several issues in the 
 ![alt text](boimmg_pipeline.PNG)
 * Figure 1 - BOIMMG's pipeline - 1 - Integration of several databases; 2 -Semi-automated knowledge expansion 3 - integration of those ontologies into GSM models
 
-In this frame, you are going to find the 2nd and 3rd modules only. The 2nd module is present in the **ontologies_generators** folder inside **boimmgpy** folder, whereas the latter is in a package format in **boimmgpy/service/**.
-
-If one wants to test for the case studies, the **case_studies** folder is provided. However, one would need either the database with relevant information or the access to it, which is unfortunately not provided yet.
-
 However, a web-service is available [here](https://boimmg.bio.di.uminho.pt/).
 
 ### Table of contents:

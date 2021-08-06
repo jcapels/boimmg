@@ -22,7 +22,6 @@ def sacc_to_9():
 
 def sacc_to_rest():
     model = cobra.io.read_sbml_model(definitions.ROOT_DIR + "/models/iMM904.xml")
-    # set_database_information(uri="bolt://palsson.di.uminho.pt:6094",user="neo4j",password="Tuning999")
 
     rest_accessor = CompoundsDBAccessor()
     rep_case_solver = CofactorSwapper(model, "ModelSEED", rest_accessor)
@@ -59,7 +58,6 @@ def simulate_ecoli_granulate_boimmg():
 
 def simulate_sacc_generalize():
     accessor = CompoundsDBAccessor()
-    set_database_information(uri="bolt://localhost:7687", user="neo4j", password="Tuning999")
 
     model = cobra.io.read_sbml_model(definitions.ROOT_DIR + "/models/iMM904.xml")
     rep_case_solver = CofactorSwapper(model, "BiGG", accessor)
@@ -75,7 +73,6 @@ def simulate_sacc_granulate():
 
 
 if __name__ == "__main__":
-    # set_database_information(uri="bolt://palsson.di.uminho.pt:6094", user="neo4j", password="Tuning999")
     # sacc_to_rest()
     # simulate_ecoli_generalize()
     # simulate_ecoli_granulate()
