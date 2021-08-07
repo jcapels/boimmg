@@ -1,10 +1,14 @@
 import cobra
 from biocyc import biocyc, Reaction
+from cobra import Metabolite
+from cobrababel import bigg
+
 from boimmgpy.utilities import model_utilities
 
 from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
 from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.utilities.annotation_utils import AnnotationUtils
 
 compounds_converter = CompoundsIDConverter()
 compounds_model_seed = ModelSeedCompoundsDB()
@@ -55,14 +59,87 @@ def transform_reaction_into_its_instance(reaction: Reaction):
             generate_reaction_for_all_databases(reaction, complete_reactants, complete_products)
 
 
-# def generate_reaction_for_all_databases(reaction, complete_reactants, complete_products):
-#
-#     if container.model_seed_id:
-#         ms_container = self.__modelseedCompoundsDb.get_compound_by_id(container.model_seed_id)
-#         self.generate_new_metabolite(ms_container)
-#
-#     else:
-#         self.generate_new_boimmg_metabolite(container)
+def generate_reaction_for_all_databases(reaction, complete_reactants, complete_products):
+    pass
+
+def generate_bigg_metabolite(model_seed_id,compoundsIdConverter,compartment):
+    if model_seed_id and "BiGG" in compoundsIdConverter.get_modelSeedIdToDb().get(model_seed_id) \
+            or "BiGG1" in compoundsIdConverter.get_modelSeedIdToDb().get(model_seed_id):
+        if "BiGG" in compoundsIdConverter.get_modelSeedIdToDb().get(model_seed_id):
+            bigg_ids = compoundsIdConverter.convert_modelSeedId_into_other_dbID(model_seed_id, "BiGG")
+        else:
+            bigg_ids = compoundsIdConverter.convert_modelSeedId_into_other_dbID(model_seed_id, "BiGG1")
+
+        bigg_metabolite = None
+        bigg_id = None
+        found = False
+        i = 0
+        while not found and i < len(bigg_ids):
+            try:
+                bigg_id = bigg_ids[i]
+                bigg_metabolite = bigg.get_bigg_metabolite(bigg_id)
+                found = True
+            except:
+                i += 1
+
+        if bigg_metabolite:
+            compounds = []
+            model_metabolite = Metabolite(bigg_id + "_" + compartment)
+            aliases = compoundsIdConverter.get_all_aliases_by_modelSeedID(model_seed_id)
+            annotation = AnnotationUtils.get_compound_annotation_format_by_aliases(aliases)
+            model_metabolite.annotation = annotation
+            if bigg_metabolite.get("inchikey"):
+                model_metabolite.annotation["inchikey"] = bigg_metabolite.get("inchikey")
+
+            model_metabolite.formula = bigg_metabolite.get("formulae")[0]
+            model_metabolite.charge = bigg_metabolite.get("charges")[0]
+            model_metabolite.name = bigg_metabolite.get("name")
+            model_metabolite.compartment = compartment
+            compounds.append(model_metabolite)
+
+            return compounds
+
+        else:
+            return generate_modelseed_metabolite(model, model_seed_id, compoundsIdConverter, modelseedCompoundsDb)
+
+    else:
+        return generate_modelseed_metabolite(model, model_seed_id, compoundsIdConverter, modelseedCompoundsDb)
+
+def generate_kegg_metabolite():
+    pass
+
+def generate_modelseed_metabolite(model_seed_id,compoundsIdConverter):
+    modelseed_compound = modelseedCompoundsDb.get_compound_by_id(model_seed_id)
+
+    aliases = compoundsIdConverter.get_all_aliases_by_modelSeedID(model_seed_id)
+    annotation = AnnotationUtils.get_compound_annotation_format_by_aliases(aliases)
+    compounds = []
+
+    if not compartment:
+
+        for compartment in model.compartments:
+            db_id = modelseed_compound.getDbId()
+            model_metabolite = Metabolite(db_id + "_" + compartment)
+            model_metabolite.annotation = annotation
+            model_metabolite.annotation["inchikey"] = modelseed_compound.getInchikey()
+            model_metabolite.formula = modelseed_compound.getFormula()
+            model_metabolite.charge = modelseed_compound.getCharge()
+            model_metabolite.name = modelseed_compound.getName()
+            model_metabolite.compartment = compartment
+            compounds.append(model_metabolite)
+
+    else:
+        db_id = modelseed_compound.getDbId()
+        model_metabolite = Metabolite(db_id + "_" + compartment)
+        model_metabolite.annotation = annotation
+        model_metabolite.annotation["inchikey"] = modelseed_compound.getInchikey()
+        model_metabolite.formula = modelseed_compound.getFormula()
+        model_metabolite.charge = modelseed_compound.getCharge()
+        model_metabolite.name = modelseed_compound.getName()
+        model_metabolite.compartment = compartment
+        compounds.append(model_metabolite)
+
+    return compounds
 
 
 def get_generic_nodes(left, right):

@@ -165,6 +165,7 @@ The LipidGranulator allows you to convert your model's lipids from a generic to 
 ```python
 import cobra
 from boimmgpy.representation_changers import LipidGranulator
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 
 model = cobra.io.read_sbml_model("iJR904_mapped.xml")
 
@@ -176,6 +177,10 @@ components = ["cpd00214", "cpd03847", "cpd05274", "cpd25615", "cpd05237"]
 
 # function call
 solver = LipidGranulator(model, "BiGG")
+
+#funtion call to use a local database
+accessor = CompoundsDBAccessor()
+solver = LipidGranulator(model, "BiGG",db_accessor=accessor)
 
 # Map the model so that internal processes can recognize which metabolites are in the model 
 solver.map_model()
@@ -227,11 +232,18 @@ solver.swap_from_generic(["cpd22513", "cpd15649"], components, False, sources=["
 ```python
 import cobra
 from boimmgpy.representation_changers import CofactorSwapper
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 
 model = cobra.io.read_sbml_model("/models/iMM904.xml")
 
 # The second parameter is the database format of the model: it can be ModelSEED, BiGG and KEGG
 rep_case_solver = CofactorSwapper(model, "ModelSEED")
+
+#funtion call to use a local database
+accessor = CompoundsDBAccessor()
+solver = CofactorSwapper(model, "ModelSEED",db_accessor=accessor)
+
+
 # Map the model so that internal processes can recognize which metabolites are in the model 
 rep_case_solver.map_model()
 # Swap cofactor: the first parameter is the database identifier of the cofactor 

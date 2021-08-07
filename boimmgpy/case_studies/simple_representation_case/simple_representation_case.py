@@ -9,7 +9,6 @@ from boimmgpy.representation_changers import CofactorSwapper
 
 def sacc_to_9():
     model = cobra.io.read_sbml_model(definitions.ROOT_DIR + "/models/iMM904.xml")
-    # set_database_information(uri="bolt://palsson.di.uminho.pt:6094", user="neo4j", password="Tuning999")
 
     rep_case_solver = CofactorSwapper(model, "ModelSEED")
     rep_case_solver.map_model()
