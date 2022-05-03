@@ -32,7 +32,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end="",flush=True)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end="", flush=True)
     # Print New Line on Complete
     if iteration == total:
         print()
@@ -117,7 +117,7 @@ class TransformationsHandler:
 
         return res
 
-    def choose_transformations_from_pathway(self,pathway_parent,compounds_to_avoid = [], accept_cycles = False):
+    def choose_transformations_from_pathway(self, pathway_parent, compounds_to_avoid=[], accept_cycles=False):
 
         self.modelSeedCompoundsDB = ModelSeedCompoundsDB()
         self.modelSeedReactionsDB = ModelSeedReactionsDB()
@@ -128,10 +128,9 @@ class TransformationsHandler:
         self.extract_metacyc_pathways(pathway_parent, True)
         target_pathways = self.__pathway_handler.get_target_pathways()
 
-
         for pathway in target_pathways:
 
-            paths_within_pathway = self.__pathway_handler.get_all_paths_using_pathway_id(pathway,accept_cycles)
+            paths_within_pathway = self.__pathway_handler.get_all_paths_using_pathway_id(pathway, accept_cycles)
             for path in paths_within_pathway:
 
                 reverse_pathway = path[::-1]
@@ -144,7 +143,7 @@ class TransformationsHandler:
 
                         reactions = self.reactionsIDConverter.convert_db_id_to_model_seed_by_db_id(reaction)
 
-                        found=False
+                        found = False
                         for react in reactions:
                             temp_reaction = self.modelSeedReactionsDB.getReaction(react)
                             compounds = temp_reaction.getCompounds()
@@ -188,9 +187,8 @@ class TransformationsHandler:
                                 if "R" in model_seed_reactant.getFormula() or "*" in model_seed_reactant.getSmiles():
 
                                     if (model_seed_reactant.getSmiles() or
-                                        model_seed_reactant.getDbId() in self.exceptions_conf.keys())  and \
+                                        model_seed_reactant.getDbId() in self.exceptions_conf.keys()) and \
                                             model_seed_reactant.getDbId() not in compounds_to_avoid:
-
                                         model_seed_reactants.append(model_seed_reactant)
 
                             model_seed_products = []
@@ -201,34 +199,28 @@ class TransformationsHandler:
                                 if "R" in model_seed_product.getFormula() or "*" in model_seed_product.getSmiles():
 
                                     if (model_seed_product.getSmiles() or
-                                        model_seed_product.getDbId() in self.exceptions_conf.keys())  and \
-                                        model_seed_product.getDbId() not in compounds_to_avoid:
-
+                                        model_seed_product.getDbId() in self.exceptions_conf.keys()) and \
+                                            model_seed_product.getDbId() not in compounds_to_avoid:
                                         model_seed_products.append(model_seed_product)
 
-
-
-                        # products_model_seed = self.__convert_metacyc_compound_into_model_seed(products)
-                        # reactants_model_seed = self.__convert_metacyc_compound_into_model_seed(reactants)
+                            # products_model_seed = self.__convert_metacyc_compound_into_model_seed(products)
+                            # reactants_model_seed = self.__convert_metacyc_compound_into_model_seed(reactants)
 
                             if model_seed_products:
-
                                 transformation, _ = self.__convert_reaction_into_transformation(model_seed_reactants,
-                                                                                            model_seed_products)
+                                                                                                model_seed_products)
 
                                 self.reactions_transformations[reaction] = transformation
 
+    def save_transformations(self, filename):
 
-    def save_transformations(self,filename):
-
-        with open(filename,"w") as file:
-
+        with open(filename, "w") as file:
             for reaction in self.reactions_transformations.keys():
-                file.write(reaction+"!!!"+self.reactions_transformations[reaction]+"\n")
+                file.write(reaction + "!!!" + self.reactions_transformations[reaction] + "\n")
 
-    def load_transformations(self,filepath):
+    def load_transformations(self, filepath):
 
-        with open(filepath,"r") as file:
+        with open(filepath, "r") as file:
 
             lines = file.readlines()
 
@@ -240,10 +232,6 @@ class TransformationsHandler:
 
                     self.reactions_transformations[reaction] = transformation
 
-
-
-
-
     def __convert_metacyc_compound_into_model_seed(self, metacyc_compounds):
         res = []
         for metacyc_compound in metacyc_compounds:
@@ -254,7 +242,6 @@ class TransformationsHandler:
                     res.append(model_seed_compound)
 
         return res
-
 
     def __neutralize_molecules(self, molecules):
         molecules_smiles = []
@@ -270,7 +257,6 @@ class TransformationsHandler:
 
         return molecules_smiles
 
-
     def __convert_reaction_into_transformation(self, reactants, products):
         """
         This method aims at transforming a MetaCyc reaction into a SMIRK transformation
@@ -279,8 +265,6 @@ class TransformationsHandler:
         :param products: list of modelseed generic products
         :return: a string representing the transformation
         """
-
-
 
         reactants_smiles = self.__neutralize_molecules(reactants)
         products_smiles = self.__neutralize_molecules(products)
@@ -292,8 +276,8 @@ class TransformationsHandler:
         r_groups_products = prod.count("*")
 
         n_primary_precursors = 0
-        while r_groups_reactants<r_groups_products:
-            reactants_smiles.append(reactants_smiles[0]) #martelado
+        while r_groups_reactants < r_groups_products:
+            reactants_smiles.append(reactants_smiles[0])  # martelado
 
             react = ".".join(reactants_smiles)
             r_groups_reactants = react.count("*")
@@ -325,8 +309,7 @@ class TransformationsHandler:
         else:
             chosen_transformation = transformations_combinations[0]
 
-
-        return chosen_transformation,n_primary_precursors
+        return chosen_transformation, n_primary_precursors
 
     def __check_if_generic(self, modelseedids):
         for modelseedid in modelseedids:
@@ -352,20 +335,14 @@ class OntologyGeneratorDA:
         self.compoundsIDConverter = CompoundsIDConverter()
         self.reactionsIDConverter = ReactionsIDConverter()
 
-        self.compounds_simplifier = {"cpd24471":"cpd12300",
-                                     "cpd27426":"cpd27914",
-                                     "cpd11611":"cpd29330",
-                                     "cpd00487":"cpd19000"}
+        self.compounds_simplifier = {"cpd24471": "cpd12300", "cpd27426": "cpd27914", "cpd11611": "cpd29330",
+                                     "cpd00487": "cpd19000", "cpd26685": "cpd00167", "cpd28189": "cpd00431"}
 
+        # ############################# exceptionally for biosynthetic pathways in the sphingolipids pathway
+        # ##################
 
-        ############################## exceptionally for biosynthetic pathways in the sphingolipids pathway ##################
-
-
-        self.compounds_simplifier["cpd26685"] = "cpd00167"
-        self.compounds_simplifier["cpd28189"] = "cpd00431"
-
-        ######################################## ###############################################################################
-
+        # #######################################
+        # ###############################################################################
 
         self.exceptions_conf = file_utilities.read_conf_file(EXCEPTIONS)
 
@@ -374,7 +351,7 @@ class OntologyGeneratorDA:
         return self.__modelSeedCompDB
 
     @modelSeedCompoundsDB.setter
-    def modelSeedCompoundsDB(self,db):
+    def modelSeedCompoundsDB(self, db):
         self.__modelSeedCompDB = db
 
     @property
@@ -406,7 +383,7 @@ class OntologyGeneratorDA:
         return self.__compoundsIDConverter
 
     @compoundsIDConverter.setter
-    def compoundsIDConverter(self,compoundsIDConverter):
+    def compoundsIDConverter(self, compoundsIDConverter):
         self.__compoundsIDConverter = compoundsIDConverter
 
     @property
@@ -422,7 +399,7 @@ class OntologyGeneratorDA:
         return self.__accessor
 
     @accessor.setter
-    def accessor(self,accessor):
+    def accessor(self, accessor):
         self.__accessor = accessor
 
     @property
@@ -430,19 +407,19 @@ class OntologyGeneratorDA:
         return self.__compounds_simplifier
 
     @compounds_simplifier.setter
-    def compounds_simplifier(self,value):
+    def compounds_simplifier(self, value):
         self.__compounds_simplifier = value
 
-    def get_combinations_with_the_same_components(self,combinations):
+    def get_combinations_with_the_same_components(self, combinations):
         res = []
-        i=0
+        i = 0
 
         comp_and_components = {}
         print("Getting combinations... ")
         for combination in combinations:
-            i+=1
+            i += 1
 
-            printProgressBar(i,len(combinations))
+            printProgressBar(i, len(combinations))
 
             if combination[0] not in comp_and_components:
                 temp_components = self.accessor.get_predecessors_by_ont_id_rel_type(combination[0], "component_of")
@@ -454,7 +431,7 @@ class OntologyGeneratorDA:
             found = False
             for compound in combination[1:]:
                 if compound not in comp_and_components.keys():
-                    components = self.accessor.get_predecessors_by_ont_id_rel_type(compound,"component_of")
+                    components = self.accessor.get_predecessors_by_ont_id_rel_type(compound, "component_of")
                     comp_and_components[compound] = components
 
                 else:
@@ -471,25 +448,23 @@ class OntologyGeneratorDA:
                 res.append(combination)
         return res
 
-
-    def create_new_compounds_using_transformation(self,transformation,reactants, products,reaction_id="",
-                                                  source="",add_rel= False,same_components = False,
+    def create_new_compounds_using_transformation(self, transformation, reactants, products, reaction_id="",
+                                                  source="", add_rel=False, same_components=False,
                                                   reverse=True):
         children = []
         for reactants_ont_id in reactants:
 
             if same_components:
-                reactant_children = self.accessor.get_predecessors_with_same_component(reactants_ont_id,"is_a")
+                reactant_children = self.accessor.get_predecessors_with_same_component(reactants_ont_id, "is_a")
 
             else:
-                reactant_children = self.accessor.get_predecessors_by_ont_id_rel_type(reactants_ont_id,"is_a")
+                reactant_children = self.accessor.get_predecessors_by_ont_id_rel_type(reactants_ont_id, "is_a")
 
             children.append(reactant_children.copy())
 
         combinations = list(itertools.product(*children))
         if same_components and len(children) > 1:
             combinations = self.get_combinations_with_the_same_components(combinations)
-
 
         i = 0
         for combination in combinations:
@@ -503,11 +478,10 @@ class OntologyGeneratorDA:
                 self.__add_molecule_and_relationships(products,
                                                       new_molecule,
                                                       reaction_id,
-                                                      source = source,
-                                                      add_biosynthetic_rel = add_rel,reverse= reverse)
+                                                      source=source,
+                                                      add_biosynthetic_rel=add_rel, reverse=reverse)
 
-
-    def handle_manual_reaction(self,reaction_transformation,reactants,products,reaction_id,source):
+    def handle_manual_reaction(self, reaction_transformation, reactants, products, reaction_id, source):
 
         model_seed_products = []
         for product in products:
@@ -522,7 +496,7 @@ class OntologyGeneratorDA:
 
             children = []
             for products_ont_id in products_ont_ids:
-                product_children = self.accessor.get_predecessors_by_ont_id_rel_type(products_ont_id,"is_a")
+                product_children = self.accessor.get_predecessors_by_ont_id_rel_type(products_ont_id, "is_a")
                 children.append(product_children)
 
             combinations = list(itertools.product(*children))
@@ -544,25 +518,22 @@ class OntologyGeneratorDA:
                 for reactants_ont_id in reactants_ont_ids:
                     for products_ont_id in products_ont_ids:
                         self.accessor.add_biosynthetic_relationship(reactants_ont_id, products_ont_id,
-                                                                        reaction=reaction_id)
-
+                                                                    reaction=reaction_id)
 
                 if reactants_ont_ids and new_reaction_products:
 
                     new_molecules_list = self.generate_new_molecule_with_transformation(new_reaction_products,
                                                                                         reaction_transformation)
 
-
                     for new_molecules in new_molecules_list:
 
                         if new_molecules:
-
                             self.__add_molecule_and_relationships(reactants_ont_ids,
                                                                   new_molecules,
                                                                   reaction_id,
                                                                   source)
 
-    def handle_reaction(self,reaction, pathway_id, transformations_file):
+    def handle_reaction(self, reaction, pathway_id, transformations_file):
         self.transformationsHandler = TransformationsHandler()
         self.transformationsHandler.load_transformations(transformations_file)
 
@@ -585,8 +556,7 @@ class OntologyGeneratorDA:
 
             children = []
             for products_ont_id in products_ont_ids:
-
-                product_children = self.accessor.get_predecessors_by_ont_id_rel_type(products_ont_id,"is_a")
+                product_children = self.accessor.get_predecessors_by_ont_id_rel_type(products_ont_id, "is_a")
 
                 children.append(product_children)
 
@@ -617,9 +587,8 @@ class OntologyGeneratorDA:
                 for reactants_ont_id in reactants_ont_ids:
                     for products_ont_id in products_ont_ids:
                         self.accessor.add_biosynthetic_relationship(reactants_ont_id, products_ont_id,
-                                                                        reaction=reaction,
-                                                                        pathway=pathway_id)
-
+                                                                    reaction=reaction,
+                                                                    pathway=pathway_id)
 
                 if reactants_ont_ids and new_reaction_products:
                     transformation = self.transformationsHandler.reactions_transformations[reaction]
@@ -627,22 +596,23 @@ class OntologyGeneratorDA:
                     new_molecules_list = self.generate_new_molecule_with_transformation(new_reaction_products,
                                                                                         transformation)
 
-
                     for new_molecules in new_molecules_list:
 
                         if new_molecules:
-
                             self.__add_molecule_and_relationships(reactants_ont_ids,
                                                                   new_molecules,
                                                                   reaction,
                                                                   pathway_id)
 
+    def __call__(self, pathway_parent, cores, transformations_file, pathway_to_avoid=None, reactions_to_avoid=None,
+                 accept_cycles=False, list_of_targets=None, all=True):
 
-
-
-    def __call__(self,pathway_parent,cores,transformations_file,pathway_to_avoid = [], reactions_to_avoid = [],
-                 accept_cycles = False,list_of_targets = [],all=True):
-
+        if reactions_to_avoid is None:
+            reactions_to_avoid = []
+        if pathway_to_avoid is None:
+            pathway_to_avoid = []
+        if list_of_targets is None:
+            list_of_targets = []
         self.transformationsHandler = TransformationsHandler()
         self.transformationsHandler.load_transformations(transformations_file)
         self.seen = pathway_to_avoid
@@ -650,35 +620,33 @@ class OntologyGeneratorDA:
         self.reactions_to_avoid = reactions_to_avoid
         self.cores = cores
         self.__pathway_handler = PathwayHandler(self.modelSeedCompoundsDB)
-        self.extract_metacyc_pathways(pathway_parent,True)
+        self.extract_metacyc_pathways(pathway_parent, True)
         target_pathways = self.__pathway_handler.get_target_pathways()
 
-
         for pathway in target_pathways:
-            print("Trying to handle this pathway: %s"%pathway)
+            print("Trying to handle this pathway: %s" % pathway)
             if pathway not in self.seen:
-                paths_within_pathways = self.__pathway_handler.get_all_paths_using_pathway_id(pathway,accept_cycles)
+                paths_within_pathways = self.__pathway_handler.get_all_paths_using_pathway_id(pathway, accept_cycles)
 
                 for path in paths_within_pathways:
                     to_continue = True
                     for reaction in self.reactions_to_avoid:
                         if reaction in path:
-                            to_continue=False
+                            to_continue = False
                             break
 
                     if to_continue:
                         reverse_path = path[::-1]
-                        print("Target: %s"%reverse_path[0])
-                        self.__handle_pathway(reverse_path,pathway,list_of_targets,all)
+                        print("Target: %s" % reverse_path[0])
+                        self.__handle_pathway(reverse_path, pathway, list_of_targets, all)
 
                 # self.seen.extend(reverse_pathway)
 
+    def __handle_pathway(self, reverse_pathway, pathway_id, list_of_targets=None, all=True):
 
-
-    def __handle_pathway(self,reverse_pathway,pathway_id,list_of_targets=[],all=True):
-
-
-        print("Handling the following pathway: %s"%pathway_id)
+        if list_of_targets is None:
+            list_of_targets = []
+        print("Handling the following pathway: %s" % pathway_id)
         first_reaction = reverse_pathway[0]
 
         # metacyc_reaction = biocyc.get(first_reaction)
@@ -692,7 +660,6 @@ class OntologyGeneratorDA:
         for product in products:
             model_seed_compound = self.modelSeedCompoundsDB.get_compound_by_id(product)
             model_seed_products.append(model_seed_compound)
-
 
         # products_model_seed = self.__convert_metacyc_compounds_into_model_seed(products)
 
@@ -733,7 +700,6 @@ class OntologyGeneratorDA:
                     # reactants = metacyc_reaction.compounds_left
                     # products = metacyc_reaction.compounds_right
 
-
                     reaction_id = self.reactionsIDConverter.convert_db_id_to_model_seed_by_db_id(reaction)
                     model_seed_reaction = self.modelSeedReactionsDB.getReaction(reaction_id[0])
                     model_seed_reactants = model_seed_reaction.getReactants()
@@ -748,18 +714,17 @@ class OntologyGeneratorDA:
                     if children_products_ont_ids:
 
                         for child in children_products_ont_ids:
-                            new_reaction_products = self.__check_if_product_is_compatible_with_ont_container(products,[child])
+                            new_reaction_products = self.__check_if_product_is_compatible_with_ont_container(products,
+                                                                                                             [child])
 
                             # reactants_model_seed = self.__convert_metacyc_compounds_into_model_seed(reactants)
                             reactants_ont_ids = self.__get_generic_compounds_from_ontology(reactants)
 
-
                             if reaction not in self.seen:
                                 for reactants_ont_id in reactants_ont_ids:
                                     for products_ont_id in products_ont_ids:
-
-                                        self.accessor.add_biosynthetic_relationship(reactants_ont_id,products_ont_id,
-                                                                                    reaction = reaction,
+                                        self.accessor.add_biosynthetic_relationship(reactants_ont_id, products_ont_id,
+                                                                                    reaction=reaction,
                                                                                     pathway=pathway_id)
 
                                 self.seen.append(reaction)
@@ -769,25 +734,23 @@ class OntologyGeneratorDA:
                                 if reaction in self.transformationsHandler.reactions_transformations:
                                     transformation = self.transformationsHandler.reactions_transformations[reaction]
 
-                            # the following describe the reaction in a reverse way,
-                            # the products of the actual reaction will be the reactants in the transformation
+                                    # the following describe the reaction in a reverse way,
+                                    # the products of the actual reaction will be the reactants in the transformation
 
-                                    new_molecules_list = self.generate_new_molecule_with_transformation(new_reaction_products,transformation)
+                                    new_molecules_list = self.generate_new_molecule_with_transformation(
+                                        new_reaction_products, transformation)
 
                                     new_products = []
 
                                     for new_molecules in new_molecules_list:
 
                                         if new_molecules:
-                                            new_molecules_ont_ids = self.__add_molecule_and_relationships(reactants_ont_ids,
-                                                                                                          new_molecules,reaction,pathway_id)
+                                            new_molecules_ont_ids = self.__add_molecule_and_relationships(
+                                                reactants_ont_ids,
+                                                new_molecules, reaction, pathway_id)
                                             new_products.extend(new_molecules_ont_ids)
 
                                     children_products_ont_ids = new_products.copy()
-
-
-
-
 
     def generate_new_molecule_with_transformation(self, reactants, transformation):
         """
@@ -797,7 +760,7 @@ class OntologyGeneratorDA:
         :return list: list of tuples (ontology_id of downstream compound, new molecules smiles)
         """
         res = []
-        reactants_mol =[]
+        reactants_mol = []
         for reactant in reactants:
 
             reactant = self.accessor.get_node_by_ont_id(reactant)
@@ -812,22 +775,19 @@ class OntologyGeneratorDA:
 
         reactants_tuple = tuple(reactants_mol)
 
-
         transformation_smarts = AllChem.ReactionFromSmarts(transformation)
 
         try:
             new_molecules = [Chem.MolToSmiles(x, 1) for x in transformation_smarts.RunReactants(
                 reactants_tuple)[0]]
 
-            res.append((reactants,new_molecules))
+            res.append((reactants, new_molecules))
         except:
             res.append(None)
 
         return res
 
-
-
-    def extract_metacyc_pathways(self,parent,generic = False):
+    def extract_metacyc_pathways(self, parent, generic=False):
 
         biocyc.set_organism('meta')
         ptw_class = biocyc.get(parent)
@@ -854,28 +814,27 @@ class OntologyGeneratorDA:
         for instance in res:
             try:
                 # printProgressBar(i, len(res))
-                self.__pathway_handler.add_metacyc_pathway(instance.id,generic)
+                self.__pathway_handler.add_metacyc_pathway(instance.id, generic)
                 i += 1
 
             except:
                 pass
 
-
-    def get_similarity(self,molecules, reactant):
+    @staticmethod
+    def get_similarity(molecules, reactant):
         similarities = []
         for molecule in molecules:
-            fgp1 = AllChem.GetMorganFingerprint(MolFromSmiles(molecule), 3, useFeatures=True,useChirality=True)
-            fgp_reactant = AllChem.GetMorganFingerprint(reactant, 1, useFeatures=True,useChirality=True)
-            similarity = DataStructs.TanimotoSimilarity(fgp_reactant, fgp1,useFeatures=True,useChirality=True)
-
+            fgp1 = AllChem.GetMorganFingerprint(MolFromSmiles(molecule), 3, useFeatures=True, useChirality=True)
+            fgp_reactant = AllChem.GetMorganFingerprint(reactant, 1, useFeatures=True, useChirality=True)
+            similarity = DataStructs.TanimotoSimilarity(fgp_reactant, fgp1, useFeatures=True, useChirality=True)
 
             similarities.append(similarity)
-
 
         average = sum(similarities) / len(similarities)
         return average
 
-    def __get_filtered_compounds(self,smiles_keys,smarts,smiles_database):
+    @staticmethod
+    def __get_filtered_compounds(smiles_keys, smarts, smiles_database):
         new_smiles_list = smiles_keys.copy()
         filtered_compounds = []
         for smile in smiles_keys:
@@ -889,8 +848,7 @@ class OntologyGeneratorDA:
 
         smiles_keys = new_smiles_list.copy()
 
-        return (filtered_compounds,smiles_keys)
-
+        return (filtered_compounds, smiles_keys)
 
     def __convert_metacyc_compounds_into_model_seed(self, metacyc_compounds):
         res = []
@@ -915,7 +873,7 @@ class OntologyGeneratorDA:
     def __neutralize_molecules(self, molecules):
         molecules_smiles = []
         for molecule in molecules:
-            #mol = MolFromSmiles(molecule.getSmiles())
+            # mol = MolFromSmiles(molecule.getSmiles())
             new_smiles, neutralised = chemo_utilities.NeutraliseCharges(molecule.getSmiles())
             molecules_smiles.append(new_smiles)
 
@@ -928,7 +886,7 @@ class OntologyGeneratorDA:
         for compound in model_seed_molecules:
             db_id = compound.getDbId()
             smiles = compound.getSmiles()
-            smiles,_ = chemo_utilities.NeutraliseCharges(smiles)
+            smiles, _ = chemo_utilities.NeutraliseCharges(smiles)
             if "*" in smiles or "R" in compound.getFormula():
                 ont_id = self.accessor.get_node_from_model_seed_id(db_id).id
 
@@ -936,18 +894,18 @@ class OntologyGeneratorDA:
 
         return res
 
-    def __add_molecule_and_relationships(self, possible_structural_parents, precursor_successor_and_smiles,reaction_id,
-                                         source,pathway_id=None,add_biosynthetic_rel = True, reverse= True):
+    def __add_molecule_and_relationships(self, possible_structural_parents, precursor_successor_and_smiles, reaction_id,
+                                         source, pathway_id=None, add_biosynthetic_rel=True, reverse=True):
 
         new_compounds_ont_ids = []
         precursor_successors = precursor_successor_and_smiles[0]
         smiles_lst = precursor_successor_and_smiles[1]
 
         for smiles in smiles_lst:
-            mol= MolFromSmiles(smiles)
+            mol = MolFromSmiles(smiles)
 
             found = False
-            i=0
+            i = 0
             while not found and i < len(possible_structural_parents):
                 structuralParentOntId = possible_structural_parents[i]
                 structuralParentContainer = self.accessor.get_node_by_ont_id(structuralParentOntId)
@@ -958,31 +916,29 @@ class OntologyGeneratorDA:
                 if isStructuralParent:
                     found = True
 
-                i+=1
+                i += 1
 
             if found:
 
-
-                newCompound_ont_id = self.__generate_complete_compound_and_establish_relationships(mol,structuralParentContainer,
-                                                                          precursor_successors,
-                                                                        reaction_id,pathway_id,source,
-                                                                        add_biosynthetic_rel,reverse)
+                newCompound_ont_id = self.__generate_complete_compound_and_establish_relationships(mol,
+                                                                                                   structuralParentContainer,
+                                                                                                   precursor_successors,
+                                                                                                   reaction_id,
+                                                                                                   pathway_id, source,
+                                                                                                   add_biosynthetic_rel,
+                                                                                                   reverse)
 
                 if newCompound_ont_id not in new_compounds_ont_ids:
                     new_compounds_ont_ids.append(newCompound_ont_id)
 
         return new_compounds_ont_ids
 
-
-
-
     def __generate_complete_compound_and_establish_relationships(self,
                                                                  mol,
                                                                  structuralParentContainer,
-                                                                 precursor_sucessors,reaction_id,
-                                                                 pathway_id,source,add_biosynthetic_rel=True,
-                                                                 reverse = True):
-
+                                                                 precursor_sucessors, reaction_id,
+                                                                 pathway_id, source, add_biosynthetic_rel=True,
+                                                                 reverse=True):
 
         inchikey = MolToInchiKey(mol)
         smiles = MolToSmiles(mol)
@@ -993,53 +949,6 @@ class OntologyGeneratorDA:
 
         if node and precursor_sucessors:
             new_molecule_ont_id = node.id
-
-            if add_biosynthetic_rel:
-                for successor in precursor_sucessors:
-                    if pathway_id:
-                        if reverse:
-                            self.accessor.add_biosynthetic_relationship(new_molecule_ont_id, successor,
-                                                            reaction=reaction_id,pathway=pathway_id,source=source)
-                        else:
-                            self.accessor.add_biosynthetic_relationship(successor,new_molecule_ont_id,
-                                                                        reaction=reaction_id, pathway=pathway_id,
-                                                                        source=source)
-                    elif reverse:
-                        self.accessor.add_biosynthetic_relationship(new_molecule_ont_id, successor,
-                                                                reaction=reaction_id, source=source)
-                    else:
-                        self.accessor.add_biosynthetic_relationship(successor, new_molecule_ont_id,
-                                                                    reaction=reaction_id, source=source)
-
-            self.accessor.establish_structural_relationship(new_molecule_ont_id,structuralParentContainer.id)
-
-
-
-        else:
-            formula = Chem.rdMolDescriptors.CalcMolFormula(mol)
-
-            if "*" in formula:
-                number_r_groups = formula.count("*")
-                formula = formula.replace("*","") + "R" + str(number_r_groups)
-
-            inchikey = MolToInchiKey(mol)
-            smiles = MolToSmiles(mol)
-
-            side_chain_providers = self.__find_side_chain_providers(mol, structuralParentContainer,precursor_sucessors)
-
-            name = self.__generate_new_molecule_name(structuralParentContainer, side_chain_providers)
-
-            charge = rdmolops.GetFormalCharge(mol)
-
-            new_molecule_ont_container = self.accessor.create_compound(name=name,formula=formula,
-                                                                       inchikey=inchikey,
-                                                                       smiles=smiles,annotated =False,charge = charge)
-            new_molecule_ont_id = new_molecule_ont_container.id
-
-            self.accessor.establish_structural_relationship(new_molecule_ont_container.id,structuralParentContainer.id)
-
-            for side_chain_provider in side_chain_providers:
-                self.accessor.add_relationship(side_chain_provider.id,new_molecule_ont_id,"component_of")
 
             if add_biosynthetic_rel:
                 for successor in precursor_sucessors:
@@ -1059,11 +968,58 @@ class OntologyGeneratorDA:
                         self.accessor.add_biosynthetic_relationship(successor, new_molecule_ont_id,
                                                                     reaction=reaction_id, source=source)
 
-            self.accessor.establish_structural_relationship(new_molecule_ont_id,structuralParentContainer.id)
+            self.accessor.establish_structural_relationship(new_molecule_ont_id, structuralParentContainer.id)
+
+        else:
+            formula = Chem.rdMolDescriptors.CalcMolFormula(mol)
+
+            if "*" in formula:
+                number_r_groups = formula.count("*")
+                formula = formula.replace("*", "") + "R" + str(number_r_groups)
+
+            inchikey = MolToInchiKey(mol)
+            smiles = MolToSmiles(mol)
+
+            side_chain_providers = self.__find_side_chain_providers(mol, structuralParentContainer, precursor_sucessors)
+
+            name = self.__generate_new_molecule_name(structuralParentContainer, side_chain_providers)
+
+            charge = rdmolops.GetFormalCharge(mol)
+
+            new_molecule_ont_container = self.accessor.create_compound(name=name, formula=formula,
+                                                                       inchikey=inchikey,
+                                                                       smiles=smiles, annotated=False, charge=charge)
+            new_molecule_ont_id = new_molecule_ont_container.id
+
+            self.accessor.establish_structural_relationship(new_molecule_ont_container.id, structuralParentContainer.id)
+
+            for side_chain_provider in side_chain_providers:
+                self.accessor.add_relationship(side_chain_provider.id, new_molecule_ont_id, "component_of")
+
+            if add_biosynthetic_rel:
+                for successor in precursor_sucessors:
+                    if pathway_id:
+                        if reverse:
+                            self.accessor.add_biosynthetic_relationship(new_molecule_ont_id, successor,
+                                                                        reaction=reaction_id, pathway=pathway_id,
+                                                                        source=source)
+                        else:
+                            self.accessor.add_biosynthetic_relationship(successor, new_molecule_ont_id,
+                                                                        reaction=reaction_id, pathway=pathway_id,
+                                                                        source=source)
+                    elif reverse:
+                        self.accessor.add_biosynthetic_relationship(new_molecule_ont_id, successor,
+                                                                    reaction=reaction_id, source=source)
+                    else:
+                        self.accessor.add_biosynthetic_relationship(successor, new_molecule_ont_id,
+                                                                    reaction=reaction_id, source=source)
+
+            self.accessor.establish_structural_relationship(new_molecule_ont_id, structuralParentContainer.id)
 
         return new_molecule_ont_id
 
-    def __generate_new_molecule_name(self,product_container,combination_list):
+    @staticmethod
+    def __generate_new_molecule_name(product_container, combination_list):
 
         names = []
 
@@ -1078,9 +1034,7 @@ class OntologyGeneratorDA:
 
         return new_name
 
-
-
-    def __generate_complete_compound(self,lipid_compound,
+    def __generate_complete_compound(self, lipid_compound,
                                      model_seed_compound,
                                      mol,
                                      structuralParentContainer=None,
@@ -1120,23 +1074,20 @@ class OntologyGeneratorDA:
             aliases = {}
             name = self.__generate_new_molecule_name(structuralParentContainer, side_chain_providers)
 
-        return id,name,formula,inchikey,smiles,aliases
+        return id, name, formula, inchikey, smiles, aliases
 
-
-    def __find_side_chain_providers(self,mol,structuralParentContainer,precursor_sucessors):
+    def __find_side_chain_providers(self, mol, structuralParentContainer, precursor_sucessors):
 
         r_groups_n1 = structuralParentContainer.smiles.count("*")
         r_groups_n2 = 0
 
-
         side_chains = []
         for precursor in precursor_sucessors:
             side_chains_lst = \
-                self.accessor.get_predecessors_by_ont_id_rel_type(precursor,"component_of")
-
+                self.accessor.get_predecessors_by_ont_id_rel_type(precursor, "component_of")
 
             # try:
-            precursor_parent = self.accessor.get_successors_by_ont_id_rel_type(precursor,"is_a")
+            precursor_parent = self.accessor.get_successors_by_ont_id_rel_type(precursor, "is_a")
             node_container = self.accessor.get_node_by_ont_id(precursor_parent[0])
             r_groups_n2 += node_container.smiles.count("*")
             # except:
@@ -1155,7 +1106,6 @@ class OntologyGeneratorDA:
 
             return res
 
-
         parent_neutralized_smiles, _ = chemo_utilities.NeutraliseCharges(structuralParentContainer.smiles)
         backup_parent = parent_neutralized_smiles
         parent_neutralized_smiles = parent_neutralized_smiles.replace("(*)", "").replace("*", "")
@@ -1164,7 +1114,6 @@ class OntologyGeneratorDA:
         if not parent_smarts:
             parent_smarts = MolFromSmarts(backup_parent)
 
-
         sidechain_compound = AllChem.DeleteSubstructs(mol, parent_smarts)
         sidechain2, sidechains_smiles_list2 = chemo_utilities.retrieve_fragments(sidechain_compound)
         components = []
@@ -1172,16 +1121,17 @@ class OntologyGeneratorDA:
         for sidechain in side_chains:
             container = self.accessor.get_node_by_ont_id(sidechain)
 
-            neutralized_smiles,_ = chemo_utilities.NeutraliseCharges(container.smiles)
+            neutralized_smiles, _ = chemo_utilities.NeutraliseCharges(container.smiles)
 
             for core in self.cores:
-                sidechain1 = AllChem.DeleteSubstructs(MolFromSmiles(neutralized_smiles),MolFromSmiles(core))
+                sidechain1 = AllChem.DeleteSubstructs(MolFromSmiles(neutralized_smiles), MolFromSmiles(core))
                 sidechain1, sidechains_smiles_list1 = chemo_utilities.retrieve_fragments(sidechain1)
 
                 for side_chain_smiles in sidechains_smiles_list2:
                     if sidechains_smiles_list1:
                         equal_side_chains = \
-                            chemo_utilities.check_if_molecules_are_equal(MolFromSmiles(side_chain_smiles), MolFromSmiles(sidechains_smiles_list1[0]))
+                            chemo_utilities.check_if_molecules_are_equal(MolFromSmiles(side_chain_smiles),
+                                                                         MolFromSmiles(sidechains_smiles_list1[0]))
 
                         if equal_side_chains:
                             if container not in components:
@@ -1189,66 +1139,7 @@ class OntologyGeneratorDA:
 
         return components
 
-
-    # def map_lipid_maps_compounds_with_side_chain_rules(self,generic_compound,core,side_chain_atoms_rules={}, side_chain_molecule_rules={},n_side_chains = 0):
-    #
-    #     generic_compound_container = self.__lipid_maps_database.get_compound_by_id(generic_compound)
-    #
-    #     name = generic_compound_container.getName()
-    #     formula = generic_compound_container.getFormula()
-    #     db_id = generic_compound_container.getDbId()
-    #     smiles = generic_compound_container.getSmiles()
-    #     aliases = generic_compound_container.getAliases()
-    #
-    #     generic_compound_ont_id = self.__compounds_ontology.add_generic_node(name,formula,db_id,smiles,aliases = aliases)
-    #
-    #     smiles_database = self.__lipid_maps_database.getSmilesDatabase()
-    #     smarts = MolFromSmarts(core)
-    #     smiles_keys = list(smiles_database.keys())
-    #
-    #     filtered_compounds, _ = self.__get_filtered_compounds(smiles_keys,smarts,smiles_database)
-    #
-    #     for complete_compound in filtered_compounds:
-    #         compound_mol = MolFromSmiles(complete_compound.getSmiles())
-    #         sidechain_compound = AllChem.DeleteSubstructs(compound_mol, smarts)
-    #         finalCheck = self.__process_and_check_side_chain(sidechain_compound, compound_mol,core,
-    #                                                          side_chain_atoms_rules,side_chain_molecule_rules)
-    #
-    #         if finalCheck:
-    #             sidechain, sidechains_smiles_list = ChemoUtilities.retrieve_fragments(sidechain_compound)
-    #
-    #             side_chain_counter = len(sidechain)
-    #
-    #             if n_side_chains==0 or side_chain_counter == n_side_chains:
-    #
-    #                 inchikey = complete_compound.getInchiKey()
-    #                 modelseed_compound = self.__modelSeedCompoundsDatabase.get_compound_by_inchi_key(inchikey)
-    #
-    #                 id, name, formula, inchikey, smiles, aliases = \
-    #                     self.__generate_complete_compound(complete_compound,modelseed_compound,compound_mol)
-    #
-    #                 complete_node_ont_id = \
-    #                     self.__compounds_ontology.add_complete_node(id, name, inchikey, formula, smiles, aliases = aliases)
-    #
-    #                 self.__compounds_ontology.add_relationship(complete_node_ont_id,generic_compound_ont_id,"is_a")
-    #
-    #
-    # def __process_and_check_side_chain(self, sidechains,compound_mol,core_smart,
-    #                                    side_chain_atoms_rules,
-    #                                    side_chain_molecule_rules):
-    #     sidechains.UpdatePropertyCache()
-    #     Chem.GetSymmSSSR(sidechains)
-    #
-    #     finalChecker = SidechainChecker()
-    #     finalCheck = finalChecker(core_smart, compound_mol,
-    #                               side_chain_atoms_rules,
-    #                               side_chain_molecule_rules)
-    #
-    #     return finalCheck
-
-    def __check_if_product_is_compatible_with_ont_container(self,model_seed_compounds,ont_ids):
-
-        # model_seed_compounds = self.__convert_metacyc_compounds_into_model_seed(metacyc_compounds)
+    def __check_if_product_is_compatible_with_ont_container(self, model_seed_compounds, ont_ids):
 
         res = []
 
@@ -1256,7 +1147,7 @@ class OntologyGeneratorDA:
 
             for compound in model_seed_compounds:
 
-                parent = self.accessor.get_successors_by_ont_id_rel_type(ont_id,"is_a")
+                parent = self.accessor.get_successors_by_ont_id_rel_type(ont_id, "is_a")
                 if parent:
 
                     ms_id = compound.getDbId()
@@ -1266,7 +1157,6 @@ class OntologyGeneratorDA:
                         for alias in aliases[ModelSEEDDatabases.MODEL_SEED.value]:
                             if ms_id == alias:
                                 res.append(ont_id)
-
 
         return res
 
@@ -1280,15 +1170,16 @@ class OntologyGeneratorDA:
 
         return res
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     coiso = OntologyGeneratorDA()
     core_fatty_acids = \
         "C(=O)O"
     core_alcohol = "*CO"
 
     reaction_transformation = "[*:1]C(=O)OC[C@@H](O)COP(=O)(O)OC[C@@H](O)CO.[*:2]C(=O)OC[C@H](COP(=O)(O)OC[C@@H](O)CO)OC([*:3])=O>>[*:1]C(=O)OC[C@@H](COP(O)(=O)OC[C@@H](COC([*:2])=O)OC([*:3])=O)O"
-    coiso.create_new_compounds_using_transformation(reaction_transformation,[110,41],[765625],"LPLIPA6","BiGG",True,True,reverse=False)
+    coiso.create_new_compounds_using_transformation(reaction_transformation, [110, 41], [765625], "LPLIPA6", "BiGG",
+                                                    True, True, reverse=False)
 
     # coiso("TRIGLSYN-PWY", [core_fatty_acids,core_alcohol] , "transformations_TRIGLSYN-PWY", ["PWY-7277","PWY-7835"],["RXN-12383","RXN-1641"])
 
