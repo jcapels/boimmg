@@ -6,6 +6,7 @@ from airflow.models.dag import dag
 from etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
 
 
+
 class AirflowExtractor(AbstractExtractor):
 
     @abstractmethod
