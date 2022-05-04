@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import List
 
 from airflow.decorators import task
 from airflow.models.dag import dag
@@ -9,7 +8,6 @@ from etl.abstract_classes import AbstractExtractor, AbstractTransformer, Abstrac
 
 class AirflowExtractor(AbstractExtractor):
 
-    @task
     @abstractmethod
     def extract(self):
         """
@@ -27,7 +25,6 @@ class AirflowExtractor(AbstractExtractor):
 
 class AirflowTransformer(AbstractTransformer):
 
-    @task
     @abstractmethod
     def transform(self):
         """
@@ -38,7 +35,6 @@ class AirflowTransformer(AbstractTransformer):
 
 class AirflowLoader(AbstractLoader):
 
-    @task
     @abstractmethod
     def load(self):
         """
@@ -48,13 +44,6 @@ class AirflowLoader(AbstractLoader):
 
 
 class AirflowPipeline(AbstractETLPipeline):
-
-    def __init__(self, steps: List):
-        """
-        Constructor of the ETL pipeline
-        :param List steps: list of steps to run the pipeline
-        """
-        self._steps = steps
 
     @task
     @abstractmethod

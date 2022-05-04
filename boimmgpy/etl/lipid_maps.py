@@ -1,3 +1,4 @@
+import pandas as pd
 import pendulum
 from airflow.decorators import task
 from airflow.models.dag import dag
@@ -19,7 +20,7 @@ class LipidMapsExtractor(AirflowExtractor):
         self.scrape_data()
         self._extract()
 
-    def _extract(self):
+    def _extract(self) -> pd.DataFrame:
         """
         Method to create a pandas dataframe with the scraped data.
         :return:
@@ -28,7 +29,7 @@ class LipidMapsExtractor(AirflowExtractor):
 
     def scrape_data(self):
         """
-        This class downloads the CSV files of lipid maps to a temporary folder.
+        This class downloads the ZIP file and extracts the CSV files of lipid maps to a temporary folder.
         :return:
         """
         pass
@@ -36,7 +37,7 @@ class LipidMapsExtractor(AirflowExtractor):
 
 class LipidMapsTransformer(AirflowTransformer):
 
-    def transform(self):
+    def transform(self, **kwargs):
         """
         This method allows to transform the dataframe previously extracted into a desired datastructure
         :return:
@@ -56,9 +57,6 @@ class LipidMapsLoader(AirflowLoader):
 
 class LipidMapsETLPipeline(AirflowPipeline):
 
-    def __init__(self, steps: List):
-        super().__init__(steps)
-
     @task  # add parameters to decorator eventually
     def extract(self, **kwargs):
         """
@@ -73,7 +71,7 @@ class LipidMapsETLPipeline(AirflowPipeline):
         Method where the transform method will be added.
         """
         transformer = LipidMapsTransformer()
-        transformer.transform()
+        transformer.transform(**kwargs)
 
     @task  # add parameters to decorator eventually
     def load(self, **kwargs):
@@ -81,7 +79,7 @@ class LipidMapsETLPipeline(AirflowPipeline):
         Method where the load method will be added.
         """
         loader = LipidMapsLoader()
-        loader.load()
+        loader.load(**kwargs)
 
     @dag(schedule_interval=None,
          start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
