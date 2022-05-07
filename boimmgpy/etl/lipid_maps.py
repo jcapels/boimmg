@@ -1,10 +1,12 @@
 import pandas as pd
+from rdkit.Chem import PandasTools
 import pendulum
 from airflow.decorators import task
 from airflow.models.dag import dag
 from airflow.operators.python import PythonOperator
+import requests, zipfile, io
 
-from etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
+from airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
 
 class LipidMapsExtractor(AirflowExtractor):
@@ -15,24 +17,31 @@ class LipidMapsExtractor(AirflowExtractor):
     def extract(self, **kwargs):
         """
         This class calls the scrape_data method and creates a pandas dataframe with the scraped data.
-        :return:
+        :return: pandas data frame of lipid maps data 
         """
-        self.scrape_data()
-        self._extract()
+        return self._extract(self.scrape_data())
 
-    def _extract(self) -> pd.DataFrame:
+
+    def _extract(self, raw, **kwargs) -> pd.DataFrame:
         """
         Method to create a pandas dataframe with the scraped data.
-        :return:
+        :return: pandas data frame of lipid maps data 
         """
-        pass
+        raw=PandasTools.LoadSDF(raw)
+        df=pd.DataFrame(raw)
+        
+        return df
 
     def scrape_data(self):
         """
-        This class downloads the ZIP file and extracts the CSV files of lipid maps to a temporary folder.
-        :return:
+        This class downloads the ZIP file and extracts the sdf file of lipid maps.
+        :return: raw sdf file of lipid maps data
         """
-        pass
+        r = requests.get("https://www.lipidmaps.org/files/?file=LMSD&ext=sdf.zip")
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+    
+        return z.open('structures.sdf')  
+
 
 
 class LipidMapsTransformer(AirflowTransformer):
@@ -82,7 +91,7 @@ class LipidMapsETLPipeline(AirflowPipeline):
         loader.load(**kwargs)
 
     @dag(schedule_interval=None,
-         start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
+         start_date=pendulum.datetime(2022, 1, 1, tz="UTC"),
          catchup=False,
          tags=['example'], )
     def run(self):
