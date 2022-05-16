@@ -3,7 +3,7 @@ from abc import abstractmethod
 from airflow.decorators import task
 from airflow.models.dag import dag
 
-from abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
+from boimmgpy.etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
 
 
 

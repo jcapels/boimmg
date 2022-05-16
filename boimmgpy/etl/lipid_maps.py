@@ -1,12 +1,11 @@
 import pandas as pd
-from rdkit.Chem import PandasTools
 import pendulum
 from airflow.decorators import task
+from rdkit.Chem import PandasTools
 from airflow.models.dag import dag
 from airflow.operators.python import PythonOperator
 import requests, zipfile, io
-
-from airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
+from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
 
 class LipidMapsExtractor(AirflowExtractor):
@@ -27,8 +26,8 @@ class LipidMapsExtractor(AirflowExtractor):
         Method to create a pandas dataframe with the scraped data.
         :return: pandas data frame of lipid maps data 
         """
-        raw=PandasTools.LoadSDF(raw)
-        df=pd.DataFrame(raw)
+        table=PandasTools.LoadSDF(raw)
+        df=pd.DataFrame(table)
         
         return df
 
@@ -66,7 +65,7 @@ class LipidMapsLoader(AirflowLoader):
 
 class LipidMapsETLPipeline(AirflowPipeline):
 
-    @task  # add parameters to decorator eventually
+    #@task  # add parameters to decorator eventually
     def extract(self, **kwargs):
         """
         Method where the extraction method will be added.
@@ -74,7 +73,7 @@ class LipidMapsETLPipeline(AirflowPipeline):
         extractor = LipidMapsExtractor()
         extractor.extract(**kwargs)
 
-    @task  # add parameters to decorator eventually
+    #@task  # add parameters to decorator eventually
     def transform(self, **kwargs):
         """
         Method where the transform method will be added.
@@ -82,7 +81,7 @@ class LipidMapsETLPipeline(AirflowPipeline):
         transformer = LipidMapsTransformer()
         transformer.transform(**kwargs)
 
-    @task  # add parameters to decorator eventually
+    #  # add parameters to decorator eventually
     def load(self, **kwargs):
         """
         Method where the load method will be added.
