@@ -1,6 +1,6 @@
 import unittest
 from boimmgpy.etl.lipid_maps import LipidMapsExtractor,LipidMapsTransformer
-from boimmgpy.etl.swiss_lipids import SwissLipidsExtractor
+from boimmgpy.etl.swiss_lipids import SwissLipidsExtractor,SwissLipidsTransformer
 
 class TestETL(unittest.TestCase):
     def test_lipid_maps_extract(self):
@@ -17,6 +17,10 @@ class TestETL(unittest.TestCase):
 
     def test_lipid_maps_transformer(self):
         transformer=LipidMapsTransformer()
+        df_treted=transformer.transform()
+    
+    def test_swiss_lipids_transformer(self):
+        transformer=SwissLipidsTransformer()
         df_treted=transformer.transform()
 
 if __name__ == '__main__':
