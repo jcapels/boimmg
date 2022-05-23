@@ -1,7 +1,7 @@
 import pandas as pd
-from rdkit.Chem import PandasTools
 import pendulum
 from airflow.decorators import task
+from rdkit.Chem import PandasTools
 from airflow.models.dag import dag
 from airflow.operators.python import PythonOperator
 import requests, zipfile, io

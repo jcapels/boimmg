@@ -6,6 +6,10 @@ class TestETL(unittest.TestCase):
     def test_lipid_maps_extract(self):
         extractor = LipidMapsExtractor()
         df = extractor.extract()
+    
+    def test_lipid_maps_extract(self):
+        extractor = SwissLipidsExtractor()
+        df = extractor.extract()
 
     def test_swiss_lipids_extract(self):
         extractor = SwissLipidsExtractor()
