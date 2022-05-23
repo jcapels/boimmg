@@ -45,8 +45,6 @@ class SwissLipidsExtractor(AirflowExtractor):
 
     
 
-
-
 class SwissLipidsTransformer(AirflowTransformer):
     
     def __init__(self) -> None:
