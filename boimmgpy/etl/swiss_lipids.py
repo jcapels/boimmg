@@ -59,12 +59,12 @@ class SwissLipidsTransformer(AirflowTransformer):
         data_treated=self.treat(data.extract())
         return data_treated
 
-    def three_col_lm(self):
-        df=pd.read_csv(r'C:\Users\ampsi\OneDrive\Ambiente de Trabalho\projeto\Projeto\Pratica\sl_treated.csv')
-        df=df[['Lipid ID','Abbreviation*','Synonyms*']]
-        return df
+    def three_col_sl(self,data):
+        df_three_col=data[['Lipid ID','Abbreviation*','Synonyms*']]
+        return df_three_col
 
     def treat(self,df):
+        df=self.three_col_sl(data)
         first_col=df[['Lipid ID']].values
         second_col=df[['Abbreviation*']].values
         third_col=df[['Synonyms*']].values
@@ -73,7 +73,6 @@ class SwissLipidsTransformer(AirflowTransformer):
             data=pd.DataFrame(columns=['Lipid ID','Abbreviation*','Synonyms*'])
             abrevs=second_col[n]
             synonyms=third_col[n]
-            id=[]
             lista_ab=[]
             lista_sy=[]
             lista_id=[]
@@ -82,25 +81,25 @@ class SwissLipidsTransformer(AirflowTransformer):
                     value=str(value)
                     value=value.split('|')
                     for i in value:
-                        lista_ab.append(''.join(i))
+                        lista_ab.append(i)
 
             if synonyms != None:    
                 for value in synonyms:
                     value=str(value)
                     value=value.split('|')
                     for i in value:
-                        lista_sy.append(''.join(i))
+                        lista_sy.append(i)
 
             for a in range(max([len(lista_ab),len(lista_sy)])):
                 for value in first_col[n]:
                     value=str(value)
-                    lista_id.append(''.join(value))
+                    lista_id.append(value)
         
             treated_data=pd.DataFrame.from_dict({'Lipid ID': lista_id, 'Abbreviation*': lista_ab, 'Synonym*':lista_sy},orient='index').T
             #df.append(treated_data,ignore_index=True,)
             
             self.treated_dataframe=pd.concat([self.treated_dataframe,treated_data],ignore_index=True,sort=False)
-            
+        print(self.treated_dataframe.head())  
         return self.treated_dataframe
 
 
