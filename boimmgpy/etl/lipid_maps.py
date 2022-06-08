@@ -1,11 +1,15 @@
+from numpy import diag_indices
 import pandas as pd
-import pendulum
+from datetime import datetime
 from airflow.decorators import task
 from rdkit.Chem import PandasTools
 from airflow.models.dag import dag
 from airflow.operators.python import PythonOperator
 import requests, zipfile, io
-
+from neo4j import GraphDatabase
+import sys
+sys.path.insert(1,'.')
+from airflow import DAG
 
 from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
@@ -15,28 +19,34 @@ class LipidMapsExtractor(AirflowExtractor):
     Class to extract information from lipid maps
     """
 
-    def extract(self, **kwargs):
-        """
-        This class calls the scrape_data method and creates a pandas dataframe with the scraped data.
-        :return: pandas data frame of lipid maps data 
+    def extract(self) -> pd.DataFrame:
+        """This class calls the scrape_data method and creates a pandas dataframe with the scraped data returned from scrape_data method.
+
+        Returns:
+            pd.DataFrame: Pandas dataframe of Lipid Maps data
         """
         return self._extract(self.scrape_data())
 
 
-    def _extract(self, raw) -> pd.DataFrame:
+    def _extract(self, raw ) -> pd.DataFrame:
         """
         Method to create a pandas dataframe with the scraped data.
-        :return: pandas data frame of lipid maps data 
+
+        Args:
+            raw (sdf file): sdf file of the whole lipid maps database 
+
+        Returns:
+            pd.DataFrame:  pandas data frame of lipid maps data
         """
-        raw=PandasTools.LoadSDF(raw)
-        df=pd.DataFrame(raw)
-        #print(df.head())
-        return df
+        raw_lipid_maps_data=PandasTools.LoadSDF(raw)
+        lm_dataframe=pd.DataFrame(raw_lipid_maps_data)
+        return lm_dataframe
 
     def scrape_data(self):
-        """
-        This class downloads the ZIP file and extracts the sdf file of lipid maps.
-        :return: raw sdf file of lipid maps data
+        """This method downloads the ZIP file and extracts the sdf file of lipid maps.
+
+        Returns:
+            sdf file: Sdf file of lipid maps data
         """
         raw_file = requests.get("https://www.lipidmaps.org/files/?file=LMSD&ext=sdf.zip")
         file_unziped = zipfile.ZipFile(io.BytesIO(raw_file.content))
@@ -45,113 +55,146 @@ class LipidMapsExtractor(AirflowExtractor):
 
 
 class LipidMapsTransformer(AirflowTransformer):
+    """Class to transform the lipid maps dataframe
+    """
 
-    def __init__(self) -> None:
-        self.treated_dataframe=pd.DataFrame(columns=['LM_ID','ABBREVIATION','SYNONYMS'])
-
-    def transform(self):
+    def transform(self, df : pd.DataFrame)->pd.DataFrame:
         """
-        This method allows to transform the dataframe previously extracted into a desired datastructure
-        :return:
+        This method allows to transform the dataframe previously extracted into a desired data structure
+        Args:
+            df (pd.dataframe): raw_dataframe of lipid maps data
+        :return: treated dataframe of lipid maps, only with two columns, synonym and ID
         """
-        data=LipidMapsExtractor()
-        data_treated=self.treat(data.extract())
+        data_treated=self.treat_lm_dataframe(df)
         return data_treated
     
-    def three_col_lm(self,data_three):
-        df_three_col=data_three[['LM_ID','ABBREVIATION','SYNONYMS']]
+    def three_col_sl(self, data: pd.DataFrame) -> pd.DataFrame:
+        """ This method uses the whole lipid maps dataframe to create one with only three columns desirable
+
+        Args:
+            data (pd.DataFrame): 
+
+        Returns:
+            pd.DataFrame: _description_
+        """
+        df_three_col=data[['LM_ID','ABBREVIATION','SYNONYMS']]
         return df_three_col
+    
+    def treat_lm_dataframe(self,lm_dataframe:pd.DataFrame)->pd.DataFrame:
+        """ This method uses the whole lipid maps dataframe and creates another with only two desirable columns, ID and Synonym, 
+        the last one englobes the abbreviation two
 
-    def treat(self,data):
-        df=self.three_col_lm(data)
-        first_col=df[['LM_ID']].values
-        second_col=df[['ABBREVIATION']].values
-        third_col=df[['SYNONYMS']].values
+        Args:
+            lm_dataframe (pd.DataFrame): Whole pandas dataframe, previosly extracted in the extract class
 
-        for n in range (len(first_col)): #len(first_col)
-            abrevs=second_col[n]
-            synonyms=third_col[n]
-            lista_ab=[]
-            lista_sy=[]
-            lista_id=[]
-            if abrevs != None:
-                for value in abrevs:
-                    value=str(value)
-                    value=value.split(';')
-                    for i in value:
-                        lista_ab.append(i)
+        Returns:
+            pd.DataFrame: pandas dataframe with two columns of the initial data, ID and Synonym
+        """
+        new_df=pd.DataFrame(columns=['LM_ID','SYNONYMS'])
+        counter=0
+        for i, row in lm_dataframe.iterrows():
+            lipid_id = row["LM_ID"]
+            abreviation = row["ABBREVIATION"]
+            synonyms = row["SYNONYMS"]
+            if abreviation is not None and not pd.isnull(abreviation):
+                abbreviation_splits = abreviation.split(';')
+                for split in abbreviation_splits:
+                    new_df.at[counter, "LM_ID"] = lipid_id
+                    new_df.at[counter, "SYNONYMS"] = split
+                    counter+=1
 
-            if synonyms != None:    
-                for value in synonyms:
-                    value=str(value)
-                    value=value.split(';')
-                    for i in value:
-                        lista_sy.append(i)
-
-            for a in range(max([len(lista_ab),len(lista_sy)])):
-                for value in first_col[n]:
-                    value=str(value)
-                    lista_id.append(value)
-
-            # pegar em cada linha e adicionar ao df
-            treated_data=pd.DataFrame.from_dict({'LM_ID': lista_id, 'ABBREVIATION': lista_ab, 'SYNONYMS':lista_sy},orient='index').T
-            #df.append(treated_data,ignore_index=True,)
-            self.treated_dataframe=pd.concat([self.treated_dataframe,treated_data],ignore_index=True,sort=False,axis=0)
-        print(self.treated_dataframe.head())
-        return self.treated_dataframe
+            if synonyms is not None and not pd.isnull(synonyms):
+                synonyms_splits = synonyms.split(';')
+                for split in synonyms_splits:
+                    new_df.at[counter, "LM_ID"] = lipid_id
+                    new_df.at[counter, "SYNONYMS"] = split
+                    counter+=1
+        return new_df
 
 
 class LipidMapsLoader(AirflowLoader):
+    """
+    Class that loads the treated data into the database
+    """
 
-    def load(self, **kwargs):
-        """
-        This method loads the data into the database
-        :return:
-        """
-        pass
+    def load(self, df: pd.DataFrame):
+        """This method connects and loads the treated data into the database
 
+        Args:
+            df (pd.DataFrame): Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
+        """
+        self.set_synonym(self.get_connection_list(df))
 
-class LipidMapsETLPipeline(AirflowPipeline):
+    def set_synonym(self, connections:list):
+        """ Method that link to the graph database and uploads all the data previously treated 
 
-    #@task  # add parameters to decorator eventually
-    def extract(self, **kwargs):
+        Args:
+            connections (list): List of the querys to upload the whole treated dataframe to the database
         """
-        Method where the extraction method will be added.
-        """
-        extractor = LipidMapsExtractor()
-        extractor.extract(**kwargs)
+        data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        session = data_base_connection.session()
+        for i in connections:
+            session.run(i)
 
-    #@task  # add parameters to decorator eventually
-    def transform(self, **kwargs):
-        """
-        Method where the transform method will be added.
-        """
-        transformer = LipidMapsTransformer()
-        transformer.transform(**kwargs)
+    def get_connection_list(self,df : pd.DataFrame)->list:
+        """ This method creates the querys necessary to upload the treated data into the database 
 
-    #@task  # add parameters to decorator eventually
-    def load(self, **kwargs):
-        """
-        Method where the load method will be added.
-        """
-        loader = LipidMapsLoader()
-        loader.load(**kwargs)
+        Args:
+            df (pd.DataFrame): Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
 
-    @dag(schedule_interval=None,
-         start_date=pendulum.datetime(2022, 1, 1, tz="UTC"),
-         catchup=False,
-         tags=['example'], )
-    def run(self):
-        extract_task = PythonOperator(
-            task_id='extract',
-            python_callable=self.extract,
+        Returns:
+            _type_: List of querys necessary to the upload of the whole dataframe
+        """
+        creation_nodes_list=[]
+        for i,row in df.iterrows():
+            lipid_maps_id=row["LM_ID"]
+            lm_synonym=row["SYNONYMS"]
+            creat_node_connection='MATCH (u:LipidMapsCompound)WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {lm_id : "' + str(lipid_maps_id) + '", synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_off]->(u);'
+            creation_nodes_list.append(creat_node_connection)
+        return creation_nodes_list
+
+dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
+        start_date=datetime(2022, 1, 1),
+        catchup=False,
         )
-        transform_task = PythonOperator(
-            task_id='transform',
-            python_callable=self.transform,
-        )
-        load_task = PythonOperator(
-            task_id='load',
-            python_callable=self.load,
-        )
-        extract_task >> transform_task >> load_task
+
+#@task  # add parameters to decorator eventually
+def extract(**kwargs):
+        ti = kwargs['ti']
+        extractor=LipidMapsExtractor()
+        raw_df=extractor.extract()
+        ti.xcom_push('order_data', raw_df)
+
+#@task  # add parameters to decorator eventually
+def transform(**kwargs):
+    ti = kwargs['ti']
+    extract_df = ti.xcom_pull(task_ids='extract', key='order_data')
+    transformer=LipidMapsTransformer()
+    treated_data=transformer.transform(extract_df)
+    
+
+#  # add parameters to decorator eventually
+def load(**kwargs):
+    """
+    Method where the load method will be added.
+    """
+    loader = LipidMapsLoader()
+    loader.load()        
+    
+with dag:
+    extract_task = PythonOperator(
+        task_id='extract',
+        dag=dag,
+        python_callable=extract,
+    )
+    transform_task = PythonOperator(
+        task_id='transform',
+        dag=dag,
+        python_callable=transform,
+    )
+    load_task = PythonOperator(
+        task_id='load',
+        dag=dag,
+        python_callable=load,
+    )
+    extract_task >> transform_task >> load_task
