@@ -30,8 +30,8 @@ class SwissLipidsExtractor(AirflowExtractor):
             CSV file: Csv file with swisss lipids data
         """
         get_zip = requests.get("https://www.swisslipids.org/api/file.php?cas=download_files&file=lipids.tsv")
-        raw_file = gzip.open(io.BytesIO(get_zip.content),'rb')
-        return raw_file
+        file_unzip = gzip.open(io.BytesIO(get_zip.content),'rb')
+        return file_unzip
         
         
 
@@ -45,9 +45,9 @@ class SwissLipidsExtractor(AirflowExtractor):
         Returns:
             pd.DataFrame: Swiss lipids data tranformed into a dataframe structure
         """
-        table= pd.read_table(raw_file,engine='python',encoding='ISO-8859-1')
-        df=pd.DataFrame(table)
-        return df
+        read_table = pd.read_table(raw_file,engine='python',encoding='ISO-8859-1')
+        sl_dataframe=pd.DataFrame(read_table)
+        return sl_dataframe
 
     
 
