@@ -7,7 +7,7 @@ from boimmgpy.etl.swiss_lipids import SwissLipidsExtractor,SwissLipidsTransforme
 
 class TestLipidMapsETL(unittest.TestCase):
 
-    def setUp(self) -> None:  #defenir o que quisermos e a função vai ser chamada antes de correr os testes
+    def setUp(self) -> None: 
         self.extractor = LipidMapsExtractor()
         self.transformer = LipidMapsTransformer()
         self.loader = LipidMapsLoader()
@@ -18,7 +18,6 @@ class TestLipidMapsETL(unittest.TestCase):
         self.assertEqual(self.scrape_data.shape[1],23) 
 
     def test_lipid_maps_transformer(self):
-        #criar mock para passar no transform, no setUp??
         self.assertEqual(self.treated_dataframe.shape[1],2)
     
     def test_lipid_maps_loader(self):

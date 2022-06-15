@@ -1,10 +1,12 @@
 import pandas as pd
 import pendulum
+from datetime import datetime
 from airflow.decorators import task
 from neo4j import GraphDatabase
 from rdkit.Chem import PandasTools
 from airflow.models.dag import dag
 from airflow.operators.python import PythonOperator
+from airflow import DAG
 import requests, zipfile, io, gzip
 from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
@@ -17,7 +19,6 @@ class SwissLipidsExtractor(AirflowExtractor):
     def extract(self)->pd.DataFrame:
         """
         This class calls the scrape_data method and creates a pandas dataframe with the scraped data.
-        :return: pandas data frame of lipid maps data 
         """
         return self._extract(self.scrape_data())
 
@@ -25,9 +26,6 @@ class SwissLipidsExtractor(AirflowExtractor):
     
     def scrape_data(self):
         """This class downloads the ZIP file and extracts the CSV files of SwissLipids.
-
-        Returns:
-            CSV file: Csv file with swisss lipids data
         """
         get_zip = requests.get("https://www.swisslipids.org/api/file.php?cas=download_files&file=lipids.tsv")
         file_unzip = gzip.open(io.BytesIO(get_zip.content),'rb')
@@ -38,12 +36,6 @@ class SwissLipidsExtractor(AirflowExtractor):
 
     def _extract(self,raw_file) -> pd.DataFrame:
         """Method to create a pandas dataframe with the scraped data.
-
-        Args:
-            raw_file (csv file):  Csv file of the swiss lipids data
-
-        Returns:
-            pd.DataFrame: Swiss lipids data tranformed into a dataframe structure
         """
         read_table = pd.read_table(raw_file,engine='python',encoding='ISO-8859-1')
         sl_dataframe=pd.DataFrame(read_table)
@@ -58,11 +50,6 @@ class SwissLipidsTransformer(AirflowTransformer):
     
     def transform(self,data: pd.DataFrame)->pd.DataFrame:
         """This method allows to transform the dataframe previously extracted into a desired datastructure
-
-        Args:
-            data (pd.DataFrame): Whole dataframe of swiss lipids
-        Returns:
-            pd.DataFrame: Treated dataframe
         """
         data_treated=self.treat(data)
         return data_treated
@@ -70,16 +57,10 @@ class SwissLipidsTransformer(AirflowTransformer):
     def treat(self,data: pd.DataFrame)->pd.DataFrame:
         """Method thad treats the dataframe of swiss lipids and creates another with only two columns, one for lipid id and another 
         for synonyms and abbrebiations 
-
-        Args:
-            data (pd.DataFrame): whole dataframe of swiss lipids data
-
-        Returns:
-            pd.DataFrame: treated dataframe, 2 colums (id and synonym), of the swiss lipids data
         """
         new_df=pd.DataFrame(columns=['Lipid ID','Synonym'])
         counter=0
-        for i, row in data.iloc[:100].iterrows():
+        for i, row in data.iterrows():
             lipid_id = row["Lipid ID"]
             abreviation = row["Abbreviation*"]
             synonyms = row["Synonyms*"]
@@ -106,9 +87,6 @@ class SwissLipidsLoader(AirflowLoader):
 
     def load(self, treated_df: pd.DataFrame):
         """Method that loads the treated dataframe into our database
-
-        Args:
-            df (pd.DataFrame): treated dataframe of swiss lipids
         """
         self.set_synonym(self.get_connection_list(treated_df))
 
@@ -120,12 +98,6 @@ class SwissLipidsLoader(AirflowLoader):
 
     def get_connection_list(self,df : pd.DataFrame)->list:
         """This method creates a list of querys necessary to do the upload of the dataframe in our database
-
-        Args:
-            df (pd.DataFrame): treated dataframe
-
-        Returns:
-            list: Querys list that will be use in the upload into our database
         """
         creation_nodes_list=[]
         for i,row in df.iterrows():
@@ -135,24 +107,34 @@ class SwissLipidsLoader(AirflowLoader):
             creation_nodes_list.append(creat_node_connection)
         return creation_nodes_list
 
-def extract(**kwargs):
-        ti = kwargs['ti']
-        extractor=SwissLipidsExtractor()
-        raw_df=extractor.extract()
-        ti.xcom_push('order_data', raw_df)
 
-#@task  # add parameters to decorator eventually
+dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
+        start_date=datetime(2022, 1, 1),
+        catchup=False,
+        )
+
+def extract(**kwargs):
+    """
+    Function where the extract method will be called.
+    """
+    ti = kwargs['ti']
+    extractor=SwissLipidsExtractor()
+    raw_df=extractor.extract()
+    ti.xcom_push('order_data', raw_df)
+
 def transform(**kwargs):
+    """
+    Function where the transform method will be called.
+    """
     ti = kwargs['ti']
     extract_df = ti.xcom_pull(task_ids='extract', key='order_data')
     transformer=SwissLipidsTransformer()
     treated_data=transformer.transform(extract_df)
     
 
-#  # add parameters to decorator eventually
 def load(**kwargs):
     """
-    Method where the load method will be added.
+    Function where the load method will be called.
     """
     loader = SwissLipidsLoader()
     loader.load()        
