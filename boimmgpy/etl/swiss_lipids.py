@@ -13,19 +13,25 @@ from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer
 
 class SwissLipidsExtractor(AirflowExtractor):
     """
-    Class to extract information from lipid maps
+    Class to extract information from swiss lipids
     """
 
     def extract(self)->pd.DataFrame:
         """
-        This class calls the scrape_data method and creates a pandas dataframe with the scraped data.
+        This class calls the scrape_data method and creates a pandas dataframe with the scraped data returned from scrape_data method.
+        :return: Dataframe of the whole Swiss Lipids data
+        :rtype: pd.DataFrame
         """
         return self._extract(self.scrape_data())
 
 
     
     def scrape_data(self):
-        """This class downloads the ZIP file and extracts the CSV files of SwissLipids.
+        """
+        This class downloads the ZIP file and extracts the CSV files of SwissLipids.
+
+        :return: csv file of the whole Swiss Lipids data
+        :rtype: csv file
         """
         get_zip = requests.get("https://www.swisslipids.org/api/file.php?cas=download_files&file=lipids.tsv")
         file_unzip = gzip.open(io.BytesIO(get_zip.content),'rb')
@@ -35,7 +41,12 @@ class SwissLipidsExtractor(AirflowExtractor):
 
 
     def _extract(self,raw_file) -> pd.DataFrame:
-        """Method to create a pandas dataframe with the scraped data.
+        """
+        Method to create a pandas dataframe with the scraped data.
+        :param raw: csv file of the whole Swiss Lipids database 
+        :type raw: csv file
+        :return: Data frame of the whole Swiss Lipids database
+        :rtype: pd.DataFrame
         """
         read_table = pd.read_table(raw_file,engine='python',encoding='ISO-8859-1')
         sl_dataframe=pd.DataFrame(read_table)
@@ -49,14 +60,24 @@ class SwissLipidsTransformer(AirflowTransformer):
     """
     
     def transform(self,data: pd.DataFrame)->pd.DataFrame:
-        """This method allows to transform the dataframe previously extracted into a desired datastructure
+        """
+        This method allows to transform the dataframe previously extracted into a desired data structure
+        :param df:  Whole pandas dataframe, previosly extracted in the extract class
+        :type df: pd.Dataframe
+        :return: treated dataframe of Swiss Lipids, only with two columns, synonym and ID
+        :rtype: pd.DataFrame
         """
         data_treated=self.treat(data)
         return data_treated
         
     def treat(self,data: pd.DataFrame)->pd.DataFrame:
-        """Method thad treats the dataframe of swiss lipids and creates another with only two columns, one for lipid id and another 
-        for synonyms and abbrebiations 
+        """
+        This method uses the whole Swiss Lipids dataframe and creates another with only two desirable columns, ID and Synonym,
+        the last one englobes the abbreviation too
+        :param lm_dataframe:  Whole pandas dataframe, previosly extracted in the extract class
+        :type lm_dataframe: pd.DataFrame
+        :return: Dataframe with two columns of the initial data, ID and Synonym
+        :rtype: pd.DataFrame
         """
         new_df=pd.DataFrame(columns=['Lipid ID','Synonym'])
         counter=0
@@ -86,18 +107,31 @@ class SwissLipidsLoader(AirflowLoader):
     """
 
     def load(self, treated_df: pd.DataFrame):
-        """Method that loads the treated dataframe into our database
+        """
+        This method connects and loads the treated data into the database
+        :param df: Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
+        :type df: pd.DataFrame
         """
         self.set_synonym(self.get_connection_list(treated_df))
 
     def set_synonym(self, connections:list):
+        """
+        Method that link to the graph database and uploads all the data previously treated
+        :param connections: List of querys necessary to the upload of the whole dataframe
+        :type connections: list
+        """
         data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
         session = data_base_connection.session()
         for i in connections:
             session.run(i)
 
     def get_connection_list(self,df : pd.DataFrame)->list:
-        """This method creates a list of querys necessary to do the upload of the dataframe in our database
+        """
+        This method creates the querys necessary to upload the treated data into the database
+        :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
+        :type df: pd.DataFrame
+        :return: List of querys necessary to the upload of the whole dataframe
+        :rtype: list
         """
         creation_nodes_list=[]
         for i,row in df.iterrows():
@@ -116,6 +150,7 @@ dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
 def extract(**kwargs):
     """
     Function where the extract method will be called.
+    :param kwargs:
     """
     ti = kwargs['ti']
     extractor=SwissLipidsExtractor()
@@ -125,6 +160,7 @@ def extract(**kwargs):
 def transform(**kwargs):
     """
     Function where the transform method will be called.
+    :param kwargs:
     """
     ti = kwargs['ti']
     extract_df = ti.xcom_pull(task_ids='extract', key='order_data')
@@ -135,9 +171,12 @@ def transform(**kwargs):
 def load(**kwargs):
     """
     Function where the load method will be called.
+    :param kwargs:
     """
+    ti = kwargs['ti']
+    transformed_df = ti.xcom_pull(task_ids='transform', key='order_data')
     loader = SwissLipidsLoader()
-    loader.load()        
+    loader.load(transformed_df)          
     
 with dag:
     extract_task = PythonOperator(
