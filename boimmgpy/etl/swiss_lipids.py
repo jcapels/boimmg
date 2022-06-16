@@ -1,12 +1,15 @@
 import pandas as pd
 import pendulum
 from datetime import datetime
+from joblib import Parallel,delayed
 from airflow.decorators import task
 from neo4j import GraphDatabase
+import multiprocessing
 from rdkit.Chem import PandasTools
 from airflow.models.dag import dag
 from airflow.operators.python import PythonOperator
 from airflow import DAG
+from tqdm import tqdm
 import requests, zipfile, io, gzip
 from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
@@ -59,7 +62,7 @@ class SwissLipidsTransformer(AirflowTransformer):
     Class to transform the lipid maps dataframe
     """
     
-    def transform(self,data: pd.DataFrame)->pd.DataFrame:
+    def transform(self,df: pd.DataFrame)->pd.DataFrame:
         """
         This method allows to transform the dataframe previously extracted into a desired data structure
         :param df:  Whole pandas dataframe, previosly extracted in the extract class
@@ -67,7 +70,12 @@ class SwissLipidsTransformer(AirflowTransformer):
         :return: treated dataframe of Swiss Lipids, only with two columns, synonym and ID
         :rtype: pd.DataFrame
         """
-        data_treated=self.treat(data)
+        #data_treated=self.treat(data)
+        itera=len(df)
+        cores=multiprocessing.cpu_count()
+        parallel_callback = Parallel(cores)
+        data_treated=parallel_callback(delayed(self.treat)(df.iloc[[i]])for i in tqdm(range(itera)))
+        data_treated = pd.concat(data_treated)
         return data_treated
         
     def treat(self,data: pd.DataFrame)->pd.DataFrame:
@@ -112,18 +120,19 @@ class SwissLipidsLoader(AirflowLoader):
         :param df: Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
         :type df: pd.DataFrame
         """
-        self.set_synonym(self.get_connection_list(treated_df))
-
-    def set_synonym(self, connections:list):
-        """
-        Method that link to the graph database and uploads all the data previously treated
-        :param connections: List of querys necessary to the upload of the whole dataframe
-        :type connections: list
-        """
+        #self.set_synonym(self.get_connection_list(treated_df))
+        self.load_multiprocessing(treated_df)
+    
+    def load_multiprocessing(self,df:pd.DataFrame):
+        itera=len(df)
+        cores=multiprocessing.cpu_count()
+        parallel_callback = Parallel(cores)
+        list_con=parallel_callback(delayed(self.get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
         data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
-        session = data_base_connection.session()
-        for i in connections:
-            session.run(i)
+        self.session = data_base_connection.session()
+        parallel_callback(delayed(set_synonym)(list_con[i])for i in tqdm(range(len(list_con))))
+        #self.set_synonym(list_con)
+
 
     def get_connection_list(self,df : pd.DataFrame)->list:
         """
@@ -140,6 +149,21 @@ class SwissLipidsLoader(AirflowLoader):
             creat_node_connection='MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {swiss_lipids_id : "' + str(swiss_lipids_id) + '", synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_off]->(u);'
             creation_nodes_list.append(creat_node_connection)
         return creation_nodes_list
+
+
+data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+session = data_base_connection.session()
+def set_synonym(connections:list):
+        """
+        Method that link to the graph database and uploads all the data previously treated
+        :param connections: List of querys necessary to the upload of the whole dataframe
+        :type connections: list
+        """
+        #data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        #session = data_base_connection.session()
+        for l in connections:    
+            #for i in l:
+            session.run(l)
 
 
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
