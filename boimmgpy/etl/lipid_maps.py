@@ -13,6 +13,8 @@ from neo4j import GraphDatabase
 import sys
 sys.path.insert(1,'.')
 from airflow import DAG
+from tqdm import tqdm
+from joblib import wrap_non_picklable_objects
 
 from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
@@ -68,7 +70,12 @@ class LipidMapsTransformer(AirflowTransformer):
         :return: treated dataframe of lipid maps, only with two columns, synonym and ID
         :rtype: pd.DataFrame
         """
-        data_treated=self.treat_lm_dataframe(df)
+        #data_treated=self.treat_lm_dataframe(df)
+        itera=len(df)
+        cores=multiprocessing.cpu_count()
+        parallel_callback = Parallel(cores)
+        data_treated=parallel_callback(delayed(self.treat_lm_dataframe)(df.iloc[[i]])for i in tqdm(range(itera)))
+        data_treated = pd.concat(data_treated)
         return data_treated
 
 
@@ -114,30 +121,20 @@ class LipidMapsLoader(AirflowLoader):
         :param df: Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
         :type df: pd.DataFrame
         """
-        self.start = time.time()
         #self.set_synonym(self.get_connection_list(df))
         self.load_multiprocessing(df)
-        self.end = time.time()
-        print(self.end - self.start)
+
 
     def load_multiprocessing(self,df:pd.DataFrame):
         itera=len(df)
         cores=multiprocessing.cpu_count()
         parallel_callback = Parallel(cores)
-        list_con=parallel_callback(delayed(self.get_connection_list)(df.iloc[[i]])for i in range(itera))
-        parallel_callback(delayed(self.set_synonym)(list_con[i])for i in range(len(list_con)))
-
-
-    def set_synonym(self, connections:list):
-        """
-        Method that link to the graph database and uploads all the data previously treated
-        :param connections: List of querys necessary to the upload of the whole dataframe
-        :type connections: list
-        """
+        list_con=parallel_callback(delayed(self.get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
         data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
-        session = data_base_connection.session()
-        for i in connections:
-            session.run(i)
+        self.session = data_base_connection.session()
+        parallel_callback(delayed(set_synonym)(list_con[i])for i in tqdm(range(len(list_con))))
+        #self.set_synonym(list_con)
+
 
     def get_connection_list(self,df : pd.DataFrame)->list:
         """
@@ -154,6 +151,22 @@ class LipidMapsLoader(AirflowLoader):
             creat_node_connection='MATCH (u:LipidMapsCompound)WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {lm_id : "' + str(lipid_maps_id) + '", synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_off]->(u);'
             creation_nodes_list.append(creat_node_connection)
         return creation_nodes_list
+
+
+data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+session = data_base_connection.session()
+def set_synonym(connections:list):
+        """
+        Method that link to the graph database and uploads all the data previously treated
+        :param connections: List of querys necessary to the upload of the whole dataframe
+        :type connections: list
+        """
+        #data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        #session = data_base_connection.session()
+        for l in connections:    
+            #for i in l:
+            session.run(l)
+
 
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
         start_date=datetime(2022, 1, 1),
