@@ -98,6 +98,7 @@ class LipidMapsTransformer(AirflowTransformer):
                 abbreviation_splits = abreviation.split(';')
                 for split in abbreviation_splits:
                     new_df.at[counter, "LM_ID"] = lipid_id
+                    split=split.replace(" ","")
                     new_df.at[counter, "SYNONYMS"] = split
                     counter+=1
 
@@ -105,6 +106,7 @@ class LipidMapsTransformer(AirflowTransformer):
                 synonyms_splits = synonyms.split(';')
                 for split in synonyms_splits:
                     new_df.at[counter, "LM_ID"] = lipid_id
+                    split=split.replace(" ","")
                     new_df.at[counter, "SYNONYMS"] = split
                     counter+=1
         return new_df
@@ -148,7 +150,7 @@ class LipidMapsLoader(AirflowLoader):
         for i,row in df.iterrows():
             lipid_maps_id=row["LM_ID"]
             lm_synonym=row["SYNONYMS"]
-            creat_node_connection='MATCH (u:LipidMapsCompound)WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {lm_id : "' + str(lipid_maps_id) + '", synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_off]->(u);'
+            creat_node_connection='MATCH (u:LipidMapsCompound)WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_of]->(u);'
             creation_nodes_list.append(creat_node_connection)
         return creation_nodes_list
 

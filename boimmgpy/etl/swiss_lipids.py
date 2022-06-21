@@ -97,6 +97,7 @@ class SwissLipidsTransformer(AirflowTransformer):
                 abbreviation_splits = abreviation.split('|')
                 for split in abbreviation_splits:
                     new_df.at[counter, "Lipid ID"] = lipid_id
+                    split=split.replace(" ","")
                     new_df.at[counter, "Synonym"] = split
                     counter+=1
 
@@ -104,6 +105,7 @@ class SwissLipidsTransformer(AirflowTransformer):
                 synonyms_splits = synonyms.split('|')
                 for split in synonyms_splits:
                     new_df.at[counter, "Lipid ID"] = lipid_id
+                    split=split.replace(" ","")
                     new_df.at[counter, "Synonym"] = split
                     counter+=1
         return new_df
@@ -146,7 +148,7 @@ class SwissLipidsLoader(AirflowLoader):
         for i,row in df.iterrows():
             swiss_lipids_id=row["Lipid ID"]
             sl_synonym=row["Synonym"]
-            creat_node_connection='MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {swiss_lipids_id : "' + str(swiss_lipids_id) + '", synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_off]->(u);'
+            creat_node_connection='MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_of]->(u);'
             creation_nodes_list.append(creat_node_connection)
         return creation_nodes_list
 
