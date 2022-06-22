@@ -130,8 +130,6 @@ class SwissLipidsLoader(AirflowLoader):
         cores=multiprocessing.cpu_count()
         parallel_callback = Parallel(cores)
         list_con=parallel_callback(delayed(self.get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
-        data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
-        self.session = data_base_connection.session()
         parallel_callback(delayed(set_synonym)(list_con[i])for i in tqdm(range(len(list_con))))
         #self.set_synonym(list_con)
 
