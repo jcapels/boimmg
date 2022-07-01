@@ -98,7 +98,7 @@ class SwissLipidsTransformer(AirflowTransformer):
                 for split in abbreviation_splits:
                     new_df.at[counter, "Lipid ID"] = lipid_id
                     split=split.replace(" ","")
-                    new_df.at[counter, "Synonym"] = split
+                    new_df.at[counter, "Synonym"] = split.lower()
                     counter+=1
 
             if synonyms is not None and not pd.isnull(synonyms):
@@ -106,7 +106,7 @@ class SwissLipidsTransformer(AirflowTransformer):
                 for split in synonyms_splits:
                     new_df.at[counter, "Lipid ID"] = lipid_id
                     split=split.replace(" ","")
-                    new_df.at[counter, "Synonym"] = split
+                    new_df.at[counter, "Synonym"] = split.lower()
                     counter+=1
         return new_df
 
@@ -129,42 +129,28 @@ class SwissLipidsLoader(AirflowLoader):
         itera=len(df)
         cores=multiprocessing.cpu_count()
         parallel_callback = Parallel(cores)
-        list_con=parallel_callback(delayed(self.get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
-        parallel_callback(delayed(set_synonym)(list_con[i])for i in tqdm(range(len(list_con))))
+        list_con=parallel_callback(delayed(get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
         #self.set_synonym(list_con)
 
 
-    def get_connection_list(self,df : pd.DataFrame)->list:
-        """
-        This method creates the querys necessary to upload the treated data into the database
-        :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
-        :type df: pd.DataFrame
-        :return: List of querys necessary to the upload of the whole dataframe
-        :rtype: list
-        """
-        creation_nodes_list=[]
-        for i,row in df.iterrows():
-            swiss_lipids_id=row["Lipid ID"]
-            sl_synonym=row["Synonym"]
-            creat_node_connection='MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_of]->(u);'
-            creation_nodes_list.append(creat_node_connection)
-        return creation_nodes_list
 
 
 data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
 session = data_base_connection.session()
-def set_synonym(connections:list):
-        """
-        Method that link to the graph database and uploads all the data previously treated
-        :param connections: List of querys necessary to the upload of the whole dataframe
-        :type connections: list
-        """
-        #data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
-        #session = data_base_connection.session()
-        for l in connections:    
-            #for i in l:
-            session.run(l)
-
+def get_connection_list(df : pd.DataFrame)->list:
+    """
+    This method creates the querys necessary to upload the treated data into the database
+    :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
+    :type df: pd.DataFrame
+    :return: List of querys necessary to the upload of the whole dataframe
+    :rtype: list
+    """
+    for i,row in df.iterrows():
+        swiss_lipids_id=row["Lipid ID"]
+        sl_synonym=row["Synonym"]
+        create_synonym = session.run('MERGE (s: Synonym {synonym:"%s"})'%str(sl_synonym))
+        #creat_node_connection=session.run('MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
+        session.run("match (l:SwissLipidsCompound),(s:Synonym) where l.swiss_lipids_id=$sl_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=sl_synonym,sl_id=swiss_lipids_id)
 
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
         start_date=datetime(2022, 1, 1),
