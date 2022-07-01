@@ -11,7 +11,7 @@ data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("n
 session = data_base_connection.session()
 
 def read_treat_model():
-    lplantarum_model = read_sbml_model(r"boimmgpy\read_model\iLB1027_lipid.xml")
+    lplantarum_model = read_sbml_model(r"boimmg\boimmgpy\read_model\iLB1027_lipid.xml")
 
     counter=defaultdict(int)
     results={}
@@ -47,7 +47,7 @@ def read_treat_model():
                                 results[metabolite.id] = results[metabolite.id] + structurally_defined_lipids
                             else:
                                 results[metabolite.id] = structurally_defined_lipids
-                            counter[backbone]+=1
+                            counter[re.sub(" *(\([\-a-zA-Z0-9/]*\))", "", metabolite_name)]+=1
             
             if lipid_id!= None and lipid_id[2] == True:
                 flag=True
@@ -60,7 +60,7 @@ def read_treat_model():
                                 results[metabolite.id] = results[metabolite.id] + structurally_defined_lipids
                             else:
                                 results[metabolite.id] = structurally_defined_lipids
-                            counter[backbone]+=1      
+                            counter[re.sub(" *(\([\-a-zA-Z0-9/]*\))", "", metabolite_name)]+=1      
     
     print(results,len(results))        
     return results,counter,check_annotation

@@ -1,4 +1,6 @@
-from boimmgpy.read_model.case_study import read_treat_model
+import sys
+sys.path.insert(1,'.')
+from boimmg.boimmgpy.read_model.case_study import read_treat_model
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,8 +10,10 @@ import matplotlib.pyplot as plt
 
 model=read_treat_model()
 
+
+
 results=model[0]
-class_count=model[1]
+class_count={'Phosphatidylcholine': 113, 'CDP-1,2-diacyl-sn-glycerol': 20, 'Phosphatidylethanolamine': 72, 'Phosphatidylinositol': 12, 'Phosphatidylglycerophosphate': 2, 'Phosphatidylglycerol': 5}
 check_annotation=model[2]
 annotations_before_implementation=list(check_annotation.values())
 print(len(annotations_before_implementation))
@@ -74,3 +78,6 @@ for count,value in enumerate(listr):
         total_one_it+=1
 
 print(num_hits,total_one_it)
+
+
+print(class_count)
