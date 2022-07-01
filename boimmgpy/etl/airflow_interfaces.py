@@ -3,7 +3,8 @@ from abc import abstractmethod
 from airflow.decorators import task
 from airflow.models.dag import dag
 
-from etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
+from boimmgpy.etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
+
 
 
 class AirflowExtractor(AbstractExtractor):
@@ -45,7 +46,7 @@ class AirflowLoader(AbstractLoader):
 
 class AirflowPipeline(AbstractETLPipeline):
 
-    @task
+    #@task
     @abstractmethod
     def extract(self):
         """
@@ -53,7 +54,7 @@ class AirflowPipeline(AbstractETLPipeline):
         """
         pass
 
-    @task
+    #@task
     @abstractmethod
     def transform(self):
         """
@@ -61,7 +62,7 @@ class AirflowPipeline(AbstractETLPipeline):
         """
         pass
 
-    @task
+    #@task
     @abstractmethod
     def load(self):
         """
@@ -69,7 +70,7 @@ class AirflowPipeline(AbstractETLPipeline):
         """
         pass
 
-    @dag
+    #@dag
     @abstractmethod
     def run(self):
         """
