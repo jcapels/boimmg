@@ -25,7 +25,7 @@ However, a web-service is available [here](https://boimmg.bio.di.uminho.pt/).
     - [Write reports](#write-reports)
     
 - [About Us](#about-us)
-- [Citing DeepMol](#citing-deepmol)
+- [Citing BOIMMG](#citing-boimmg)
 
 
 ## Requirements
