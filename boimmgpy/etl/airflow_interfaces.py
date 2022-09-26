@@ -1,16 +1,14 @@
 from abc import abstractmethod
 
-from airflow.decorators import task
-from airflow.models.dag import dag
+import pandas as pd
 
 from boimmgpy.etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
-
 
 
 class AirflowExtractor(AbstractExtractor):
 
     @abstractmethod
-    def extract(self):
+    def extract(self) -> pd.DataFrame:
         """
         Extract method that implements the 'task' decorator of the airflow package
         """
@@ -27,7 +25,7 @@ class AirflowExtractor(AbstractExtractor):
 class AirflowTransformer(AbstractTransformer):
 
     @abstractmethod
-    def transform(self):
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Transform method that implements the 'task' decorator of the airflow package
         """
@@ -37,7 +35,7 @@ class AirflowTransformer(AbstractTransformer):
 class AirflowLoader(AbstractLoader):
 
     @abstractmethod
-    def load(self):
+    def load(self, df: pd.DataFrame):
         """
         Load method that implements the 'task' decorator of the airflow package
         """
@@ -46,31 +44,31 @@ class AirflowLoader(AbstractLoader):
 
 class AirflowPipeline(AbstractETLPipeline):
 
-    #@task
+    # @task
     @abstractmethod
-    def extract(self):
+    def extract(self, df: pd.DataFrame):
         """
         Abstract method where the extraction method will be added.
         """
         pass
 
-    #@task
+    # @task
     @abstractmethod
-    def transform(self):
+    def transform(self, df: pd.DataFrame):
         """
         Abstract method where the transform method will be added.
         """
         pass
 
-    #@task
+    # @task
     @abstractmethod
-    def load(self):
+    def load(self, df: pd.DataFrame):
         """
         Abstract method where the load method will be added.
         """
         pass
 
-    #@dag
+    # @dag
     @abstractmethod
     def run(self):
         """

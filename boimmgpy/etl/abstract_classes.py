@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+import pandas as pd
+
 
 class AbstractExtractor(metaclass=ABCMeta):
     """
@@ -7,7 +9,7 @@ class AbstractExtractor(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def extract(self):
+    def extract(self) -> pd.DataFrame:
         """
         Method to extract data.
         """
@@ -27,7 +29,7 @@ class AbstractTransformer(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def transform(self):
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Method to transform data.
         """
@@ -40,7 +42,7 @@ class AbstractLoader(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def load(self):
+    def load(self, df: pd.DataFrame):
         """
         Method to transform data.
         """
@@ -53,21 +55,21 @@ class AbstractETLPipeline(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def extract(self):
+    def extract(self, df: pd.DataFrame):
         """
         Abstract method where the extraction method will be added.
         """
         pass
 
     @abstractmethod
-    def transform(self):
+    def transform(self, df: pd.DataFrame):
         """
         Abstract method where the transform method will be added.
         """
         pass
 
     @abstractmethod
-    def load(self):
+    def load(self, df: pd.DataFrame):
         """
         Abstract method where the load method will be added.
         """
