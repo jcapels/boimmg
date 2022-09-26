@@ -27,7 +27,7 @@ from boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
 from boimmgpy.utilities import model_utilities
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
 from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDBRest, \
-    ModelSeedCompoundsDBRaw
+    ModelSeedCompoundsDBNeo4j
 from boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, COMPOUNDS_ANNOTATION_CONFIGS_PATH, \
     REACTIONS_ANNOTATION_CONFIGS_PATH
 from boimmgpy.utilities import file_utilities
@@ -80,7 +80,7 @@ class LipidGranulator(RepresentationProblemSolver):
         self.__define_instance_variables()
 
         if isinstance(db_accessor, CompoundsDBAccessor):
-            self.__modelseedCompoundsDb = ModelSeedCompoundsDBRaw()
+            self.__modelseedCompoundsDb = ModelSeedCompoundsDBNeo4j()
 
         else:
             self.__modelseedCompoundsDb = ModelSeedCompoundsDBRest()
@@ -470,7 +470,7 @@ class CofactorSwapper:
         self.__compounds_ontology = db_accessor
 
         if isinstance(db_accessor, CompoundsDBAccessor):
-            self.__modelseedCompoundsDb = ModelSeedCompoundsDBRaw()
+            self.__modelseedCompoundsDb = ModelSeedCompoundsDBNeo4j()
 
         else:
             self.__modelseedCompoundsDb = ModelSeedCompoundsDBRest()

@@ -60,7 +60,7 @@ class ModelSeedCompoundsDBRest(ModelSeedCompoundsDB):
         return self.deserialize_compound(res)
 
 
-class ModelSeedCompoundsDBRaw(ModelSeedCompoundsDB):
+class ModelSeedCompoundsDBNeo4j(ModelSeedCompoundsDB):
 
     def __init__(self, uri="", user="", password=""):
 
