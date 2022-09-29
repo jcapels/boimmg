@@ -16,3 +16,5 @@ RUN pip3 install -r requirements.txt
 #clean output; -y acepts everything
 RUN apt-get -y autoclean
 RUN apt-get -y clean
+
+CMD ["python", "tests\unit_tests\test_etl.py"]
