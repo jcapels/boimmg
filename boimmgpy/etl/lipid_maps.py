@@ -1,7 +1,6 @@
 from numpy import diag_indices
 import multiprocessing
 import pandas as pd
-import time
 from datetime import datetime
 from airflow.decorators import task
 from rdkit.Chem import PandasTools
@@ -139,7 +138,7 @@ class LipidMapsLoader(AirflowLoader):
    
 
 
-data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+data_base_connection = GraphDatabase.driver(uri="bolt://palsson.di.uminho.pt:6094",auth=("neo4j","bucket-folio-truck-supreme-venus-2823"))
 session = data_base_connection.session()
 def get_connection_list(df : pd.DataFrame)->list:
     """

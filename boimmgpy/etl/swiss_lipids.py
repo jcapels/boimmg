@@ -1,5 +1,4 @@
 import pandas as pd
-import pendulum
 from datetime import datetime
 from joblib import Parallel,delayed
 from airflow.decorators import task
@@ -10,7 +9,7 @@ from airflow.models.dag import dag
 from airflow.operators.python import PythonOperator
 from airflow import DAG
 from tqdm import tqdm
-import requests, zipfile, io, gzip
+import requests, io, gzip
 from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
 
@@ -135,7 +134,7 @@ class SwissLipidsLoader(AirflowLoader):
 
 
 
-data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+data_base_connection = GraphDatabase.driver(uri="bolt://palsson.di.uminho.pt:6094",auth=("neo4j","bucket-folio-truck-supreme-venus-2823"))
 session = data_base_connection.session()
 def get_connection_list(df : pd.DataFrame)->list:
     """
