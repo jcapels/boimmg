@@ -1,24 +1,16 @@
-from numpy import diag_indices
 import multiprocessing
 import pandas as pd
-from datetime import datetime
-from airflow.decorators import task
 from rdkit.Chem import PandasTools
-from airflow.models.dag import dag
-from airflow.operators.python import PythonOperator
 from joblib import Parallel,delayed
 import requests, zipfile, io
 from neo4j import GraphDatabase
 import sys
 sys.path.insert(1,'.')
-from airflow import DAG
+
 from tqdm import tqdm
-from joblib import wrap_non_picklable_objects
-
-from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
 
-class LipidMapsExtractor(AirflowExtractor):
+class LipidMapsExtractor():
     """
     Class to extract information from lipid maps
     """
@@ -58,7 +50,7 @@ class LipidMapsExtractor(AirflowExtractor):
 
 
 
-class LipidMapsTransformer(AirflowTransformer):
+class LipidMapsTransformer():
     """Class to transform the lipid maps dataframe
     """
     def transform(self, df : pd.DataFrame)->pd.DataFrame:
@@ -111,7 +103,7 @@ class LipidMapsTransformer(AirflowTransformer):
         return new_df
 
 
-class LipidMapsLoader(AirflowLoader):
+class LipidMapsLoader():
     """
     Class that loads the treated data into the database
     """
@@ -130,7 +122,7 @@ class LipidMapsLoader(AirflowLoader):
         itera=len(df)
         cores=multiprocessing.cpu_count()
         parallel_callback = Parallel(cores)
-        list_con=parallel_callback(delayed(get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
+        parallel_callback(delayed(get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
         #relationship_connection=set_relationship(df)
         #self.set_synonym(list_con)
 
@@ -148,17 +140,16 @@ def get_connection_list(df : pd.DataFrame)->list:
     :return: List of querys necessary to the upload of the whole dataframe
     :rtype: list
     """
-    creation_nodes_list=[]
     for i,row in df.iterrows():
         lipid_maps_id=row["LM_ID"]
         lm_synonym=row["SYNONYMS"]
-        create_synonym = session.run('MERGE (s: Synonym {synonym:"%s"})'%str(lm_synonym))
+        session.run('MERGE (s: Synonym {synonym:"%s"})'%str(lm_synonym))
         #creat_node_connection=session.run('MATCH (u:LipidMapsCompound) WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
         session.run("match (l:LipidMapsCompound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=lm_synonym,lipid_maps_id=lipid_maps_id)
 
 
 
-
+"""
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
         start_date=datetime(2022, 1, 1),
         catchup=False,
@@ -166,20 +157,20 @@ dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
 
 
 def extract(**kwargs):
-    """
+
     Function where the extract method will be called.
     :param kwargs:
-    """
+   
     ti = kwargs['ti']
     extractor=LipidMapsExtractor()
     raw_df=extractor.extract()
     ti.xcom_push('order_data', raw_df)
 
 def transform(**kwargs):
-    """
+   
     Function where the load transform will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     extract_df = ti.xcom_pull(task_ids='extract', key='order_data')
     transformer=LipidMapsTransformer()
@@ -188,10 +179,10 @@ def transform(**kwargs):
     
 
 def load(**kwargs):
-    """
+    
     Function where the load method will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     transformed_df = ti.xcom_pull(task_ids='transform', key='order_data')
     loader = LipidMapsLoader()
@@ -214,3 +205,4 @@ with dag:
         python_callable=load,
     )
     extract_task >> transform_task >> load_task
+"""

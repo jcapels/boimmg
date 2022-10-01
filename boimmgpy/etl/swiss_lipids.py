@@ -1,19 +1,13 @@
 import pandas as pd
-from datetime import datetime
 from joblib import Parallel,delayed
-from airflow.decorators import task
 from neo4j import GraphDatabase
 import multiprocessing
-from rdkit.Chem import PandasTools
-from airflow.models.dag import dag
-from airflow.operators.python import PythonOperator
-from airflow import DAG
 from tqdm import tqdm
 import requests, io, gzip
-from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
+#from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader, AirflowPipeline
 
 
-class SwissLipidsExtractor(AirflowExtractor):
+class SwissLipidsExtractor():
     """
     Class to extract information from swiss lipids
     """
@@ -56,7 +50,7 @@ class SwissLipidsExtractor(AirflowExtractor):
 
     
 
-class SwissLipidsTransformer(AirflowTransformer):
+class SwissLipidsTransformer():
     """
     Class to transform the lipid maps dataframe
     """
@@ -110,7 +104,7 @@ class SwissLipidsTransformer(AirflowTransformer):
         return new_df
 
 
-class SwissLipidsLoader(AirflowLoader):
+class SwissLipidsLoader():
     """
     Class that loads the treated data into the database
     """
@@ -147,30 +141,30 @@ def get_connection_list(df : pd.DataFrame)->list:
     for i,row in df.iterrows():
         swiss_lipids_id=row["Lipid ID"]
         sl_synonym=row["Synonym"]
-        create_synonym = session.run('MERGE (s: Synonym {synonym:"%s"})'%str(sl_synonym))
+        session.run('MERGE (s: Synonym {synonym:"%s"})'%str(sl_synonym))
         #creat_node_connection=session.run('MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
         session.run("match (l:SwissLipidsCompound),(s:Synonym) where l.swiss_lipids_id=$sl_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=sl_synonym,sl_id=swiss_lipids_id)
-
+"""
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
         start_date=datetime(2022, 1, 1),
         catchup=False,
         )
 
 def extract(**kwargs):
-    """
+    
     Function where the extract method will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     extractor=SwissLipidsExtractor()
     raw_df=extractor.extract()
     ti.xcom_push('order_data', raw_df)
 
 def transform(**kwargs):
-    """
+
     Function where the transform method will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     extract_df = ti.xcom_pull(task_ids='extract', key='order_data')
     transformer=SwissLipidsTransformer()
@@ -178,10 +172,10 @@ def transform(**kwargs):
     
 
 def load(**kwargs):
-    """
+    
     Function where the load method will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     transformed_df = ti.xcom_pull(task_ids='transform', key='order_data')
     loader = SwissLipidsLoader()
@@ -204,3 +198,4 @@ with dag:
         python_callable=load,
     )
     extract_task >> transform_task >> load_task
+    """
