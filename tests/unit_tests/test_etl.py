@@ -4,7 +4,6 @@ sys.path.insert(1,'.')
 from boimmgpy.etl.lipid_maps import LipidMapsExtractor,LipidMapsTransformer,LipidMapsLoader
 from boimmgpy.etl.swiss_lipids import SwissLipidsExtractor,SwissLipidsTransformer,SwissLipidsLoader
 
-
 class TestLipidMapsETL(unittest.TestCase):
 
     def setUp(self) -> None: 
@@ -36,6 +35,7 @@ class TestSwissLipidsETL(unittest.TestCase):
         df = self.scrape_data
         self.assertEqual(df.shape[1],29) 
         self.assertEqual(self.treated_dataframe.shape[1],2)
+        print("aqui")
         self.loader.load(self.treated_dataframe)
 
 
