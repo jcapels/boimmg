@@ -64,7 +64,7 @@ class LipidMapsTransformer():
         #data_treated=self.treat_lm_dataframe(df)
         itera=len(df)
         cores=multiprocessing.cpu_count()
-        parallel_callback = Parallel(cores)
+        parallel_callback = Parallel(8)
         data_treated=parallel_callback(delayed(self.treat_lm_dataframe)(df.iloc[[i]])for i in tqdm(range(itera)))
         data_treated = pd.concat(data_treated)
         return data_treated
@@ -121,17 +121,15 @@ class LipidMapsLoader():
     def load_multiprocessing(self,df:pd.DataFrame):
         itera=len(df)
         cores=multiprocessing.cpu_count()
-        parallel_callback = Parallel(cores)
+        parallel_callback = Parallel(8)
         parallel_callback(delayed(get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
         #relationship_connection=set_relationship(df)
         #self.set_synonym(list_con)
 
 
-   
-
 
 data_base_connection = GraphDatabase.driver(uri="bolt://palsson.di.uminho.pt:6094",auth=("neo4j","bucket-folio-truck-supreme-venus-2823"))
-session = data_base_connection.session()
+
 def get_connection_list(df : pd.DataFrame)->list:
     """
     This method creates the querys necessary to upload the treated data into the database
@@ -140,12 +138,13 @@ def get_connection_list(df : pd.DataFrame)->list:
     :return: List of querys necessary to the upload of the whole dataframe
     :rtype: list
     """
-    for i,row in df.iterrows():
-        lipid_maps_id=row["LM_ID"]
-        lm_synonym=row["SYNONYMS"]
-        session.run('MERGE (s: Synonym {synonym:"%s"})'%str(lm_synonym))
-        #creat_node_connection=session.run('MATCH (u:LipidMapsCompound) WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
-        session.run("match (l:LipidMapsCompound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=lm_synonym,lipid_maps_id=lipid_maps_id)
+    with data_base_connection.session() as session:
+        for i,row in df.iterrows():
+            lipid_maps_id=row["LM_ID"]
+            lm_synonym=row["SYNONYMS"]
+            session.run('MERGE (s: Synonym {synonym:"%s"})'%str(lm_synonym))
+            #creat_node_connection=session.run('MATCH (u:LipidMapsCompound) WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
+            session.run("match (l:LipidMapsCompound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=lm_synonym,lipid_maps_id=lipid_maps_id)
 
 
 

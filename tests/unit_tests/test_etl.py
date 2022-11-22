@@ -35,7 +35,6 @@ class TestSwissLipidsETL(unittest.TestCase):
         df = self.scrape_data
         self.assertEqual(df.shape[1],29) 
         self.assertEqual(self.treated_dataframe.shape[1],2)
-        print("aqui")
         self.loader.load(self.treated_dataframe)
 
 

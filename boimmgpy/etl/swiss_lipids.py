@@ -64,9 +64,10 @@ class SwissLipidsTransformer():
         :rtype: pd.DataFrame
         """
         #data_treated=self.treat(data)
+
         itera=len(df)
         cores=multiprocessing.cpu_count()
-        parallel_callback = Parallel(cores)
+        parallel_callback = Parallel(8)
         data_treated=parallel_callback(delayed(self.treat)(df.iloc[[i]])for i in tqdm(range(itera)))
         data_treated = pd.concat(data_treated)
         return data_treated
@@ -121,7 +122,7 @@ class SwissLipidsLoader():
     def load_multiprocessing(self,df:pd.DataFrame):
         itera=len(df)
         cores=multiprocessing.cpu_count()
-        parallel_callback = Parallel(cores)
+        parallel_callback = Parallel(8)
         list_con=parallel_callback(delayed(get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
         #self.set_synonym(list_con)
 
@@ -138,12 +139,13 @@ def get_connection_list(df : pd.DataFrame)->list:
     :return: List of querys necessary to the upload of the whole dataframe
     :rtype: list
     """
-    for i,row in df.iterrows():
-        swiss_lipids_id=row["Lipid ID"]
-        sl_synonym=row["Synonym"]
-        session.run('MERGE (s: Synonym {synonym:"%s"})'%str(sl_synonym))
-        #creat_node_connection=session.run('MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
-        session.run("match (l:SwissLipidsCompound),(s:Synonym) where l.swiss_lipids_id=$sl_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=sl_synonym,sl_id=swiss_lipids_id)
+    with data_base_connection.session() as session:
+        for i,row in df.iterrows():
+            swiss_lipids_id=row["Lipid ID"]
+            sl_synonym=row["Synonym"]
+            session.run('MERGE (s: Synonym {synonym:"%s"})'%str(sl_synonym))
+            #creat_node_connection=session.run('MATCH (u:SwissLipidsCompound) WHERE u.swiss_lipids_id="' + str(swiss_lipids_id) + '" merge (s: Synonym {synonym:"' + str(sl_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
+            session.run("match (l:SwissLipidsCompound),(s:Synonym) where l.swiss_lipids_id=$sl_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=sl_synonym,sl_id=swiss_lipids_id)
 """
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
         start_date=datetime(2022, 1, 1),
