@@ -1,11 +1,12 @@
 import multiprocessing
 import pandas as pd
 from rdkit.Chem import PandasTools
-from joblib import Parallel,delayed
+from joblib import Parallel, delayed
 import requests, zipfile, io
 from neo4j import GraphDatabase
 import sys
-sys.path.insert(1,'.')
+
+sys.path.insert(1, '.')
 
 from tqdm import tqdm
 
@@ -23,8 +24,7 @@ class LipidMapsExtractor():
         """
         return self._extract(self.scrape_data())
 
-
-    def _extract(self, raw ) -> pd.DataFrame:
+    def _extract(self, raw) -> pd.DataFrame:
         """
         Method to create a pandas dataframe with the scraped data.
         :param raw: sdf file of the whole lipid maps database 
@@ -33,10 +33,9 @@ class LipidMapsExtractor():
         :rtype: pd.DataFrame
         """
 
-        raw_lipid_maps_data=PandasTools.LoadSDF(raw)
-        lm_dataframe=pd.DataFrame(raw_lipid_maps_data)
+        raw_lipid_maps_data = PandasTools.LoadSDF(raw)
+        lm_dataframe = pd.DataFrame(raw_lipid_maps_data)
         return lm_dataframe
-
 
     def scrape_data(self):
         """
@@ -46,14 +45,14 @@ class LipidMapsExtractor():
         """
         raw_file = requests.get("https://www.lipidmaps.org/files/?file=LMSD&ext=sdf.zip")
         file_unziped = zipfile.ZipFile(io.BytesIO(raw_file.content))
-        return file_unziped.open('structures.sdf')  
-
+        return file_unziped.open('structures.sdf')
 
 
 class LipidMapsTransformer():
     """Class to transform the lipid maps dataframe
     """
-    def transform(self, df : pd.DataFrame)->pd.DataFrame:
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         This method allows to transform the dataframe previously extracted into a desired data structure
         :param df:  Whole pandas dataframe, previosly extracted in the extract class
@@ -61,16 +60,15 @@ class LipidMapsTransformer():
         :return: treated dataframe of lipid maps, only with two columns, synonym and ID
         :rtype: pd.DataFrame
         """
-        #data_treated=self.treat_lm_dataframe(df)
-        itera=len(df)
-        cores=multiprocessing.cpu_count()
+        # data_treated=self.treat_lm_dataframe(df)
+        itera = len(df)
+        cores = multiprocessing.cpu_count()
         parallel_callback = Parallel(cores)
-        data_treated=parallel_callback(delayed(self.treat_lm_dataframe)(df.iloc[[i]])for i in tqdm(range(itera)))
+        data_treated = parallel_callback(delayed(self.treat_lm_dataframe)(df.iloc[[i]]) for i in tqdm(range(itera)))
         data_treated = pd.concat(data_treated)
         return data_treated
 
-
-    def treat_lm_dataframe(self,lm_dataframe:pd.DataFrame)->pd.DataFrame:
+    def treat_lm_dataframe(self, lm_dataframe: pd.DataFrame) -> pd.DataFrame:
         """
         This method uses the whole lipid maps dataframe and creates another with only two desirable columns, ID and Synonym,
         the last one englobes the abbreviation too
@@ -79,8 +77,8 @@ class LipidMapsTransformer():
         :return: Dataframe with two columns of the initial data, ID and Synonym
         :rtype: pd.DataFrame
         """
-        new_df=pd.DataFrame(columns=['LM_ID','SYNONYMS'])
-        counter=0
+        new_df = pd.DataFrame(columns=['LM_ID', 'SYNONYMS'])
+        counter = 0
         for i, row in lm_dataframe.iterrows():
             lipid_id = row["LM_ID"]
             abreviation = row["ABBREVIATION"]
@@ -89,17 +87,17 @@ class LipidMapsTransformer():
                 abbreviation_splits = abreviation.split(';')
                 for split in abbreviation_splits:
                     new_df.at[counter, "LM_ID"] = lipid_id
-                    split=split.replace(" ","")
+                    split = split.replace(" ", "")
                     new_df.at[counter, "SYNONYMS"] = split.lower()
-                    counter+=1
+                    counter += 1
 
             if synonyms is not None and not pd.isnull(synonyms):
                 synonyms_splits = synonyms.split(';')
                 for split in synonyms_splits:
                     new_df.at[counter, "LM_ID"] = lipid_id
-                    split=split.replace(" ","")
+                    split = split.replace(" ", "")
                     new_df.at[counter, "SYNONYMS"] = split.lower()
-                    counter+=1
+                    counter += 1
         return new_df
 
 
@@ -114,25 +112,25 @@ class LipidMapsLoader():
         :param df: Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
         :type df: pd.DataFrame
         """
-        #self.set_synonym(self.get_connection_list(df))
+        # self.set_synonym(self.get_connection_list(df))
         self.load_multiprocessing(df)
 
 
-    def load_multiprocessing(self,df:pd.DataFrame):
-        itera=len(df)
-        cores=multiprocessing.cpu_count()
+    def load_multiprocessing(self, df: pd.DataFrame):
+        itera = len(df)
+        cores = multiprocessing.cpu_count()
         parallel_callback = Parallel(cores)
-        parallel_callback(delayed(get_connection_list)(df.iloc[[i]])for i in tqdm(range(itera)))
-        #relationship_connection=set_relationship(df)
-        #self.set_synonym(list_con)
+        parallel_callback(delayed(get_connection_list)(df.iloc[[i]]) for i in tqdm(range(itera)))
+        # relationship_connection=set_relationship(df)
+        # self.set_synonym(list_con)
 
 
-   
-
-
-data_base_connection = GraphDatabase.driver(uri="bolt://palsson.di.uminho.pt:6094",auth=("neo4j","bucket-folio-truck-supreme-venus-2823"))
+data_base_connection = GraphDatabase.driver(uri="bolt://palsson.di.uminho.pt:6094",
+                                            auth=("neo4j", "bucket-folio-truck-supreme-venus-2823"))
 session = data_base_connection.session()
-def get_connection_list(df : pd.DataFrame)->list:
+
+
+def get_connection_list(df: pd.DataFrame) -> list:
     """
     This method creates the querys necessary to upload the treated data into the database
     :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
@@ -140,13 +138,14 @@ def get_connection_list(df : pd.DataFrame)->list:
     :return: List of querys necessary to the upload of the whole dataframe
     :rtype: list
     """
-    for i,row in df.iterrows():
-        lipid_maps_id=row["LM_ID"]
-        lm_synonym=row["SYNONYMS"]
-        session.run('MERGE (s: Synonym {synonym:"%s"})'%str(lm_synonym))
-        #creat_node_connection=session.run('MATCH (u:LipidMapsCompound) WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
-        session.run("match (l:LipidMapsCompound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",synonym=lm_synonym,lipid_maps_id=lipid_maps_id)
-
+    for i, row in df.iterrows():
+        lipid_maps_id = row["LM_ID"]
+        lm_synonym = row["SYNONYMS"]
+        session.run('MERGE (s: Synonym {synonym:"%s"})' % str(lm_synonym))
+        # creat_node_connection=session.run('MATCH (u:LipidMapsCompound) WHERE u.lipidmaps_id="' + str(lipid_maps_id) + '" merge (s: Synonym {synonym:"' + str(lm_synonym) + '"} )-[:is_synonym_of]->(u) return *;')
+        session.run(
+            "match (l:LipidMapsCompound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)",
+            synonym=lm_synonym, lipid_maps_id=lipid_maps_id)
 
 
 """
