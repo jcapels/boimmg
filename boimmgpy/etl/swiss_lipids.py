@@ -125,9 +125,8 @@ class SwissLipidsLoader:
         parallel_callback(delayed(get_connection_list)(df.iloc[[i]]) for i in tqdm(range(itera)))
 
 
-data_base_connection = GraphDatabase.driver(uri="bolt://palsson.di.uminho.pt:6094",
-                                            auth=("neo4j", "bucket-folio-truck-supreme-venus-2823"))
-session = data_base_connection.session()
+data_base_connection = GraphDatabase.driver(uri=log,
+                                            auth=(user, password))
 
 
 def get_connection_list(df: pd.DataFrame):
