@@ -10,6 +10,9 @@ from rdkit.Chem import PandasTools
 from tqdm import tqdm
 
 sys.path.insert(1, '.')
+from boimmg.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor,set_database_information
+
+log,user,password = CompoundsDBAccessor.read_config_file()
 
 
 class LipidMapsExtractor:
@@ -127,8 +130,8 @@ class LipidMapsLoader:
         parallel_callback(delayed(get_connection_list)(df.iloc[[i]]) for i in tqdm(range(itera)))
 
 
-data_base_connection = GraphDatabase.driver(uri="bolt://palsson.di.uminho.pt:6094",
-                                            auth=("neo4j", "bucket-folio-truck-supreme-venus-2823"))
+data_base_connection = GraphDatabase.driver(uri=log,
+                                            auth=(user, password))
 
 
 def get_connection_list(df: pd.DataFrame):

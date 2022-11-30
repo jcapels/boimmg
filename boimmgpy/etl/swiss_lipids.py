@@ -6,6 +6,9 @@ from joblib import Parallel, delayed
 from neo4j import GraphDatabase
 from tqdm import tqdm
 
+from boimmg.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor,set_database_information
+
+log,user,password = CompoundsDBAccessor.read_config_file()
 
 class SwissLipidsExtractor:
     """
