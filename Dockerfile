@@ -1,5 +1,6 @@
-FROM python:3.8-slim-buster
+FROM informaticsmatters/rdkit-python3-debian
 
+USER root
 
 #update linux and accessories
 RUN apt-get -y update
@@ -7,26 +8,11 @@ RUN apt-get -y upgrade
 
 #get pip
 RUN apt-get install -y python-dev build-essential
-RUN apt-get install -y python-pip
-RUN python -m pip install --upgrade pip
-RUN apt-get install -y libxrender1
-RUN apt install libxext6
-RUN apt-get install -y libxrender-dev
+RUN apt-get install python3-pip
 
-# create directory in container
-WORKDIR /code
+COPY ./requirements.txt .
+RUN pip3 install -r requirements.txt
 
-# copy requirements to directory created
-COPY ./requirements.txt /code/requirements.txt
-
-
-# run and update requirements
-RUN python -m pip install --no-cache-dir -r /code/requirements.txt
-RUN pip install -U flask
-
-
-# copy all folders in local root to the image
-COPY . .
-
-# run script test_etl.py with python
-CMD ["python","tests/unit_tests/test_etl.py"]
+#clean output; -y acepts everything
+RUN apt-get -y autoclean
+RUN apt-get -y clean
