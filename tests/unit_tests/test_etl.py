@@ -1,9 +1,6 @@
 import unittest
-import sys
 from boimmgpy.etl.lipid_maps import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
 from boimmgpy.etl.swiss_lipids import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
-
-
 
 
 class TestLipidMapsETL(unittest.TestCase):

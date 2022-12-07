@@ -2,16 +2,18 @@ import pandas as pd
 from neo4j import GraphDatabase
 from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 
-log, user, password = CompoundsDBAccessor.read_config_file()
-data_base_connection = GraphDatabase.driver(uri=log, auth=(user, password))
-def incert_in_database(df: pd.Series):
+
+def insert_in_database_lipid_maps(df: pd.Series):
     """
-    This method creates the querys necessary to upload the treated data into the database
+    This method creates the queries necessary to upload the treated data into the database
     :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
     :type df: pd.DataFrame
-    :return: List of querys necessary to the upload of the whole dataframe
+    :return: List of queries necessary to the upload of the whole dataframe
     :rtype: list
     """
+    log, user, password = CompoundsDBAccessor.read_config_file()
+    data_base_connection = GraphDatabase.driver(uri=log, auth=(user, password))
+
     with data_base_connection.session() as session:
         for i, row in df.iterrows():
             lipid_maps_id = row["LM_ID"]
@@ -23,14 +25,17 @@ def incert_in_database(df: pd.Series):
                 synonym=lm_synonym, lipid_maps_id=lipid_maps_id)
 
 
-def incert_in_database_sl(df: pd.Series):
+def insert_in_database_swiss_lipids(df: pd.Series):
     """
-    This method creates the querys necessary to upload the treated data into the database
+    This method creates the queries necessary to upload the treated data into the database
     :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
     :type df: pd.DataFrame
-    :return: List of querys necessary to the upload of the whole dataframe
+    :return: List of queries necessary to the upload of the whole dataframe
     :rtype: list
     """
+    log, user, password = CompoundsDBAccessor.read_config_file()
+    data_base_connection = GraphDatabase.driver(uri=log, auth=(user, password))
+
     with data_base_connection.session() as session1:
         for i, row in df.iterrows():
             swiss_lipids_id = row["Lipid ID"]

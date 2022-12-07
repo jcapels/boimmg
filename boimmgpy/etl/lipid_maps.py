@@ -1,18 +1,13 @@
-import sys
-
 import io
 import pandas as pd
 import requests
 import zipfile
 from joblib import Parallel, delayed
-from neo4j import GraphDatabase
 from rdkit.Chem import PandasTools
 from tqdm import tqdm
 
-sys.path.insert(1, '.')
-from boimmg.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor,set_database_information
-
-log,user,password = CompoundsDBAccessor.read_config_file()
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.etl._utils import insert_in_database_lipid_maps
 
 
 class LipidMapsExtractor:
@@ -22,7 +17,8 @@ class LipidMapsExtractor:
 
     def extract(self) -> pd.DataFrame:
         """
-        This class calls the scrape_data method and creates a pandas dataframe with the scraped data returned from scrape_data method.
+        This class calls the scrape_data method and creates a pandas dataframe with the scraped data returned from
+        scrape_data method.
         :return: Dataframe of the whole Lipid Maps data
         :rtype: pd.DataFrame
         """
@@ -120,37 +116,14 @@ class LipidMapsLoader:
             load
         :type df: pd.DataFrame
         """
-        # self.set_synonym(self.get_connection_list(df))
         self.load_multiprocessing(df)
 
     @staticmethod
     def load_multiprocessing(df: pd.DataFrame):
-        itera = len(df)
+        n_iterations = len(df)
         parallel_callback = Parallel(8)
-        parallel_callback(delayed(get_connection_list)(df.iloc[[i]]) for i in tqdm(range(itera)))
+        parallel_callback(delayed(insert_in_database_lipid_maps)(df.iloc[[i]]) for i in tqdm(range(n_iterations)))
 
-
-data_base_connection = GraphDatabase.driver(uri=log,
-                                            auth=(user, password))
-
-
-def get_connection_list(df: pd.DataFrame):
-    """
-    This method creates the querys necessary to upload the treated data into the database
-    :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
-    :type df: pd.DataFrame
-    :return: List of querys necessary to the upload of the whole dataframe
-    :rtype: list
-    """
-    with data_base_connection.session() as session:
-        for i, row in df.iterrows():
-            lipid_maps_id = row["LM_ID"]
-            lm_synonym = row["SYNONYMS"]
-            session.run('MERGE (s: Synonym {synonym:"%s"})' % str(lm_synonym))
-            session.run(
-                "match (l:LipidMapsCompound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym "
-                "merge (s)-[:is_synonym_of]->(l)",
-                synonym=lm_synonym, lipid_maps_id=lipid_maps_id)
 
 
 """
