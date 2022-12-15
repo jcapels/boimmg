@@ -26,7 +26,7 @@ RUN pip install -U flask
 
 
 # copy all folders in local root to the image
-COPY ../.. .
+COPY ./ .
 
 # install setup.py
 RUN python "setup.py" install
