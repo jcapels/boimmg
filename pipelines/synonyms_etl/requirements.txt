@@ -16,3 +16,4 @@ apache-airflow==1.10.12
 joblib
 tqdm
 jinja2
+python-dotenv

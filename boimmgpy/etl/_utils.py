@@ -1,8 +1,10 @@
 import pandas as pd
+import os
 from neo4j import GraphDatabase
-from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 
-
+password = os.getenv("password")
+log = os.getenv("uri")
+user = os.getenv("user")
 def insert_in_database_lipid_maps(df: pd.Series):
     """
     This method creates the queries necessary to upload the treated data into the database
@@ -11,7 +13,7 @@ def insert_in_database_lipid_maps(df: pd.Series):
     :return: List of queries necessary to the upload of the whole dataframe
     :rtype: list
     """
-    log, user, password = CompoundsDBAccessor.read_config_file()
+    #log, user, password = CompoundsDBAccessor.read_config_file()
     data_base_connection = GraphDatabase.driver(uri=log, auth=(user, password))
 
     with data_base_connection.session() as session:
@@ -33,7 +35,7 @@ def insert_in_database_swiss_lipids(df: pd.Series):
     :return: List of queries necessary to the upload of the whole dataframe
     :rtype: list
     """
-    log, user, password = CompoundsDBAccessor.read_config_file()
+    #log1, user1, password1 = CompoundsDBAccessor.read_config_file()
     data_base_connection = GraphDatabase.driver(uri=log, auth=(user, password))
 
     with data_base_connection.session() as session1:
