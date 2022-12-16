@@ -4,7 +4,6 @@ import pandas as pd
 import requests
 from joblib import Parallel, delayed
 from tqdm import tqdm
-
 from boimmgpy.etl._utils import insert_in_database_swiss_lipids
 
 
@@ -113,7 +112,6 @@ class SwissLipidsLoader:
         :param treated_df: Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
         :type treated_df: pd.DataFrame
         """
-        # self.set_synonym(self.get_connection_list(treated_df))
         self.load_multiprocessing(treated_df)
 
     @staticmethod
