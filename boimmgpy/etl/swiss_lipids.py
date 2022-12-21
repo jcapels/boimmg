@@ -4,6 +4,8 @@ import pandas as pd
 import requests
 from joblib import Parallel, delayed
 from tqdm import tqdm
+
+from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 from boimmgpy.etl._utils import insert_in_database_swiss_lipids
 
 
@@ -52,7 +54,7 @@ class SwissLipidsTransformer:
     Class to transform the lipid maps dataframe
     """
 
-    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+    def transform(self, df: pd.DataFrame,n_jobs=8) -> pd.DataFrame:
         """
         This method allows to transform the dataframe previously extracted into a desired data structure
         :param df:  Whole pandas dataframe, previously extracted in the extract class
@@ -62,7 +64,7 @@ class SwissLipidsTransformer:
         """
 
         iteration = len(df)
-        parallel_callback = Parallel(8)
+        parallel_callback = Parallel(n_jobs)
         data_treated = parallel_callback(delayed(self.treat)(df.iloc[[i]]) for i in tqdm(range(iteration)))
         data_treated = pd.concat(data_treated)
         return data_treated
@@ -105,6 +107,9 @@ class SwissLipidsLoader:
     """
     Class that loads the treated data into the database
     """
+    
+    def __init__(self):
+        self.driver = DatabaseAccessManager().connect()
 
     def load(self, treated_df: pd.DataFrame):
         """
@@ -115,10 +120,30 @@ class SwissLipidsLoader:
         self.load_multiprocessing(treated_df)
 
     @staticmethod
-    def load_multiprocessing(df: pd.DataFrame):
+    def load_multiprocessing(df: pd.DataFrame,n_jobs=8):
         itera = len(df)
-        parallel_callback = Parallel(8)
+        parallel_callback = Parallel(n_jobs)
         parallel_callback(delayed(insert_in_database_swiss_lipids)(df.iloc[[i]]) for i in tqdm(range(itera)))
+
+    
+    
+    def insert_in_database_swiss_lipids(self, df: pd.Series):
+        """
+        This method creates the queries necessary to upload the treated data into the database
+        :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
+        :type df: pd.DataFrame
+        :return: List of queries necessary to the upload of the whole dataframe
+        :rtype: list
+        """
+
+        with self.driver.session() as session:
+            for i, row in df.iterrows():
+                swiss_lipids_id = row["Lipid ID"]
+                sl_synonym = row["Synonym"]
+                session.run('MERGE (s: Synonym {synonym:"%s"})' % str(sl_synonym))
+                session.run("match (l:SwissLipidsCompound),(s:Synonym) where l.swiss_lipids_id=$sl_id and "
+                            "s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)", synonym=sl_synonym,
+                            sl_id=swiss_lipids_id)
 
 
 
