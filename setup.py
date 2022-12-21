@@ -3,8 +3,6 @@ import os
 import setuptools
 from boimmgpy import definitions
 
-with open("boimmgpy/README.md", "r") as fh:
-    long_description = fh.read()
 
 setuptools.setup(
     name="boimmg",
@@ -12,7 +10,6 @@ setuptools.setup(
     author="João Capela",
     author_email="jcapels96@gmail.com",
     description="Find and tag Git commits based on version numbers in commit messages.",
-    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://initialcommit.com/projects/git-tagup",
     packages=setuptools.find_packages(),
