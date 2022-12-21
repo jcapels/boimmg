@@ -2,10 +2,10 @@ from unittest import TestCase
 
 import pandas
 
-from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor, set_database_information
-from boimmgpy.database.accessors.compounds_rest_accessor import CompoundsRestAccessor
-from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from boimmgpy.kegg.kegg_compound import KeggCompound
+from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor, set_database_information
+from src.boimmgpy.database.accessors.compounds_rest_accessor import CompoundsRestAccessor
+from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from src.boimmgpy.kegg.kegg_compound import KeggCompound
 
 
 class TestRestAccess(TestCase):

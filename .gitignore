@@ -6,7 +6,7 @@
 /neo4j_boimmg.py
 /chemoinformatics_tests.ipynb
 /OntologyClasses
-/boimmgpy/configs/my_database_settings.conf
+/src/boimmgpy/configs/my_database_settings.conf
 /database_integration
 /GapFilling
 /curation
@@ -16,6 +16,7 @@
 /stastistics/statistics.py
 /boimmg_pipeline.py
 /*.cpython-36.pyc
-/boimmgpy/required_files/LipidMaps
+/src/boimmgpy/required_files/LipidMaps
 /dist/
 setup_database_credentials.py
+boimmg.egg-info

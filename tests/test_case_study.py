@@ -1,11 +1,10 @@
-import os
 import sys
 
 import cobra
 from rdkit import RDLogger
 
-from boimmgpy.definitions import ROOT_DIR
-from boimmgpy.service.representation_problem_solvers.representation_redundant_case_solver import RedundantCaseSolver
+from src.boimmgpy import ROOT_DIR
+from src.boimmgpy import RedundantCaseSolver
 
 DATABASE_CONF = ROOT_DIR + "/configs/database_settings.conf"
 

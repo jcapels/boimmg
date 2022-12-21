@@ -1,8 +1,7 @@
 import cobra
-from cobra import Reaction, Model
-from cobra.flux_analysis.gapfilling import GapFiller
+from cobra import Reaction
 
-from boimmgpy.representation_changers import LipidGranulator
+from src.boimmgpy.representation_changers import LipidGranulator
 
 
 def redundant_granulator_yeast():

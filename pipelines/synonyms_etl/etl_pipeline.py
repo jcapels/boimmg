@@ -1,8 +1,5 @@
-import pathlib
-
-from boimmgpy import definitions
-from boimmgpy.etl.lipid_maps import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
-from boimmgpy.etl.swiss_lipids import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
+from src.boimmgpy.etl.lipid_maps import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
+from src.boimmgpy import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
 
 
 

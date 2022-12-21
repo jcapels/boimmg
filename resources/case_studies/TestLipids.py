@@ -5,9 +5,9 @@ import cobra
 from cobra import Model
 from cobra.flux_analysis.gapfilling import GapFiller
 
-from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from boimmgpy.boimmg.RepresentationRevisors.RepresentationSimpleCaseSolver import SimpleCaseSolver
-from boimmgpy.boimmg.RepresentationRevisors.RepresentationRedundantCaseSolver import RepresentationRedundantCaseSolver
+from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from src.boimmgpy import SimpleCaseSolver
+from src.boimmgpy import RepresentationRedundantCaseSolver
 from resources.case_studies.redundant_representation_case.map_ecoli_model import map_iJR904
 
 

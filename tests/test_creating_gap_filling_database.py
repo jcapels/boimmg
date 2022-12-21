@@ -1,14 +1,11 @@
-import cobra
 from biocyc import biocyc, Reaction
 from cobra import Metabolite
 from cobrababel import bigg
 
-from boimmgpy.utilities import model_utilities
-
-from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
-from boimmgpy.utilities.annotation_utils import AnnotationUtils
+from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from src.boimmgpy import ModelSeedCompoundsDB
+from src.boimmgpy import AnnotationUtils
 
 compounds_converter = CompoundsIDConverter()
 compounds_model_seed = ModelSeedCompoundsDB()

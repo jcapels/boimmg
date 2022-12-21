@@ -1,8 +1,8 @@
-from boimmgpy import definitions
-from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from boimmgpy.service.network_handlers.pathway_handler import printProgressBar
-from boimmgpy.utilities import file_utilities
-from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH
+from src.boimmgpy import definitions
+from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from src.boimmgpy.service.network_handlers.pathway_handler import printProgressBar
+from src.boimmgpy.utilities import file_utilities
+from src.boimmgpy import COMPOUNDS_ANNOTATION_CONFIGS_PATH
 
 
 def check_if_reaction_exists(reaction_compounds, compounds_in_model_db_ids):
@@ -461,7 +461,8 @@ def compare_lipids_ecoli_granulated(model_database, compoundsAnnotationConfigs,
                                                  compoundsIDConverter):
 
     model3 = cobra.io.read_sbml_model(definitions.ROOT_DIR + "/models/iJR904.xml")
-    model2 = cobra.io.read_sbml_model(definitions.ROOT_DIR + "/case_studies/enhanced_model_ecoli_without_components_gap_filled.xml")
+    model2 = cobra.io.read_sbml_model(
+        definitions.ROOT_DIR + "/case_studies/enhanced_model_ecoli_without_components_gap_filled.xml")
     model = cobra.io.read_sbml_model(definitions.ROOT_DIR + "/models/iAF1260b_mapped.xml")
 
 
