@@ -18,3 +18,4 @@
 /*.cpython-36.pyc
 /boimmgpy/required_files/LipidMaps
 /dist/
+setup_database_credentials.py

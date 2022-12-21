@@ -123,6 +123,8 @@ class SwissLipidsLoader:
 
 
 
+
+
 """
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
         start_date=datetime(2022, 1, 1),
