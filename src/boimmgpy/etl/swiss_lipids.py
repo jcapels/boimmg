@@ -108,8 +108,8 @@ class SwissLipidsLoader:
     Class that loads the treated data into the database
     """
     
-    def __init__(self):
-        self.driver = DatabaseAccessManager().connect()
+    def __init__(self, conf_file_path):
+        self.driver = DatabaseAccessManager(conf_file_path=conf_file_path).connect()
 
     def load(self, treated_df: pd.DataFrame):
         """

@@ -1,6 +1,5 @@
 from boimmgpy.etl.lipid_maps import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
-from boimmgpy import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
-
+from boimmgpy.etl.swiss_lipids import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
 
 
 
@@ -9,7 +8,7 @@ def run_lm_pipeline():
     scrape_data = extractor.extract()
     transformer = LipidMapsTransformer()
     treated_dataframe = transformer.transform(scrape_data)
-    loader = LipidMapsLoader()
+    loader = LipidMapsLoader(conf_file_path="my_database.conf")
     loader.load(treated_dataframe)
 
 def run_sl_pipeline():
@@ -17,7 +16,7 @@ def run_sl_pipeline():
     scrape_data = extractor.extract()
     transformer = SwissLipidsTransformer()
     treated_dataframe = transformer.transform(scrape_data)
-    loader = SwissLipidsLoader()
+    loader = SwissLipidsLoader(conf_file_path="my_database.conf")
     loader.load(treated_dataframe)
 
 

@@ -10,6 +10,9 @@ from neo4j import GraphDatabase, basic_auth
 class DatabaseAccessManager:
     _driver = None
 
+    def __init__(self, conf_file_path: str = None):
+        self.conf_file_path = conf_file_path
+
     @property
     def driver(self):
         if self._driver is None:
@@ -31,17 +34,16 @@ class DatabaseAccessManager:
         return self.driver
 
     @staticmethod
-    def write_config_file(uri: str, user: str, password: str):
+    def write_config_file(file_path: str, uri: str = None, user: str = None, password: str = None):
         uri_bool = False
         user_bool = False
         pass_bool = False
         lines = []
-        if pathlib.Path(definitions.BOIMMG_DATABASE).exists():
-            with open(definitions.BOIMMG_DATABASE, "r") as f:
+        if pathlib.Path(file_path).exists():
+            with open(file_path, "r") as f:
                 lines = f.readlines()
 
-        with open(definitions.BOIMMG_DATABASE, "w") as f:
-
+        with open(file_path, "w") as f:
             if lines:
                 for line in lines:
                     if re.match("^uri=", line):
@@ -73,8 +75,10 @@ class DatabaseAccessManager:
             result = session.run(query, params)
         return result
 
-    def _get_credentials_from_file(self, path: str = definitions.BOIMMG_DATABASE):
-        if not pathlib.Path(path).exists():
+    def _get_credentials_from_file(self, path=None):
+        if path is not None:
+            self.conf_file_path = path
+        if not pathlib.Path(self.conf_file_path).exists():
             raise Exception("Database credentials file not found")
         else:
             uri, user, password = self.read_database_credentials()
@@ -98,9 +102,9 @@ class DatabaseAccessManager:
             raise Exception("Please insert the required database information using set_database_information function")
 
 
-def read_config_file():
-    if pathlib.Path("/code/boimmgpy/configs/my_database_settings.conf").exists():
-        configs = file_utilities.read_conf_file("/code/boimmgpy/configs/my_database_settings.conf")
+def read_config_file(file_path):
+    if pathlib.Path(file_path).exists():
+        configs = file_utilities.read_conf_file(file_path)
 
         if "uri" in configs.keys() and "user" in configs.keys() and "password" in configs.keys():
             uri = configs["uri"]
