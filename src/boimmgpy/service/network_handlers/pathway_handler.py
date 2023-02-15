@@ -1,13 +1,13 @@
 import re
 
-from src.boimmgpy.kegg.kegg_compound import KeggCompound
-from src.boimmgpy.kegg.kegg_pathway import KeggPathway
-from src.boimmgpy.kegg.kegg_reaction import KeggReaction
-from src.boimmgpy.service.network_handlers.metabolic_network import MetabolicNetwork
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.kegg.kegg_compound import KeggCompound
+from boimmgpy.kegg.kegg_pathway import KeggPathway
+from boimmgpy.kegg.kegg_reaction import KeggReaction
+from boimmgpy.service.network_handlers.metabolic_network import MetabolicNetwork
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
 from biocyc import biocyc
-from src.boimmgpy.definitions import ROOT_DIR
+from boimmgpy.definitions import ROOT_DIR
 
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):

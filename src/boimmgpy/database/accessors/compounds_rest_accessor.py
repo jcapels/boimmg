@@ -1,9 +1,9 @@
 import time
 
-from src.boimmgpy import definitions
-from src.boimmgpy.database.containers.compound_node import CompoundNode
-from src.boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
-from src.boimmgpy.utilities import file_utilities
+from boimmgpy import definitions
+from boimmgpy.database.containers.compound_node import CompoundNode
+from boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
+from boimmgpy.utilities import file_utilities
 import requests
 
 

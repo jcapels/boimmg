@@ -1,6 +1,6 @@
 import re
 
-from src.boimmgpy.kegg.kegg_entity import KeggEntity
+from boimmgpy.kegg.kegg_entity import KeggEntity
 
 
 class KeggModule(KeggEntity):

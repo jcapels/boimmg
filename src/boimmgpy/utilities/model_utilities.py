@@ -1,12 +1,12 @@
 from cobra import Metabolite, Reaction, Model
 from cobrababel import bigg
 
-from src.boimmgpy.database.containers.compound_node import CompoundNode
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
-from src.boimmgpy.utilities.annotation_utils import AnnotationUtils
-from src.boimmgpy.kegg.kegg_compound import KeggCompound
-from src.boimmgpy.kegg.kegg_reaction import KeggReaction
+from boimmgpy.database.containers.compound_node import CompoundNode
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.utilities.annotation_utils import AnnotationUtils
+from boimmgpy.kegg.kegg_compound import KeggCompound
+from boimmgpy.kegg.kegg_reaction import KeggReaction
 
 import numpy as np
 

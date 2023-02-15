@@ -1,4 +1,4 @@
-from src.boimmgpy.kegg.kegg_entity import KeggEntity
+from boimmgpy.kegg.kegg_entity import KeggEntity
 import re
 
 

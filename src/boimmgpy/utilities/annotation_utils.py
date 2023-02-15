@@ -1,5 +1,5 @@
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH, REACTIONS_ANNOTATION_CONFIGS_PATH
+from boimmgpy.utilities import file_utilities
+from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH, REACTIONS_ANNOTATION_CONFIGS_PATH
 
 
 class AnnotationUtils(object):

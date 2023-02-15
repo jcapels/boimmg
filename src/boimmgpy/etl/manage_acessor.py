@@ -1,4 +1,4 @@
-from src.boimmgpy.utilities import file_utilities
+from boimmgpy.utilities import file_utilities
 import pathlib
 import os
 

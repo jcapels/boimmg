@@ -1,7 +1,7 @@
 import cobra
 from cobra import Reaction
 
-from src.boimmgpy.representation_changers import LipidGranulator
+from boimmgpy.representation_changers import LipidGranulator
 
 
 def redundant_granulator_yeast():

@@ -1,6 +1,6 @@
 import pandas as pd
 from neo4j import GraphDatabase
-from src.boimmgpy.database.accessors.database_access_manager import read_config_file
+from boimmgpy.database.accessors.database_access_manager import read_config_file
 
 
 def insert_in_database_lipid_maps(df: pd.Series):

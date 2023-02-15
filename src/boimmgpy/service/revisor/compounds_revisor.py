@@ -5,10 +5,10 @@ from collections import defaultdict
 from cobra import Model, Reaction
 from sympy import solve, Symbol, Integer
 
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy.utilities.annotation_utils import AnnotationUtils
-from src.boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.utilities import file_utilities
+from boimmgpy.utilities.annotation_utils import AnnotationUtils
+from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH
 
 
 class CompoundsRevisor:

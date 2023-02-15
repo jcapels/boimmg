@@ -5,9 +5,9 @@ from typing import Union
 import requests
 from neo4j import GraphDatabase
 
-from src.boimmgpy import definitions
-from src.boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
-from src.boimmgpy.utilities import file_utilities
+from boimmgpy import definitions
+from boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
+from boimmgpy.utilities import file_utilities
 
 
 class ModelSeedCompoundsDB:

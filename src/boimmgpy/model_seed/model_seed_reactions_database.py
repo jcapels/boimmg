@@ -1,8 +1,8 @@
 import re
 
-from src.boimmgpy.model_seed.model_seed_reaction import ModelSeedReaction
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy.definitions import ROOT_DIR, DATABASE_CONFIGS
+from boimmgpy.model_seed.model_seed_reaction import ModelSeedReaction
+from boimmgpy.utilities import file_utilities
+from boimmgpy.definitions import ROOT_DIR, DATABASE_CONFIGS
 
 
 class ModelSeedReactionsDB:

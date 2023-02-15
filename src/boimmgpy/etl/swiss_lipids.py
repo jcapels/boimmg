@@ -5,8 +5,8 @@ import requests
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from src.boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
-from src.boimmgpy.etl._utils import insert_in_database_swiss_lipids
+from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
+from boimmgpy.etl._utils import insert_in_database_swiss_lipids
 
 
 class SwissLipidsExtractor:

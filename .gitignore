@@ -20,3 +20,4 @@
 /dist/
 setup_database_credentials.py
 boimmg.egg-info
+*.egg

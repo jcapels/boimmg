@@ -1,4 +1,4 @@
-from src.boimmgpy.service.network_handlers.graph import Graph
+from boimmgpy.service.network_handlers.graph import Graph
 
 
 class MetabolicNetwork(Graph):

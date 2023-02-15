@@ -1,8 +1,8 @@
 import re
 
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy.id_converters.id_converter import IDConverter
-from src.boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, DATABASE_CONFIGS
+from boimmgpy.utilities import file_utilities
+from boimmgpy.id_converters.id_converter import IDConverter
+from boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, DATABASE_CONFIGS
 
 
 class ReactionsIDConverter(IDConverter):

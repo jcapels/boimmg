@@ -4,17 +4,17 @@ from typing import Union
 
 from cobra import Model, Metabolite
 
-from src.boimmgpy.database.containers.compound_node import CompoundNode
-from src.boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
-from src.boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
-from src.boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
-from src.boimmgpy.utilities import file_utilities, model_utilities
-from src.boimmgpy.utilities.annotation_utils import AnnotationUtils
-from src.boimmgpy.service.network_modifiers.reactions_swapper import ReactionsChanger
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.kegg.kegg_compound import KeggCompound
+from boimmgpy.database.containers.compound_node import CompoundNode
+from boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
+from boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.utilities import file_utilities, model_utilities
+from boimmgpy.utilities.annotation_utils import AnnotationUtils
+from boimmgpy.service.network_modifiers.reactions_swapper import ReactionsChanger
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.kegg.kegg_compound import KeggCompound
 from cobrababel import bigg
-from src.boimmgpy.definitions import ROOT_DIR, TOOL_CONFIG_PATH, REACTIONS_ANNOTATION_CONFIGS_PATH, \
+from boimmgpy.definitions import ROOT_DIR, TOOL_CONFIG_PATH, REACTIONS_ANNOTATION_CONFIGS_PATH, \
     COMPOUNDS_ANNOTATION_CONFIGS_PATH
 
 logPath = ROOT_DIR + "/logs"

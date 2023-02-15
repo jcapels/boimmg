@@ -1,8 +1,8 @@
-from src.boimmgpy import definitions
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.service.network_handlers.pathway_handler import printProgressBar
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy import COMPOUNDS_ANNOTATION_CONFIGS_PATH
+from boimmgpy import definitions
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.service.network_handlers.pathway_handler import printProgressBar
+from boimmgpy.utilities import file_utilities
+from boimmgpy import COMPOUNDS_ANNOTATION_CONFIGS_PATH
 
 
 def check_if_reaction_exists(reaction_compounds, compounds_in_model_db_ids):

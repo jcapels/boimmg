@@ -4,11 +4,11 @@ from typing import Union
 
 from neo4j import GraphDatabase
 
-from src.boimmgpy import definitions
-from src.boimmgpy.database.containers.compound_node import CompoundNode
-from src.boimmgpy.database.databases_babel import AliasesTransformer
-from src.boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
-from src.boimmgpy.utilities import file_utilities
+from boimmgpy import definitions
+from boimmgpy.database.containers.compound_node import CompoundNode
+from boimmgpy.database.databases_babel import AliasesTransformer
+from boimmgpy.database.interfaces.boimmg_database_accessor import BOIMMGDatabaseAccessor
+from boimmgpy.utilities import file_utilities
 
 
 def set_database_information(uri, user, password):

@@ -1,5 +1,5 @@
-from src.boimmgpy.etl.lipid_maps import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
-from src.boimmgpy import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
+from boimmgpy.etl.lipid_maps import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
+from boimmgpy import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
 
 
 

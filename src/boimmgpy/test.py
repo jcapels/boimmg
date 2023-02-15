@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.boimmgpy.database.accessors.compounds_database_accessor import set_database_information, CompoundsDBAccessor
+from boimmgpy.database.accessors.compounds_database_accessor import set_database_information, CompoundsDBAccessor
 
 
 class TestRestAccess(TestCase):

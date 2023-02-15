@@ -1,8 +1,8 @@
 import pathlib
 import re
 
-from src.boimmgpy import definitions
-from src.boimmgpy.utilities import file_utilities
+from boimmgpy import definitions
+from boimmgpy.utilities import file_utilities
 
 from neo4j import GraphDatabase, basic_auth
 

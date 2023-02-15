@@ -1,6 +1,6 @@
-from src.boimmgpy.database.databases_babel import BOIMMGDatabases, AliasesTransformer
-from src.boimmgpy.database.boimmg_properties import BOIMMGProperties
-from src.boimmgpy.database.interfaces.node import OntologyNode
+from boimmgpy.database.databases_babel import BOIMMGDatabases, AliasesTransformer
+from boimmgpy.database.boimmg_properties import BOIMMGProperties
+from boimmgpy.database.interfaces.node import OntologyNode
 
 
 class CompoundNode(OntologyNode):

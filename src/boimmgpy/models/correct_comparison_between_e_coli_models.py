@@ -1,6 +1,6 @@
 import cobra
 
-from src.boimmgpy import definitions
+from boimmgpy import definitions
 
 
 def map_e_coli_granulated_model():

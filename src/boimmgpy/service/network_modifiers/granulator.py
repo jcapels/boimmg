@@ -3,12 +3,12 @@ from typing import Tuple, List
 
 from cobra import Reaction, Model, Metabolite
 
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
-from src.boimmgpy.service.model_mapper import ModelMapper
-from src.boimmgpy.utilities import chemo_utilities, model_utilities, file_utilities
-from src.boimmgpy.definitions import ROOT_DIR, REACTIONS_ANNOTATION_CONFIGS_PATH
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.service.model_mapper import ModelMapper
+from boimmgpy.utilities import chemo_utilities, model_utilities, file_utilities
+from boimmgpy.definitions import ROOT_DIR, REACTIONS_ANNOTATION_CONFIGS_PATH
 
 PROGRESS_BAR = ROOT_DIR + "/service/logs/progress_bar.txt"
 

@@ -2,8 +2,8 @@ import shutil
 from datetime import datetime
 from urllib import request
 
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy.definitions import ROOT_DIR, DATABASE_CONFIGS
+from boimmgpy.utilities import file_utilities
+from boimmgpy.definitions import ROOT_DIR, DATABASE_CONFIGS
 
 
 class CompoundsIDConverterScraper:

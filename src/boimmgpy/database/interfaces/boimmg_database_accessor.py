@@ -1,6 +1,6 @@
 import abc
 
-from src.boimmgpy.database.interfaces import node
+from boimmgpy.database.interfaces import node
 
 
 class BOIMMGDatabaseAccessor(metaclass=abc.ABCMeta):

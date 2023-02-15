@@ -3,9 +3,9 @@ import time
 import cobra
 from cobra import Reaction
 
-from src.boimmgpy import definitions
-from src.boimmgpy import RepresentationRedundantCaseSolver
-from src.boimmgpy import SimpleCaseSolver
+from boimmgpy import definitions
+from boimmgpy import RepresentationRedundantCaseSolver
+from boimmgpy import SimpleCaseSolver
 
 # ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 from resources.case_studies.redundant_representation_case.map_ecoli_model import map_iJR904

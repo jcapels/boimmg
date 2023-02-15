@@ -1,8 +1,8 @@
 import json
 
-from src.boimmgpy.database.containers.compound_node import CompoundNode
-from src.boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH
-from src.boimmgpy.utilities import file_utilities
+from boimmgpy.database.containers.compound_node import CompoundNode
+from boimmgpy.definitions import COMPOUNDS_ANNOTATION_CONFIGS_PATH
+from boimmgpy.utilities import file_utilities
 
 
 class ModelMapper:

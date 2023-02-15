@@ -152,7 +152,7 @@ neo4j-admin load --from=<path to dump file> --database=graph.db
 12. Finally, you are ready to set up the database in the package!
 
 ```python
-from src.boimmgpy.database.accessors.compounds_database_accessor import set_database_information
+from boimmgpy.database.accessors.compounds_database_accessor import set_database_information
 
 set_database_information(uri="bolt://localhost:<bolt port>", user="neo4j", password="<your password>")
 ```
@@ -163,8 +163,8 @@ The LipidGranulator allows you to convert your model's lipids from a generic to 
 
 ```python
 import cobra
-from src.boimmgpy.representation_changers import LipidGranulator
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.representation_changers import LipidGranulator
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 
 model = cobra.io.read_sbml_model("iJR904_mapped.xml")
 
@@ -200,7 +200,7 @@ cobra.io.write_sbml_model(solver.model, "granulated_iJR904.xml")
 
 ```python
 import cobra
-from src.boimmgpy.representation_changers import LipidGranulator
+from boimmgpy.representation_changers import LipidGranulator
 
 model = cobra.io.read_sbml_model("iJR904_mapped.xml")
 
@@ -231,8 +231,8 @@ solver.swap_from_generic(["cpd22513", "cpd15649"], components, False, sources=["
 
 ```python
 import cobra
-from src.boimmgpy.representation_changers import CofactorSwapper
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.representation_changers import CofactorSwapper
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 
 model = cobra.io.read_sbml_model("/models/iMM904.xml")
 
@@ -254,7 +254,7 @@ rep_case_solver.swap_compound("cpd15290", "cpd11669")
 
 ```python
 import cobra
-from src.boimmgpy.representation_changers import CofactorSwapper
+from boimmgpy.representation_changers import CofactorSwapper
 
 model = cobra.io.read_sbml_model("/models/iMM904.xml")
 
@@ -265,7 +265,7 @@ rep_case_solver.swap_compound("cpd15290", "cpd11669")
 rep_case_solver.write_report("new_report.txt")
 
 import cobra
-from src.boimmgpy.representation_changers import LipidGranulator
+from boimmgpy.representation_changers import LipidGranulator
 
 model = cobra.io.read_sbml_model("iJR904_mapped.xml")
 

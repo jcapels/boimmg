@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from src.boimmgpy.etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
+from boimmgpy.etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
 
 
 

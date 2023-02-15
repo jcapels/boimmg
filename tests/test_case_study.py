@@ -3,8 +3,8 @@ import sys
 import cobra
 from rdkit import RDLogger
 
-from src.boimmgpy import ROOT_DIR
-from src.boimmgpy import RedundantCaseSolver
+from boimmgpy import ROOT_DIR
+from boimmgpy import RedundantCaseSolver
 
 DATABASE_CONF = ROOT_DIR + "/configs/database_settings.conf"
 

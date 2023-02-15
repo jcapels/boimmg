@@ -1,5 +1,5 @@
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from src.boimmgpy.ontology_generators.ontology_generator import OntologyGeneratorDA, TransformationsHandler
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.ontology_generators.ontology_generator import OntologyGeneratorDA, TransformationsHandler
 
 
 def run_ontology_generation_for_lmsd_ms_compounds():

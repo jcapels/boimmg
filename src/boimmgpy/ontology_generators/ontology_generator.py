@@ -5,15 +5,15 @@ from rdkit import Chem, DataStructs
 from rdkit.Chem import AllChem, MolToInchiKey, MolToSmiles, rdmolops
 from rdkit.Chem.rdmolfiles import MolFromSmarts, MolFromSmiles
 
-from src.boimmgpy.database.databases_babel import ModelSEEDDatabases
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from src.boimmgpy.service.network_handlers.pathway_handler import PathwayHandler
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.id_converters.reactions_id_converter import ReactionsIDConverter
-from src.boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
-from src.boimmgpy.model_seed.model_seed_reactions_database import ModelSeedReactionsDB
-from src.boimmgpy.utilities import chemo_utilities, file_utilities
-from src.boimmgpy.definitions import EXCEPTIONS
+from boimmgpy.database.databases_babel import ModelSEEDDatabases
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.service.network_handlers.pathway_handler import PathwayHandler
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.id_converters.reactions_id_converter import ReactionsIDConverter
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDB
+from boimmgpy.model_seed.model_seed_reactions_database import ModelSeedReactionsDB
+from boimmgpy.utilities import chemo_utilities, file_utilities
+from boimmgpy.definitions import EXCEPTIONS
 
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='|', printEnd="\r"):

@@ -1,8 +1,8 @@
 import cobra
 
-from src.boimmgpy import definitions
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from src.boimmgpy.representation_changers import CofactorSwapper
+from boimmgpy import definitions
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.representation_changers import CofactorSwapper
 
 
 def sacc_to_9():

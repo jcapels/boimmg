@@ -1,9 +1,9 @@
 from cobra import Model, Reaction
 
-from src.boimmgpy.service.revisor.compounds_revisor import CompoundsRevisor
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, REACTIONS_ANNOTATION_CONFIGS_PATH, \
+from boimmgpy.service.revisor.compounds_revisor import CompoundsRevisor
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.utilities import file_utilities
+from boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, REACTIONS_ANNOTATION_CONFIGS_PATH, \
     COMPOUNDS_ANNOTATION_CONFIGS_PATH
 
 

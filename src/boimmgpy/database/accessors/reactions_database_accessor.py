@@ -1,7 +1,7 @@
 
 from neo4j import GraphDatabase
 
-from src.boimmgpy.database.interfaces import node
+from boimmgpy.database.interfaces import node
 
 
 class ReactionsDBAccessor:

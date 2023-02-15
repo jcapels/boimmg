@@ -3,9 +3,9 @@ from copy import deepcopy
 from cobra import Reaction
 from cobra.util import linear_reaction_coefficients
 
-from src.boimmgpy.database.accessors.compounds_rest_accessor import CompoundsRestAccessor
-from src.boimmgpy.service.network_modifiers.granulator import Granulator
-from src.boimmgpy.service.interfaces.representation_problem_solver import RepresentationProblemSolver
+from boimmgpy.database.accessors.compounds_rest_accessor import CompoundsRestAccessor
+from boimmgpy.service.network_modifiers.granulator import Granulator
+from boimmgpy.service.interfaces.representation_problem_solver import RepresentationProblemSolver
 
 import logging
 import re
@@ -14,24 +14,24 @@ from logging.handlers import TimedRotatingFileHandler
 
 import cobra
 from biocyc import biocyc
-from src.boimmgpy import definitions
+from boimmgpy import definitions
 from cobra import Model
 
-from src.boimmgpy.database.containers.compound_node import CompoundNode
-from src.boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
-from src.boimmgpy.database.databases_babel import AliasesTransformer
-from src.boimmgpy.service.model_mapper import ModelMapper
-from src.boimmgpy.service.revisor.compounds_revisor import CompoundsRevisor
-from src.boimmgpy.service.network_modifiers.metabolite_swapper import MetaboliteSwapper
-from src.boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
-from src.boimmgpy.utilities import model_utilities
-from src.boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
-from src.boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDBRest, \
+from boimmgpy.database.containers.compound_node import CompoundNode
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.database.databases_babel import AliasesTransformer
+from boimmgpy.service.model_mapper import ModelMapper
+from boimmgpy.service.revisor.compounds_revisor import CompoundsRevisor
+from boimmgpy.service.network_modifiers.metabolite_swapper import MetaboliteSwapper
+from boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
+from boimmgpy.utilities import model_utilities
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.model_seed.model_seed_compounds_database import ModelSeedCompoundsDBRest, \
     ModelSeedCompoundsDBRaw
-from src.boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, COMPOUNDS_ANNOTATION_CONFIGS_PATH, \
+from boimmgpy.definitions import TOOL_CONFIG_PATH, ROOT_DIR, COMPOUNDS_ANNOTATION_CONFIGS_PATH, \
     REACTIONS_ANNOTATION_CONFIGS_PATH
-from src.boimmgpy.utilities import file_utilities
-from src.boimmgpy.utilities.rest_access_utils import RestUtils
+from boimmgpy.utilities import file_utilities
+from boimmgpy.utilities.rest_access_utils import RestUtils
 
 logPath = ROOT_DIR + "/logs"
 

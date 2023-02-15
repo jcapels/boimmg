@@ -5,7 +5,7 @@ import re
 from sympy.solvers import solve
 from collections import defaultdict
 
-from src.boimmgpy import definitions
+from boimmgpy import definitions
 
 
 def map_iJR904():
