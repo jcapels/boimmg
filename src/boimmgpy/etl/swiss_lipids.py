@@ -108,8 +108,6 @@ class SwissLipidsLoader:
     Class that loads the treated data into the database
     """
     
-    def __init__(self, conf_file_path):
-        self.driver = DatabaseAccessManager(conf_file_path=conf_file_path).connect()
 
     def load(self, treated_df: pd.DataFrame):
         """
@@ -126,24 +124,6 @@ class SwissLipidsLoader:
         parallel_callback(delayed(insert_in_database_swiss_lipids)(df.iloc[[i]]) for i in tqdm(range(itera)))
 
     
-    
-    def insert_in_database_swiss_lipids(self, df: pd.Series):
-        """
-        This method creates the queries necessary to upload the treated data into the database
-        :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
-        :type df: pd.DataFrame
-        :return: List of queries necessary to the upload of the whole dataframe
-        :rtype: list
-        """
-
-        with self.driver.session() as session:
-            for i, row in df.iterrows():
-                swiss_lipids_id = row["Lipid ID"]
-                sl_synonym = row["Synonym"]
-                session.run('MERGE (s: Synonym {synonym:"%s"})' % str(sl_synonym))
-                session.run("match (l:SwissLipidsCompound),(s:Synonym) where l.swiss_lipids_id=$sl_id and "
-                            "s.synonym=$synonym merge (s)-[:is_synonym_of]->(l)", synonym=sl_synonym,
-                            sl_id=swiss_lipids_id)
 
 
 

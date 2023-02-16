@@ -20,14 +20,14 @@ class DatabaseAccessManager:
         else:
             return self._driver
 
-    def establish_connection(self, uri: str = None, user: str = None, password: str = None):
+    def establish_connection(self,path = None, uri: str = None, user: str = None, password: str = None):
         if uri is None or user is None or password is None:
-            uri, user, password = self._get_credentials_from_file()
+            uri, user, password = self._get_credentials_from_file(path=path)
         self._driver = GraphDatabase.driver(uri, auth=basic_auth(user, password))
 
     def establish_connection_from_file(self, path):
         uri, user, password = self._get_credentials_from_file(path)
-        self.establish_connection(uri, user, password)
+        self.establish_connection(path,uri, user, password)
 
     def connect(self):
         self.establish_connection()
@@ -84,11 +84,11 @@ class DatabaseAccessManager:
             uri, user, password = self.read_database_credentials()
             return uri, user, password
 
-    @staticmethod
-    def read_database_credentials():
 
-        if pathlib.Path(definitions.BOIMMG_DATABASE).exists():
-            configs = file_utilities.read_conf_file(definitions.BOIMMG_DATABASE)
+    def read_database_credentials(self):
+
+        if pathlib.Path(self.conf_file_path).exists():
+            configs = file_utilities.read_conf_file(self.conf_file_path)
 
             if "uri" in configs.keys() and "user" in configs.keys() and "password" in configs.keys():
                 uri = configs["uri"]

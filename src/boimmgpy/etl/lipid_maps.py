@@ -108,9 +108,6 @@ class LipidMapsLoader:
     Class that loads the treated data into the database
     """
 
-    def __init__(self, conf_file_path: str):
-        self.driver = DatabaseAccessManager(conf_file_path=conf_file_path).connect()
-
     def load(self, df: pd.DataFrame):
         """
         This method connects and loads the treated data into the database
@@ -126,25 +123,7 @@ class LipidMapsLoader:
         parallel_callback = Parallel(n_jobs)
         parallel_callback(delayed(insert_in_database_lipid_maps)(df.iloc[[i]]) for i in tqdm(range(n_iterations)))
 
-    def insert_in_database_lipid_maps(self, df: pd.Series):
-        """
-        This method creates the queries necessary to upload the treated data into the database
-        :param df:  Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
-        :type df: pd.DataFrame
-        :return: List of queries necessary to the upload of the whole dataframe
-        :rtype: list
-        """
-
-        with self.driver.session() as session:
-            for i, row in df.iterrows():
-                lipid_maps_id = row["LM_ID"]
-                lm_synonym = row["SYNONYMS"]
-                session.run('MERGE (s: Synonym {synonym:"%s"})' % str(lm_synonym))
-                session.run(
-                    "match (l:LipidMapsCompound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym "
-                    "merge (s)-[:is_synonym_of]->(l)",
-                    synonym=lm_synonym, lipid_maps_id=lipid_maps_id)
-
+    
 
 """
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
