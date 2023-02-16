@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(1,'.')
+sys.path.insert(1, '')
 from boimmg.boimmgpy.read_model.case_study import read_treat_model
 import numpy as np
 import pandas as pd

@@ -1,8 +1,5 @@
 from abc import abstractmethod
 
-from airflow.decorators import task
-from airflow.models.dag import dag
-
 from boimmgpy.etl.abstract_classes import AbstractExtractor, AbstractTransformer, AbstractLoader, AbstractETLPipeline
 
 

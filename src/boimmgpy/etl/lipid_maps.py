@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 from rdkit.Chem import PandasTools
 from tqdm import tqdm
 
-from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 from boimmgpy.etl._utils import insert_in_database_lipid_maps
 
 
@@ -64,7 +64,6 @@ class LipidMapsTransformer:
         :return: treated dataframe of lipid maps, only with two columns, synonym and ID
         :rtype: pd.DataFrame
         """
-        # data_treated=self.treat_lm_dataframe(df)
         iteration = len(df)
         parallel_callback = Parallel(8)
         data_treated = parallel_callback(delayed(self.treat_lm_dataframe)(df.iloc[[i]]) for i in tqdm(range(iteration)))
@@ -119,12 +118,12 @@ class LipidMapsLoader:
         self.load_multiprocessing(df)
 
     @staticmethod
-    def load_multiprocessing(df: pd.DataFrame):
+    def load_multiprocessing(df: pd.DataFrame, n_jobs: int = 8):
         n_iterations = len(df)
-        parallel_callback = Parallel(8)
+        parallel_callback = Parallel(n_jobs)
         parallel_callback(delayed(insert_in_database_lipid_maps)(df.iloc[[i]]) for i in tqdm(range(n_iterations)))
 
-
+    
 
 """
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",

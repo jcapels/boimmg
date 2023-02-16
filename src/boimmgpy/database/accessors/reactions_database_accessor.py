@@ -7,8 +7,8 @@ from boimmgpy.database.interfaces import node
 class ReactionsDBAccessor:
 
     def login(self):
-        uri = "bolt://palsson.di.uminho.pt:6094"
-        driver = GraphDatabase.driver(uri, auth=("neo4j", "Tuning999"), encrypted=False)
+        uri = "coiso"
+        driver = GraphDatabase.driver(uri, auth=("coiso", "coiso"), encrypted=False)
         self.tx = driver
 
     @property

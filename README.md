@@ -151,7 +151,6 @@ neo4j-admin load --from=<path to dump file> --database=graph.db
 
 12. Finally, you are ready to set up the database in the package!
 
-
 ```python
 from boimmgpy.database.accessors.compounds_database_accessor import set_database_information
 
@@ -178,9 +177,9 @@ components = ["cpd00214", "cpd03847", "cpd05274", "cpd25615", "cpd05237"]
 # function call
 solver = LipidGranulator(model, "BiGG")
 
-#funtion call to use a local database
+# funtion call to use a local database
 accessor = CompoundsDBAccessor()
-solver = LipidGranulator(model, "BiGG",db_accessor=accessor)
+solver = LipidGranulator(model, "BiGG", db_accessor=accessor)
 
 # Map the model so that internal processes can recognize which metabolites are in the model 
 solver.map_model()
@@ -198,6 +197,7 @@ cobra.io.write_sbml_model(solver.model, "granulated_iJR904.xml")
 ```
 
 #### Granulate only with lipids from specific sources
+
 ```python
 import cobra
 from boimmgpy.representation_changers import LipidGranulator
@@ -219,7 +219,7 @@ solver.map_model()
 # here we will only granulate a generic lipid with the ones from LIPID MAPS
 solver.swap_from_generic(["cpd22513", "cpd15649"], components, False, sources=["LIPID MAPS"])
 
-#here we will only granulate a generic lipid with the ones from LIPID MAPS AND Swiss Lipids
+# here we will only granulate a generic lipid with the ones from LIPID MAPS AND Swiss Lipids
 solver.swap_from_generic(["cpd22513", "cpd15649"], components, False, sources=["LIPID MAPS", "SwissLipids"])
 
 
@@ -239,10 +239,9 @@ model = cobra.io.read_sbml_model("/models/iMM904.xml")
 # The second parameter is the database format of the model: it can be ModelSEED, BiGG and KEGG
 rep_case_solver = CofactorSwapper(model, "ModelSEED")
 
-#funtion call to use a local database
+# funtion call to use a local database
 accessor = CompoundsDBAccessor()
-solver = CofactorSwapper(model, "ModelSEED",db_accessor=accessor)
-
+solver = CofactorSwapper(model, "ModelSEED", db_accessor=accessor)
 
 # Map the model so that internal processes can recognize which metabolites are in the model 
 rep_case_solver.map_model()

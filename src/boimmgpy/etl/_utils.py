@@ -1,6 +1,8 @@
 import pandas as pd
 from neo4j import GraphDatabase
-from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+
+from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
+
 
 
 def insert_in_database_lipid_maps(df: pd.Series):
@@ -11,10 +13,10 @@ def insert_in_database_lipid_maps(df: pd.Series):
     :return: List of queries necessary to the upload of the whole dataframe
     :rtype: list
     """
-    log, user, password = CompoundsDBAccessor.read_config_file()
-    data_base_connection = GraphDatabase.driver(uri=log, auth=(user, password))
 
-    with data_base_connection.session() as session:
+    driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
+
+    with driver.session() as session:
         for i, row in df.iterrows():
             lipid_maps_id = row["LM_ID"]
             lm_synonym = row["SYNONYMS"]
@@ -33,10 +35,10 @@ def insert_in_database_swiss_lipids(df: pd.Series):
     :return: List of queries necessary to the upload of the whole dataframe
     :rtype: list
     """
-    log, user, password = CompoundsDBAccessor.read_config_file()
-    data_base_connection = GraphDatabase.driver(uri=log, auth=(user, password))
+    
+    driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
 
-    with data_base_connection.session() as session1:
+    with driver.session() as session1:
         for i, row in df.iterrows():
             swiss_lipids_id = row["Lipid ID"]
             sl_synonym = row["Synonym"]

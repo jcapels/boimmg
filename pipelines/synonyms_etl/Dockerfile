@@ -26,10 +26,11 @@ RUN pip install -U flask
 
 
 # copy all folders in local root to the image
-COPY ../.. .
+COPY ./ .
 
 # install setup.py
 RUN python "setup.py" install
+RUN python "pipelines/synonyms_etl/setup_database_credentials.py"
 
 # run script test_etl.py with python
 CMD ["python","pipelines/synonyms_etl/etl_pipeline.py"]

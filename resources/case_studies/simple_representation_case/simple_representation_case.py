@@ -1,9 +1,7 @@
 import cobra
 
 from boimmgpy import definitions
-from boimmgpy.database.accessors.compounds_database_accessor import set_database_information, CompoundsDBAccessor
-from boimmgpy.database.accessors.compounds_rest_accessor import CompoundsRestAccessor
-from boimmgpy.definitions import ROOT_DIR
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
 from boimmgpy.representation_changers import CofactorSwapper
 
 

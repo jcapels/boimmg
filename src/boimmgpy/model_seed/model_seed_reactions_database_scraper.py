@@ -1,5 +1,4 @@
 import shutil
-import urllib
 from datetime import datetime
 from urllib import request
 
