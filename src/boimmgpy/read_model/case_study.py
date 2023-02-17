@@ -33,6 +33,9 @@ class LipidNameAnnotator:
 
             if found:
                 backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
+                if len(side_chain)!= 1:
+                    for a in range(len(side_chain)-1):
+                        backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", backbone)
                 counter[backbone] += 1
                 count +=1
         print(count)
