@@ -1,22 +1,59 @@
 from cobra.io import  read_sbml_model
 import re
-from neo4j import GraphDatabase
 from tqdm import tqdm
 from collections import defaultdict
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib as plt
+from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 
-data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
-session = data_base_connection.session()
+#driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
+#session = driver.session()
 
-def read_treat_model():
-    lplantarum_model = read_sbml_model(r"boimmg\boimmgpy\read_model\iLB1027_lipid.xml")
+
+class LipidNameAnnotator:
+    def __init__(self,model_path) -> None:
+        self.model = read_sbml_model(model_path)
+
+        
+    def model_lipids_finder (self):
+        counter = defaultdict(int)
+        count = 0
+        for metabolite in self.model.metabolites:
+            backbone = None
+            side_chain = []
+            matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
+            metabolite_original_name = metabolite.name
+            metabolite_name=metabolite.name
+            found = False
+            for match in matches:
+                found=True
+                metabolite_name = metabolite_name.replace(match.string[match.start():match.end()], "")
+                side_chain.append(match.string[match.start():match.end()])
+
+            if found:
+                backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
+                counter[backbone] += 1
+                count +=1
+        print(count)
+        sorted_class_dict = sorted(counter.items(), key=lambda x: x[1], reverse=True)
+        converted_dict = dict(sorted_class_dict)
+        return converted_dict
+
+annotator=LipidNameAnnotator(r"src\boimmgpy\read_model\iLB1027_lipid.xml")
+print(annotator.model_lipids_finder())
+
+
+
+
+
+
+def read_treat_model(self):
 
     counter=defaultdict(int)
     results={}
     check_annotation={}
-    for metabolite in tqdm(lplantarum_model.metabolites):
+    for metabolite in tqdm(self.model.metabolites):
         side_chain=[]
         backbone=None
         matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
@@ -64,7 +101,7 @@ def read_treat_model():
     
     print(results,len(results))        
     return results,counter,check_annotation
-        
+    
 
 ## QUERYS TO MATCH SYNONYM AND GET DATABSE ID
 def get_synonym_id(backbone,side_chain):
@@ -145,57 +182,3 @@ def get_compounds_with_specific_parent_set_of_components( parent, components):
 
     if len(res) != 0:
         return res
-
-'''
-model=read_treat_model()
-
-results=model[0]
-class_count=model[1]
-check_annotation=model[2]
-annotations_before_implementation=list(check_annotation.values())
-print(len(annotations_before_implementation))
-print(annotations_before_implementation.count(True))
-print((annotations_before_implementation.count(True)/len(annotations_before_implementation))*100)
-
-for l in check_annotation.keys():
-    if l in results.keys():
-        check_annotation[l]=True
-
-annotations_after_implementation=list(check_annotation.values())
-print(annotations_after_implementation.count(True))
-print((annotations_after_implementation.count(True)/len(annotations_after_implementation))*100)
-
-# desvio padrao e media
-
-
-listr = []
-
-     
-for value in results.values():
-    listr.append(value)
-
-for count, value in enumerate(listr):
-        listr[count]=len(value)
-
-one_hit=0
-sum_hits=sum(listr)
-for value in listr:
-    if value==1:
-        count+=1
-   
-data=pd.Series(listr)
-print(data.describe())
-
-# grafico
-names = ['Annoted before implementation', 'Annoted after implementation']
-values = [(annotations_before_implementation.count(True)/len(annotations_before_implementation))*100 , (annotations_after_implementation.count(True)/len(annotations_after_implementation))*100]
-
-y_pos = np.arange(len(names))
-plt.bar(y_pos, values)
-
-# Create names on the x-axis
-plt.xticks(y_pos, names)
-plt.yticks(np.arange(0, 101, 10))
-# Show graphic
-plt.show()
-'''
