@@ -7,21 +7,31 @@ import pandas as pd
 import matplotlib as plt
 from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 
+driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
+session = driver.session()
+
 
 class LipidNameAnnotator:
     def __init__(self,model_path) -> None:
         self.model = read_sbml_model(model_path)
         self.lipid_class_dict = defaultdict(int)
         self.check_annotation_dict = {}
-        #driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
-        #session = driver.session()
-        
+        self.side_chain = []
+        self.backbone = None
+        self.counter=defaultdict(int)
+        self.results={}
+    
+    
     def model_lipids_finder (self):
+        """Method that searchs for lipid metabolites
+
+        Returns:
+            _type_: _description_
+        """
+        
         count = 0
 
-        for metabolite in self.model.metabolites:
-            backbone = None
-            side_chain = []
+        for metabolite in tqdm(self.model.metabolites):
             matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
             metabolite_original_name = metabolite.name
             metabolite_name=metabolite.name
@@ -29,24 +39,30 @@ class LipidNameAnnotator:
             for match in matches:
                 found=True
                 metabolite_name = metabolite_name.replace(match.string[match.start():match.end()], "")
-                side_chain.append(match.string[match.start():match.end()])
+                self.side_chain.append(match.string[match.start():match.end()])
 
             if found:
                 self.annotation_checker(lipid=metabolite)
-                backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
-                if len(side_chain)!= 1:
-                    for a in range(len(side_chain)-1):
-                        backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", backbone)
-                self.lipid_class_dict[backbone] += 1
+                self.backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
+                if len(self.side_chain)!= 1:
+                    for a in range(len(self.side_chain)-1):
+                        self.backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", self.backbone)
+                self.lipid_class_dict[self.backbone] += 1
                 count +=1
-        
+                self.search_lipid_synonyms(metabolite)
+                
         sorted_lipid_class_dict = sorted(self.lipid_class_dict.items(), key=lambda x: x[1], reverse=True)
         converted_lipid_class_dict = dict(sorted_lipid_class_dict)
-        return converted_lipid_class_dict,self.check_annotation_dict
+        return converted_lipid_class_dict,self.check_annotation_dict,self.counter
     
 
 
     def annotation_checker (self,lipid):
+        """Method that checks if a given lipid is annotated in the model
+
+        Args:
+            lipid (_type_): given lipid metabolite from the model
+        """
         annotation=lipid.annotation.keys()
         annotated=False
         self.check_annotation_dict[lipid.id]=annotated
@@ -56,19 +72,40 @@ class LipidNameAnnotator:
 
     
 
-annotator=LipidNameAnnotator(r"src\boimmgpy\read_model\iLB1027_lipid.xml")
-dicts = annotator.model_lipids_finder()
-lipids_class = dicts[0]
-print(lipids_class)
-original_annotations = dicts[1]
-print(len(original_annotations))
-print(sum(map((True).__eq__, original_annotations.values())))
+    def search_lipid_synonyms(self, metabolite):
+        flag = False
+        lipid_id=get_synonym_id(self.backbone,self.side_chain)
+        if lipid_id!= None and not lipid_id[2]:
+            for backbone in lipid_id[0]:
+                lipid_compound=get_coumpound(backbone,lipid_id[1],flag)
+                if lipid_compound != None:
+                    structurally_defined_lipids = get_compounds_with_specific_parent_set_of_components(lipid_compound[0],lipid_compound[1])
+                    if  structurally_defined_lipids:
+                        if metabolite.id in self.results:
+                            self.results[metabolite.id] = self.results[metabolite.id] + structurally_defined_lipids
+                        else:
+                            self.results[metabolite.id] = structurally_defined_lipids
+                        self.counter[self.backbone]+=1
+        
+        if lipid_id!= None and lipid_id[2] == True:
+            flag=True
+            for backbone in lipid_id[0]:
+                lipid_compound=get_coumpound(backbone,lipid_id[1],flag)
+                if lipid_compound != None:
+                    structurally_defined_lipids = get_compounds_with_specific_parent_set_of_components(lipid_compound[0],lipid_compound[1])
+                    if  structurally_defined_lipids:
+                        if metabolite.id in self.results:
+                            self.results[metabolite.id] = self.results[metabolite.id] + structurally_defined_lipids
+                        else:
+                            self.results[metabolite.id] = structurally_defined_lipids
+                        self.counter[self.backbone]+=1   
 
 
 
 
 
 
+"""
 def read_treat_model(self):
 
     counter=defaultdict(int)
@@ -122,7 +159,7 @@ def read_treat_model(self):
     
     print(results,len(results))        
     return results,counter,check_annotation
-    
+"""
 
 ## QUERYS TO MATCH SYNONYM AND GET DATABSE ID
 def get_synonym_id(backbone,side_chain):
@@ -203,3 +240,17 @@ def get_compounds_with_specific_parent_set_of_components( parent, components):
 
     if len(res) != 0:
         return res
+
+
+
+
+annotator=LipidNameAnnotator(r"src\boimmgpy\read_model\iLB1027_lipid.xml")
+dicts = annotator.model_lipids_finder()
+lipids_class = dicts[0]
+print(lipids_class)
+original_annotations = dicts[1]
+print(len(original_annotations))
+print(sum(map((True).__eq__, original_annotations.values())))
+resutltado = dicts[2]
+print(resutltado)
+print( sum(resutltado.values()))
