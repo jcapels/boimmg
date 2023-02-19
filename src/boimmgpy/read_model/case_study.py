@@ -7,18 +7,18 @@ import pandas as pd
 import matplotlib as plt
 from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 
-#driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
-#session = driver.session()
-
 
 class LipidNameAnnotator:
     def __init__(self,model_path) -> None:
         self.model = read_sbml_model(model_path)
-
+        self.lipid_class_dict = defaultdict(int)
+        self.check_annotation_dict = {}
+        #driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
+        #session = driver.session()
         
     def model_lipids_finder (self):
-        counter = defaultdict(int)
         count = 0
+
         for metabolite in self.model.metabolites:
             backbone = None
             side_chain = []
@@ -32,19 +32,37 @@ class LipidNameAnnotator:
                 side_chain.append(match.string[match.start():match.end()])
 
             if found:
+                self.annotation_checker(lipid=metabolite)
                 backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
                 if len(side_chain)!= 1:
                     for a in range(len(side_chain)-1):
                         backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", backbone)
-                counter[backbone] += 1
+                self.lipid_class_dict[backbone] += 1
                 count +=1
-        print(count)
-        sorted_class_dict = sorted(counter.items(), key=lambda x: x[1], reverse=True)
-        converted_dict = dict(sorted_class_dict)
-        return converted_dict
+        
+        sorted_lipid_class_dict = sorted(self.lipid_class_dict.items(), key=lambda x: x[1], reverse=True)
+        converted_lipid_class_dict = dict(sorted_lipid_class_dict)
+        return converted_lipid_class_dict,self.check_annotation_dict
+    
+
+
+    def annotation_checker (self,lipid):
+        annotation=lipid.annotation.keys()
+        annotated=False
+        self.check_annotation_dict[lipid.id]=annotated
+        if "slm" in annotation or "lipidmaps" in annotation:
+            annotated=True
+            self.check_annotation_dict[lipid.id]=annotated        
+
+    
 
 annotator=LipidNameAnnotator(r"src\boimmgpy\read_model\iLB1027_lipid.xml")
-print(annotator.model_lipids_finder())
+dicts = annotator.model_lipids_finder()
+lipids_class = dicts[0]
+print(lipids_class)
+original_annotations = dicts[1]
+print(len(original_annotations))
+print(sum(map((True).__eq__, original_annotations.values())))
 
 
 
