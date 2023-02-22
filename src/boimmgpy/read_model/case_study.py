@@ -2,9 +2,6 @@ from cobra.io import  read_sbml_model
 import re
 from tqdm import tqdm
 from collections import defaultdict
-import numpy as np
-import pandas as pd
-import matplotlib as plt
 from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 
 driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
@@ -57,7 +54,7 @@ class LipidNameAnnotator:
                 
         sorted_lipid_class_dict = sorted(self.lipid_class_dict.items(), key=lambda x: x[1], reverse=True)
         converted_lipid_class_dict = dict(sorted_lipid_class_dict)
-        return converted_lipid_class_dict,self.check_annotation_dict,self.counter
+        return converted_lipid_class_dict,self.check_annotation_dict,self.counter,self.results
     
 
 
@@ -88,7 +85,7 @@ class LipidNameAnnotator:
         if lipid_id != None and not lipid_id[2]:
             for backbone in lipid_id[0]:
                 lipid_compound = self.get_coumpound(backbone,lipid_id[1],is_compound)
-                if lipid_compound != None:
+                if lipid_compound != None and lipid_compound[0] != 0:
                     structurally_defined_lipids = self.get_compounds_with_specific_parent_set_of_components(lipid_compound[0],lipid_compound[1])
                     if  structurally_defined_lipids:
                         if metabolite.id in self.results:
@@ -96,6 +93,17 @@ class LipidNameAnnotator:
                         else:
                             self.results[metabolite.id] = structurally_defined_lipids
                         self.counter[self.backbone]+=1
+                
+                if  lipid_compound != None and lipid_compound[0] == 0:
+                    backbone_compound = self.get_compound_from_synonym(backbone)
+                    structurally_defined_lipids = self.get_compounds_with_specific_parent_set_of_components(backbone_compound,lipid_compound[1])
+                    if  structurally_defined_lipids:
+                        if metabolite.id in self.results:
+                            self.results[metabolite.id] = self.results[metabolite.id] + structurally_defined_lipids
+                        else:
+                            self.results[metabolite.id] = structurally_defined_lipids
+                        self.counter[self.backbone]+=1
+
         
         if lipid_id != None and lipid_id[2] == True:
             is_compound = True
@@ -123,6 +131,7 @@ class LipidNameAnnotator:
         """
         sidechain_id=[]
         backbone_id=[]
+        backbone=backbone.replace("'","")
         backbone_node=session.run("match (s:Synonym) where s.synonym='"+str(backbone.lower())+"' return ID(s) as boimmg_id")
         node= backbone_node.data()
         compound=False
@@ -174,11 +183,12 @@ class LipidNameAnnotator:
                 result=(session.run("match(s:Synonym)-[:is_synonym_of]->(l)-[:is_db_link_of]->(t:Compound) where id(s)=$v and exists(t.boimmg_id) return id(t)",v=v))
                 data = result.data()
                 for value in data:
-                    side_chains_coumpound.append(value.get("id(t)"))
+                    if value.get("id(t)") not in side_chains_coumpound:
+                        side_chains_coumpound.append(value.get("id(t)"))
             node=session.run("match(s:Synonym)-[:is_synonym_of]->(l)-[:is_db_link_of]->(t:Compound) where id(s)=$backbone and exists(t.boimmg_id) return t.boimmg_id as boimmg_id",backbone=backbone)
             for value in node:
                     backbone_coumpound = value.get("boimmg_id")
-            if backbone_coumpound !=0 and len(side_chains_coumpound)!=0:
+            if len(side_chains_coumpound)!=0:
                 return backbone_coumpound, side_chains_coumpound
         
         if flag==True:
@@ -188,10 +198,27 @@ class LipidNameAnnotator:
                 for value in data:
                     side_chains_coumpound.append(value.get("id(t)"))
                 return backbone,side_chains_coumpound
+            
+
+    @staticmethod
+    def get_compound_from_synonym(synonym_ID:int):
+        """Method to get the generic compound directly connected to the backbone synonnym.
+
+        Args:
+            synonym_ID (): ID of the backbone synonym
+
+        Returns:
+            _type_: Generic Compound with specific backbone synonym 
+        """
+        node=session.run("match(s:Synonym)-[:is_synonym_of]->(t:Compound) where id(s)=$backbone and exists(t.boimmg_id) return t.boimmg_id as boimmg_id",backbone=synonym_ID)
+        backbone_coumpound = None
+        for value in node:
+            backbone_coumpound = value.get("boimmg_id")
+        return backbone_coumpound    
     
     @staticmethod
     def get_compounds_with_specific_parent_set_of_components( parent:str, components:list):
-        """_summary_
+        """Get all non genericall compounds with the specific set of components
 
         Args:
             parent (str): Backbone compound id
@@ -221,7 +248,7 @@ class LipidNameAnnotator:
 
 
 
-annotator=LipidNameAnnotator(r"src\boimmgpy\read_model\iLB1027_lipid.xml")
+annotator=LipidNameAnnotator(r"src\boimmgpy\read_model\models\iLB1027_lipid.xml")
 dicts = annotator.model_lipids_finder()
 lipids_class = dicts[0]
 print(lipids_class)
@@ -230,5 +257,8 @@ original_annotations = dicts[1]
 print(len(original_annotations))
 print(sum(map((True).__eq__, original_annotations.values())))
 resutltado = dicts[2]
+print("##########LIPIDS_CLASS_CAUGHT########")
 print(resutltado)
 print( sum(resutltado.values()))
+print("########## ANOTTATION#############")
+print(dicts[3])
