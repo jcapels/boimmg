@@ -1,83 +1,41 @@
-import sys
-sys.path.insert(1, '')
-from boimmg.boimmgpy.read_model.case_study import read_treat_model
+from boimmgpy.read_model.case_study import LipidNameAnnotator
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 
+def get_info(path):
+    annotator = LipidNameAnnotator(path)
+    model_id = annotator.model.id
+    if model_id == '':
+        model_id = "iBD1106"
+    info = annotator.model_lipids_finder()
+    lipids_class = pd.Series(info[0])
+    lipids_class = pd.DataFrame(lipids_class)
+    print(lipids_class)
+    original_annotations = pd.Series(info[1])
+    original_annotations = pd.DataFrame(original_annotations)
+    class_annotated = pd.Series(info[2])
+    class_annotated = pd.DataFrame(class_annotated)
+    #annotations = pd.Series(info[3])
 
+    with pd.ExcelWriter(r"models\results\annotation_results.xlsx") as writer:
+    
+        # use to_excel function and specify the sheet_name and index
+        # to store the dataframe in specified sheet
+        print(model_id)
+        lipids_class.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0 , startcol=0)
+        original_annotations.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0 , startcol=8)
+        class_annotated.to_excel(writer, sheet_name=str(model_id), index=True,startrow=0, startcol=4)
 
-model=read_treat_model()
+"""
+    print(lipids_class)
+    print(sum(lipids_class.values()))
+    print(len(original_annotations))
+    print(sum(map((True).__eq__, original_annotations.values())))
+"""
 
-
-
-results=model[0]
-class_count={'Phosphatidylcholine': 113, 'CDP-1,2-diacyl-sn-glycerol': 20, 'Phosphatidylethanolamine': 72, 'Phosphatidylinositol': 12, 'Phosphatidylglycerophosphate': 2, 'Phosphatidylglycerol': 5}
-check_annotation=model[2]
-annotations_before_implementation=list(check_annotation.values())
-print(len(annotations_before_implementation))
-print(annotations_before_implementation.count(True))
-print((annotations_before_implementation.count(True)/len(annotations_before_implementation))*100)
-
-for l in check_annotation.keys():
-    if l in results.keys():
-        check_annotation[l]=True
-
-annotations_after_implementation=list(check_annotation.values())
-print(annotations_after_implementation.count(True))
-print((annotations_after_implementation.count(True)/len(annotations_after_implementation))*100)
-
-# desvio padrao e media
-
-
-listr = []
-
-     
-for value in results.values():
-    listr.append(value)
-
-for count, value in enumerate(listr):
-        listr[count]=len(value)
-
-one_hit=0
-sum_hits=sum(listr)
-for value in listr:
-    if value==1:
-        count+=1
-   
-data=pd.Series(listr)
-print(data.describe())
-
-# grafico
-names = ['Annoted before implementation', 'Annoted after implementation']
-values = [(annotations_before_implementation.count(True)/len(annotations_before_implementation))*100 , (annotations_after_implementation.count(True)/len(annotations_after_implementation))*100]
-
-y_pos = np.arange(len(names))
-plt.bar(y_pos, values)
-
-# Create names on the x-axis
-plt.xticks(y_pos, names)
-plt.yticks(np.arange(0, 101, 10))
-# Show graphic
-plt.show()
-
-
-
-
-listr=[]
-
-num_hits=0
-total_one_it=0
-for value in results.values():
-    listr.append(value)
-
-for count,value in enumerate(listr):
-    num_hits+=len(value)
-    if len(value)==1:
-        total_one_it+=1
-
-print(num_hits,total_one_it)
-
-
-print(class_count)
+if __name__ == '__main__':
+    get_info(r"models\iBD1106.xml")
+    get_info(r"models\chorella\PP2016-00593DR3_Data1Model_Heterotrophy.xml")
+    get_info(r"models\12918_2017_441_MOESM3_ESM.xml")

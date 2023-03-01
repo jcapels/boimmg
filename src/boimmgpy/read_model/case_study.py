@@ -27,7 +27,6 @@ class LipidNameAnnotator:
         """
 
         count = 0
-
         for metabolite in tqdm(self.model.metabolites):
             matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
             metabolite_original_name = metabolite.name
@@ -294,18 +293,3 @@ class LipidNameAnnotator:
         if len(res) != 0:
             return res
 
-
-annotator = LipidNameAnnotator(r"models\iBD1106.xml")
-dicts = annotator.model_lipids_finder()
-lipids_class = dicts[0]
-print(lipids_class)
-print(sum(lipids_class.values()))
-original_annotations = dicts[1]
-print(len(original_annotations))
-print(sum(map((True).__eq__, original_annotations.values())))
-resultado = dicts[2]
-print("##########LIPIDS_CLASS_CAUGHT########")
-print(resultado)
-print(sum(resultado.values()))
-print("########## ANOTTATION#############")
-print(dicts[3])
