@@ -24,3 +24,4 @@ boimmg.egg-info
 build
 my_database.conf
 /*.xlsx
+models/results
