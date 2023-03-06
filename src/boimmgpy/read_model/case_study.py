@@ -9,8 +9,8 @@ session = driver.session()
 
 
 class LipidNameAnnotator:
-    def __init__(self, model_path) -> None:
-        self.model = read_sbml_model(model_path)
+    def __init__(self, model) -> None:
+        self.model = model
         self.lipid_class_dict = defaultdict(int)
         self.check_annotation_dict = {}
         self.side_chain = []
