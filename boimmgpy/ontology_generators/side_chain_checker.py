@@ -10,12 +10,10 @@ def matchers_functions(f):
 
 class SidechainChecker:
 
-
     def __call__(self, core_smart, mol, side_chain_atoms_rules={}, molecule_atoms_rules={}):
 
         atoms_checked = True
         molecule_checked = True
-
 
         # core_smart = MolFromSmarts(core_smart)
         sidechain_compound = AllChem.DeleteSubstructs(mol, core_smart)
@@ -36,7 +34,7 @@ class SidechainChecker:
             atoms_checked = self.__check_sidechain_atoms__(substructure_idx, mol, side_chain_atoms_rules)
 
         if molecule_atoms_rules:
-            molecule_checked = self.__check_molecule_atoms__(molecule_atoms_rules,sidechain_compound)
+            molecule_checked = self.__check_molecule_atoms__(molecule_atoms_rules, sidechain_compound)
 
         if molecule_checked and atoms_checked:
             return True
@@ -52,7 +50,6 @@ class SidechainChecker:
             for matcher in matchers_atoms:
                 if callable(matchers_atoms[matcher]):
                     check = matchers_functions(matchers_atoms[matcher])(atom)
-
 
                     boolean_list.append(check)
 

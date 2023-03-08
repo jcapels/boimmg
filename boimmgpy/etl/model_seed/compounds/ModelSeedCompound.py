@@ -1,17 +1,17 @@
 class ModelSeedCompound:
 
-    def __init__(self,id,name,charge,formula):
-        self.__id=id
-        self.__name=name
-        self.__charge=charge
-        self.__formula =formula
+    def __init__(self, id, name, charge, formula):
+        self.__id = id
+        self.__name = name
+        self.__charge = charge
+        self.__formula = formula
         self.__inchi = ""
 
-    def setStructures(self,smiles=None,inchikey=None,inchi = None):
+    def setStructures(self, smiles=None, inchikey=None, inchi=None):
         if smiles is not None:
-            self.__smiles=smiles
+            self.__smiles = smiles
         if inchikey is not None:
-            self.__inchikey=inchikey
+            self.__inchikey = inchikey
 
         if inchi:
             self.__inchi = inchi
@@ -36,4 +36,3 @@ class ModelSeedCompound:
 
     def getInchi(self):
         return self.__inchi
-

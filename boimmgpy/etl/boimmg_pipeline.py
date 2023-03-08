@@ -1,6 +1,3 @@
-
-
-########################################### swiss lipids database loading and MODEL SEED database integration  ######################################################
 import math
 import re
 from collections import defaultdict
@@ -12,11 +9,22 @@ from rdkit.Chem import MolToInchiKey, AllChem
 from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles, MolFromSmarts
 from sympy import solve
 
-
 import pandas as pd
 
-from etl.model_seed.compounds.ModelSeedCompoundsDB import ModelSeedCompoundsDB
-from id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.database.accessors.reactions_database_accessor import ReactionsDBAccessor
+from boimmgpy.database.databases_babel import BOIMMGDatabases
+from boimmgpy.etl.model_seed.compounds.ModelSeedCompoundsDB import ModelSeedCompoundsDB
+from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
+from boimmgpy.id_converters.reactions_id_converter import ReactionsIDConverter
+from boimmgpy.model_seed.model_seed_compound import ModelSeedCompound
+from boimmgpy.model_seed.model_seed_reactions_database import ModelSeedReactionsDB
+from boimmgpy.ontology_generators.ontology_generator import TransformationsHandler, OntologyGeneratorDA
+from boimmgpy.ontology_generators.side_chain_checker import SidechainChecker
+from boimmgpy.service.network_handlers.pathway_handler import PathwayHandler
+from boimmgpy.utilities import ChemoUtilities, chemo_utilities
+from boimmgpy.utilities.LipidMapsStructureDB import LipidMapsStructureDB
+from boimmgpy.utilities.chemo_utilities import neutralise_charges
 
 
 def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='|', printEnd="\r"):
@@ -35,35 +43,34 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end="",flush=True)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end="", flush=True)
     # Print New Line on Complete
     if iteration == total:
         print()
 
-def read_swiss_lipids_database():
 
+def read_swiss_lipids_database():
     import os
-    data = pd.read_csv(os.getcwd() + "/lipids.tsv", header=0, delimiter="\t",encoding = "ISO-8859-1")
+    data = pd.read_csv(os.getcwd() + "/lipids.tsv", header=0, delimiter="\t", encoding="ISO-8859-1")
     modelSeedDB = ModelSeedCompoundsDB()
 
     idConverter = CompoundsIDConverter()
 
-    header = ["swiss_lipids_id:ID","name","smiles","inchi","inchikey","formula","charge:int","mass:float",
-              "hmdb_id","chebi_id","lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
-              "metacyc_id","generic","model_seed_id",":LABEL"]
+    header = ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge:int", "mass:float",
+              "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
+              "metacyc_id", "generic", "model_seed_id", ":LABEL"]
 
-
-    new_data=[]
+    new_data = []
 
     for i in range(data.shape[0]):
-        printProgressBar(i,data.shape[0])
+        printProgressBar(i, data.shape[0])
 
         inchikey = data.loc[:, "InChI key (pH7.3)"].iloc[i]
         if not pd.isna(inchikey):
-            inchikey = inchikey.replace("InChIKey=","")
+            inchikey = inchikey.replace("InChIKey=", "")
 
         else:
-            inchikey=None
+            inchikey = None
 
         smiles = data.loc[:, "SMILES (pH7.3)"].iloc[i]
         level = data.loc[:, "Level"].iloc[i]
@@ -78,7 +85,6 @@ def read_swiss_lipids_database():
                 if mol_smiles:
                     canonical_smiles = MolToSmiles(mol_smiles)
 
-
             swisslipids_id = data.loc[:, "Lipid ID"].iloc[i]
             name = data.loc[:, "Name"].iloc[i]
             formula = data.loc[:, "Formula (pH7.3)"].iloc[i]
@@ -91,7 +97,6 @@ def read_swiss_lipids_database():
             pubchem_cid = str(data.loc[:, "PMID"].iloc[i])
             charge = data.loc[:, "Charge (pH7.3)"].iloc[i]
             mass = data.loc[:, "Mass (pH7.3)"].iloc[i]
-
 
             if not pd.isna(hmdb_id):
                 hmdb_id = hmdb_id.split("|")
@@ -121,7 +126,7 @@ def read_swiss_lipids_database():
                 else:
                     pubchem_cid = None
 
-            generic=False
+            generic = False
 
             model_seed_compound = None
             if pd.isna(inchikey):
@@ -134,10 +139,10 @@ def read_swiss_lipids_database():
 
             if model_seed_compound:
 
-                kegg_id,bigg_id,metanetx_id,metacyc_id = integrate_model_ids(idConverter,model_seed_compound)
+                kegg_id, bigg_id, metanetx_id, metacyc_id = integrate_model_ids(idConverter, model_seed_compound)
 
-                new_line = [swisslipids_id,name,canonical_smiles,inchi,inchikey,formula,charge,mass,hmdb_id,
-                            chebi_id,lipidmaps_id,pubchem_cid,kegg_id,bigg_id,metanetx_id,metacyc_id,generic,
+                new_line = [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
+                            chebi_id, lipidmaps_id, pubchem_cid, kegg_id, bigg_id, metanetx_id, metacyc_id, generic,
                             model_seed_compound.getDbId()]
 
             else:
@@ -155,7 +160,8 @@ def read_swiss_lipids_database():
     data_frame = pd.DataFrame(new_data)
     data_frame.to_csv("entities.csv", sep=",", header=header, index=False)
 
-def integrate_model_ids(idConverter,model_seed_compound):
+
+def integrate_model_ids(idConverter, model_seed_compound):
     kegg_ids = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "KEGG")
     bigg_ids = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "BiGG")
     metanetxs = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "metanetx.chemical")
@@ -184,11 +190,11 @@ def integrate_model_ids(idConverter,model_seed_compound):
     else:
         metacyc_id = None
 
-    return kegg_id,bigg_id,metanetx_id,metacyc_id
+    return kegg_id, bigg_id, metanetx_id, metacyc_id
+
 
 def create_file_for_relationships():
-
-    header = [":START_ID",":END_ID",":TYPE"]
+    header = [":START_ID", ":END_ID", ":TYPE"]
     data_list = []
     with open("components.tsv", "r") as file:
         lines = file.readlines()
@@ -197,7 +203,7 @@ def create_file_for_relationships():
             end = line_list[0]
             start = line_list[1].strip()
             type = "component_of"
-            new_line = [start,end,type]
+            new_line = [start, end, type]
             data_list.append(new_line)
 
     with open("../parents.tsv", "r") as file:
@@ -207,7 +213,7 @@ def create_file_for_relationships():
             start = line_list[0]
             end = line_list[1].strip()
             type = "is_a"
-            new_line = [start,end,type]
+            new_line = [start, end, type]
             data_list.append(new_line)
 
     data_frame = pd.DataFrame(data_list)
@@ -219,7 +225,7 @@ def create_file_for_relationships():
 def scrap_lipid_maps_db(tx):
     lipids_db = LipidMapsStructureDB()
     db = lipids_db.getDatabase()
-    i= 0
+    i = 0
     accessor = CompoundsDBAccessor()
     for lipid in db:
         printProgressBar(i, len(db))
@@ -227,7 +233,7 @@ def scrap_lipid_maps_db(tx):
 
         smiles = lipid_container.getSmiles()
         if pd.isna(smiles):
-            canonical_smiles=None
+            canonical_smiles = None
         else:
             try:
                 canonical_smiles = MolToSmiles(MolFromSmiles(smiles))
@@ -263,15 +269,14 @@ def scrap_lipid_maps_db(tx):
         if type(inchikey) == str:
             inchikey_wlast = inchikey[:-1]
 
-
         if inchikey_wlast:
-            res = accessor.get_by_inchikey_test(inchikey)
+            res = accessor.get_compound_by_inchikey(inchikey)
 
             if not res:
 
                 with tx.session() as session:
                     session.run("MERGE (c:Compound { lipidmaps_id: $lipid_maps_id}) "
-                                "ON CREATE SET c.lipidmaps_id = $lipid_maps_id, "
+                                "ON CREATE SET c.lipid_maps_id = $lipid_maps_id, "
                                 "c.smiles = $smiles, c.generic = False, c.inchikey = $inchikey, "
                                 "c.formula = $formula, c.charge = 0, c.kegg_id = $kegg_id, c.inchi = $inchi, "
                                 "c.chebi_id = $chebi_id, c.lipid_bank_id = $lipid_bank_id,"
@@ -280,12 +285,12 @@ def scrap_lipid_maps_db(tx):
                                 ,
                                 lipid_maps_id=lipid,
                                 smiles=canonical_smiles,
-                                inchikey = lipid_container.getInchiKey(),
-                                formula = lipid_container.getFormula(),
-                                kegg_id = kegg_id,
-                                chebi_id = chebi_id, lipid_bank_id = lipid_bank_id,
-                                pubchem_id = pubchem_id, hmdb_id = hmdb_id,
-                                inchi = lipid_container.getInchi(),name=name
+                                inchikey=lipid_container.getInchiKey(),
+                                formula=lipid_container.getFormula(),
+                                kegg_id=kegg_id,
+                                chebi_id=chebi_id, lipid_bank_id=lipid_bank_id,
+                                pubchem_id=pubchem_id, hmdb_id=hmdb_id,
+                                inchi=lipid_container.getInchi(), name=name
                                 )
 
             else:
@@ -293,17 +298,17 @@ def scrap_lipid_maps_db(tx):
                 if BOIMMGDatabases.LIPID_MAPS.value not in to_merge_node.aliases.keys():
                     with tx.session() as session:
                         session.run("MATCH (c:Compound) "
-                                "where id(c) = $ont_id "
-                                "set c.lipidmaps_id = $lipid_maps_id,"
-                                "c.kegg_id = $kegg_id",
-                                ont_id = to_merge_node.id,
-                                lipid_maps_id = lipid_container.getDbId(),
-                                kegg_id=kegg_id)
+                                    "where id(c) = $ont_id "
+                                    "set c.lipid_maps_id = $lipid_maps_id,"
+                                    "c.kegg_id = $kegg_id",
+                                    ont_id=to_merge_node.id,
+                                    lipid_maps_id=lipid_container.getDbId(),
+                                    kegg_id=kegg_id)
+
+        i += 1
 
 
-        i+=1
-
-def get_filtered_compounds(smiles_keys,smarts,smiles_database):
+def get_filtered_compounds(smiles_keys, smarts, smiles_database):
     new_smiles_list = smiles_keys.copy()
     filtered_compounds = []
     for smile in smiles_keys:
@@ -317,24 +322,25 @@ def get_filtered_compounds(smiles_keys,smarts,smiles_database):
 
     smiles_keys = new_smiles_list.copy()
 
-    return (filtered_compounds,smiles_keys)
-
-def filter_lipid_maps_compounds_by_model_seed_generic_compound(generic_compound: ModelSeedCompound,lipid_maps_database) -> list:
+    return (filtered_compounds, smiles_keys)
 
 
+def filter_lipid_maps_compounds_by_model_seed_generic_compound(generic_compound: ModelSeedCompound,
+                                                               lipid_maps_database) -> list:
     smiles_database = lipid_maps_database.getSmilesDatabase()
     smiles = generic_compound.getSmiles()
 
-    neutralized_smiles, boo = ChemoUtilities.NeutraliseCharges(smiles)
+    neutralized_smiles, boo = neutralise_charges(smiles)
     smarts = MolFromSmarts(neutralized_smiles)
     smiles_keys = list(smiles_database.keys())
 
     filtered_compounds, _ = get_filtered_compounds(smiles_keys, smarts, smiles_database)
     return filtered_compounds
 
-def process_and_check_side_chain(sidechains,compound_mol,core_smart,
-                                   side_chain_atoms_rules,
-                                   side_chain_molecule_rules):
+
+def process_and_check_side_chain(sidechains, compound_mol, core_smart,
+                                 side_chain_atoms_rules,
+                                 side_chain_molecule_rules):
     sidechains.UpdatePropertyCache()
     Chem.GetSymmSSSR(sidechains)
 
@@ -346,10 +352,8 @@ def process_and_check_side_chain(sidechains,compound_mol,core_smart,
     return finalCheck
 
 
-
-
-
-def establish_relationship_between_generic_and_lipid_maps_compounds(tx,targets,core,side_chain_atoms_rules={},side_chain_molecule_rules={}):
+def establish_relationship_between_generic_and_lipid_maps_compounds(tx, targets, core, side_chain_atoms_rules={},
+                                                                    side_chain_molecule_rules={}):
     accessor = CompoundsDBAccessor()
     model_seed_db = ModelSeedCompoundsDB()
 
@@ -358,9 +362,17 @@ def establish_relationship_between_generic_and_lipid_maps_compounds(tx,targets,c
     seen = []
 
     lipid_maps_database = LipidMapsStructureDB()
+    # lipid = lipid_maps_database.get_compound_by_id("LMFA01000001")
+    # aliases = lipid.getAliases()
+    # targets = []
+    #
+    # if "KEGG" in aliases.keys():
+    #     kegg_id = aliases.get("KEGG")[0]
+    #     model_seed_ids = id_converter.convert_db_id_to_model_seed_by_db_id(kegg_id)
+    #     targets.append(model_seed_ids[0])
 
     for target in targets:
-        print("Handling %s"%target)
+        print("Handling %s" % target)
 
         if target not in seen:
             modelseed_container = model_seed_db.get_compound_by_id(target)
@@ -368,31 +380,30 @@ def establish_relationship_between_generic_and_lipid_maps_compounds(tx,targets,c
             if "R" in modelseed_container.getFormula():
                 # node = accessor.check_if_node_exist_by_model_seed_id(modelseed_id[0])
                 # canonical_smiles = MolToSmiles(MolFromSmiles(modelseed_container.getSmiles()))
-                parent_ont_container= accessor.get_node_from_model_seed_id(target)
-
+                parent_ont_container = accessor.get_node_from_model_seed_id(target)
 
                 filtered_compounds = filter_lipid_maps_compounds_by_model_seed_generic_compound(
-                    modelseed_container,lipid_maps_database)
+                    modelseed_container, lipid_maps_database)
 
-                print("establishing reaction with %s"%parent_ont_container.name)
-                i=0
+                print("establishing reaction with %s" % parent_ont_container.name)
+                i = 0
 
                 for compound in filtered_compounds:
-                    i+=1
+                    i += 1
                     printProgressBar(i, len(filtered_compounds))
 
                     compound_mol = MolFromSmiles(compound.getSmiles())
 
-                    neutralized_smiles, boo = ChemoUtilities.NeutraliseCharges(modelseed_container.getSmiles())
+                    neutralized_smiles, boo = chemo_utilities.neutralise_charges(modelseed_container.getSmiles())
                     smarts = MolFromSmarts(neutralized_smiles)
 
                     sidechain_compound = AllChem.DeleteSubstructs(compound_mol, smarts)
                     finalCheck = process_and_check_side_chain(sidechain_compound, compound_mol, core,
-                                                                     side_chain_atoms_rules,
-                                                                     side_chain_molecule_rules)
+                                                              side_chain_atoms_rules,
+                                                              side_chain_molecule_rules)
 
                     if finalCheck:
-                        sidechain, sidechains_smiles_list = ChemoUtilities.retrieve_fragments(sidechain_compound)
+                        sidechain, sidechains_smiles_list = chemo_utilities.retrieve_fragments(sidechain_compound)
 
                         side_chain_counter = len(sidechain)
 
@@ -400,14 +411,12 @@ def establish_relationship_between_generic_and_lipid_maps_compounds(tx,targets,c
 
                         if n_side_chains == 0 or side_chain_counter == n_side_chains:
 
-
                             compound_ont = accessor.get_node_from_lipid_maps_id(compound.getDbId())
 
                             if compound_ont:
-                                successors = accessor.get_all_successors_by_ont_id_rel_type(compound_ont.id,"is_a")
+                                successors = accessor.get_all_successors_by_ont_id_rel_type(compound_ont.id, "is_a")
 
                                 if parent_ont_container.id not in successors:
-
                                     with tx.session() as session:
                                         session.run("MATCH (c:Compound),(d:Compound) "
                                                     "WHERE ID(c)=$target and ID(d) = $origin "
@@ -416,19 +425,17 @@ def establish_relationship_between_generic_and_lipid_maps_compounds(tx,targets,c
                                                     ,
                                                     target=parent_ont_container.id, origin=compound_ont.id)
 
-                                    establish_components_relationships(sidechains_smiles_list,core,tx,compound_ont)
-
+                                    establish_components_relationships(sidechains_smiles_list, core, tx, compound_ont)
 
                 if not filtered_compounds:
-                    print("not found children for %s"%target)
-
-
+                    print("not found children for %s" % target)
 
             seen.append(target)
 
-def establish_components_relationships(sidechains_smiles_list,core,tx,compound_ont):
+
+def establish_components_relationships(sidechains_smiles_list, core, tx, compound_ont):
     for sidechain in sidechains_smiles_list:
-        sidechain+=core
+        sidechain += core
         try:
             mol = MolFromSmiles(sidechain)
 
@@ -444,10 +451,11 @@ def establish_components_relationships(sidechains_smiles_list,core,tx,compound_o
         except:
             print("Warning: side chains not viable")
 
+
 def get_targets(pathway):
     ptw = extract_metacyc_pathways(pathway)
     ptw.save_in_file(pathway)
-    read_and_filter(pathway)
+    # read_and_filter(pathway)
     targets = []
     with open("generic_targets", "r") as file:
         lines = file.readlines()
@@ -457,6 +465,7 @@ def get_targets(pathway):
                 targets.append(target)
 
     return targets
+
 
 def extract_metacyc_pathways(parent):
     ptw = PathwayHandler()
@@ -485,9 +494,9 @@ def extract_metacyc_pathways(parent):
     i = 0
     for instance in res:
         try:
-            printProgressBar(i,len(res))
+            printProgressBar(i, len(res))
             ptw.add_metacyc_pathway(instance.id)
-            i+=1
+            i += 1
 
         except:
             pass
@@ -498,8 +507,7 @@ def extract_metacyc_pathways(parent):
 
 ####################################################### reactions ontology ##############################################
 
-def reactions_ontology_generation(to_ignore = []):
-
+def reactions_ontology_generation(to_ignore=[]):
     model_seed_reactions_db = ModelSeedReactionsDB()
     model_seed_compounds_db = ModelSeedCompoundsDB()
     reactions_id_converter = ReactionsIDConverter()
@@ -508,10 +516,10 @@ def reactions_ontology_generation(to_ignore = []):
     uri = "bolt://palsson.di.uminho.pt:6094"
     driver = GraphDatabase.driver(uri, auth=("neo4j", "Tuning999"), encrypted=False)
 
-    file = open("statistics","w")
+    file = open("statistics", "w")
     file.write("reaction\tbad_relations\ttotal\tratio\n")
 
-    file2 = open("bad_relations_products","w")
+    file2 = open("bad_relations_products", "w")
     file2.write("reaction\tcompound\n")
 
     with driver.session() as session:
@@ -548,14 +556,13 @@ def reactions_ontology_generation(to_ignore = []):
 
                     if not compound_in_ontology:
                         session.run("merge (c:ModelSeedCompound {model_seed_id: $compound_ms_id})"
-                                    , compound_ms_id = product)
+                                    , compound_ms_id=product)
 
                         final_ms_stoichiometry[product] = ms_stoichiometry[product]
 
                     else:
                         products_in_ontology.append(compound_in_ontology)
                         onto_stoichiometry[compound_in_ontology.id] = ms_stoichiometry[product]
-
 
                 for reactant in reactants:
                     compound_in_ontology = accessor.get_node_from_model_seed_id(reactant)
@@ -570,17 +577,17 @@ def reactions_ontology_generation(to_ignore = []):
                         products_in_ontology.append(compound_in_ontology)
                         onto_stoichiometry[compound_in_ontology.id] = ms_stoichiometry[reactant]
 
-                add_generic_reaction_and_generate_other(reaction,onto_stoichiometry,
+                add_generic_reaction_and_generate_other(reaction, onto_stoichiometry,
                                                         final_ms_stoichiometry,
                                                         model_seed_reaction,
-                                                        model_seed_compounds_db,model_seed_reactions_db,
-                                                        file,file2)
+                                                        model_seed_compounds_db, model_seed_reactions_db,
+                                                        file, file2)
 
-            # add_generic_reaction_and_generate_other("CARDIOLIPSYN-RXN", onto_stoichiometry,
-            #                                         final_ms_stoichiometry,
-            #                                         model_seed_reaction,
-            #                                         model_seed_compounds_db, model_seed_reactions_db,
-            #                                         file, file2)
+                # add_generic_reaction_and_generate_other("CARDIOLIPSYN-RXN", onto_stoichiometry,
+                #                                         final_ms_stoichiometry,
+                #                                         model_seed_reaction,
+                #                                         model_seed_compounds_db, model_seed_reactions_db,
+                #                                         file, file2)
 
                 file = open("statistics", "a+")
                 file2 = open("bad_relations_products", "a+")
@@ -589,26 +596,23 @@ def reactions_ontology_generation(to_ignore = []):
         file2.close()
 
 
-def add_generic_reaction_and_generate_other(reaction_id,onto_stoichiometry,
+def add_generic_reaction_and_generate_other(reaction_id, onto_stoichiometry,
                                             ms_stoichiometry,
                                             model_seed_reaction,
                                             model_seed_compound_db,
                                             model_seed_reactions_db,
-                                            file,file2):
-
+                                            file, file2):
     reactions_accessor = ReactionsDBAccessor()
     compounds_accessor = CompoundsDBAccessor()
 
-
-
-    parent_reaction = reactions_accessor.add_reaction(name= model_seed_reaction.getName(),
-                                    onto_stoichiometry = onto_stoichiometry,
-                                    ms_stoich = ms_stoichiometry,
-                                    direction = model_seed_reaction.getDirection(),
-                                    ec_numbers=model_seed_reaction.getEcNumbers(),
-                                    annotated=True,
-                                    deltaG = model_seed_reaction.getDeltaG(),
-                                    model_seed_id=model_seed_reaction.getDbId())
+    parent_reaction = reactions_accessor.add_reaction(name=model_seed_reaction.getName(),
+                                                      onto_stoichiometry=onto_stoichiometry,
+                                                      ms_stoich=ms_stoichiometry,
+                                                      direction=model_seed_reaction.getDirection(),
+                                                      ec_numbers=model_seed_reaction.getEcNumbers(),
+                                                      annotated=True,
+                                                      deltaG=model_seed_reaction.getDeltaG(),
+                                                      model_seed_id=model_seed_reaction.getDbId())
 
     original_ms_stoichiometry = ms_stoichiometry.copy()
 
@@ -628,15 +632,15 @@ def add_generic_reaction_and_generate_other(reaction_id,onto_stoichiometry,
 
         generic_product = products[0]
 
-        product_children = compounds_accessor.get_predecessors_by_ont_id_rel_type(generic_product,"is_a")
+        product_children = compounds_accessor.get_predecessors_by_ont_id_rel_type(generic_product, "is_a")
 
-        j=1
-        i=0
+        j = 1
+        i = 0
 
         bad_relationships = 0
         for product in product_children:
-            printProgressBar(i,len(product_children))
-            i+=1
+            printProgressBar(i, len(product_children))
+            i += 1
             parent_coef = onto_stoichiometry[generic_product]
 
             new_product_onto_stoichiometry = onto_stoichiometry.copy()
@@ -646,7 +650,6 @@ def add_generic_reaction_and_generate_other(reaction_id,onto_stoichiometry,
             del new_product_onto_stoichiometry[generic_product]
             new_product_onto_stoichiometry[product] = parent_coef
 
-
             precursors = compounds_accessor.get_predecessors_by_ont_id_reaction_id(product, reaction_id)
             precursor_and_correspondent_parent = {}
 
@@ -654,7 +657,7 @@ def add_generic_reaction_and_generate_other(reaction_id,onto_stoichiometry,
             seen_parents = [generic_product]
             for precursor in precursors:
 
-                parent = compounds_accessor.get_successors_by_ont_id_rel_type(precursor,"is_a")
+                parent = compounds_accessor.get_successors_by_ont_id_rel_type(precursor, "is_a")
                 if parent:
 
                     precursor_and_correspondent_parent[precursor] = parent[0]
@@ -673,34 +676,36 @@ def add_generic_reaction_and_generate_other(reaction_id,onto_stoichiometry,
                         go = False
                         break
                 else:
-                    go=False
+                    go = False
                     break
 
             if go and sorted(list(onto_stoichiometry.keys())) == sorted(seen_parents):
-                equation = get_equation(new_product_onto_stoichiometry,ms_stoichiometry,model_seed_compound_db,compounds_accessor)
+                equation = get_equation(new_product_onto_stoichiometry, ms_stoichiometry, model_seed_compound_db,
+                                        compounds_accessor)
 
                 go2 = True
                 if "R" not in equation:
-                    new_onto_stoich,new_ms_stoich = \
-                        balance_reaction(equation,new_product_onto_stoichiometry,ms_stoichiometry,compounds_accessor,model_seed_compound_db)
+                    new_onto_stoich, new_ms_stoich = \
+                        balance_reaction(equation, new_product_onto_stoichiometry, ms_stoichiometry, compounds_accessor,
+                                         model_seed_compound_db)
 
                     if new_onto_stoich and new_ms_stoich:
                         reactions = check_if_reaction_in_model_seed(new_onto_stoich, new_ms_stoich, compounds_accessor,
-                                                                model_seed_reactions_db)
+                                                                    model_seed_reactions_db)
 
                     else:
                         bad_relationships += 1
-                        file2.write(reaction_id + "\t" + str(product)+"\n")
+                        file2.write(reaction_id + "\t" + str(product) + "\n")
                         go2 = False
 
 
                 else:
                     new_ms_stoich = ms_stoichiometry.copy()
-                    reactions = check_if_reaction_in_model_seed(new_product_onto_stoichiometry, ms_stoichiometry, compounds_accessor,
+                    reactions = check_if_reaction_in_model_seed(new_product_onto_stoichiometry, ms_stoichiometry,
+                                                                compounds_accessor,
                                                                 model_seed_reactions_db)
 
                     new_onto_stoich = new_product_onto_stoichiometry.copy()
-
 
                 if go2:
                     if reactions:
@@ -708,37 +713,37 @@ def add_generic_reaction_and_generate_other(reaction_id,onto_stoichiometry,
                         new_model_seed_reaction = model_seed_reactions_db.getReaction(ms_reaction_id)
 
                         ont_reaction_id = reactions_accessor.add_reaction(name=new_model_seed_reaction.getName(),
-                                                    onto_stoichiometry=new_onto_stoich,
-                                                    ms_stoich=new_ms_stoich,
-                                                    direction=new_model_seed_reaction.getDirection(),
-                                                    ec_numbers=new_model_seed_reaction.getEcNumbers(),
-                                                    annotated=True,
-                                                    deltaG=new_model_seed_reaction.getDeltaG(),
-                                                    model_seed_id=new_model_seed_reaction.getDbId())
+                                                                          onto_stoichiometry=new_onto_stoich,
+                                                                          ms_stoich=new_ms_stoich,
+                                                                          direction=new_model_seed_reaction.getDirection(),
+                                                                          ec_numbers=new_model_seed_reaction.getEcNumbers(),
+                                                                          annotated=True,
+                                                                          deltaG=new_model_seed_reaction.getDeltaG(),
+                                                                          model_seed_id=new_model_seed_reaction.getDbId())
 
                     else:
 
-
-                        ont_reaction_id = reactions_accessor.add_reaction(name= model_seed_reaction.getName() + "_granulated_" + str(j),
-                                            onto_stoichiometry = new_onto_stoich,
-                                            ms_stoich = new_ms_stoich,
-                                            direction = model_seed_reaction.getDirection(),
-                                            ec_numbers=model_seed_reaction.getEcNumbers(),
-                                            annotated=False,
-                                            deltaG = None)
+                        ont_reaction_id = reactions_accessor.add_reaction(
+                            name=model_seed_reaction.getName() + "_granulated_" + str(j),
+                            onto_stoichiometry=new_onto_stoich,
+                            ms_stoich=new_ms_stoich,
+                            direction=model_seed_reaction.getDirection(),
+                            ec_numbers=model_seed_reaction.getEcNumbers(),
+                            annotated=False,
+                            deltaG=None)
 
                         j += 1
 
-                    reactions_accessor.add_relationship(ont_reaction_id,parent_reaction,"is_a")
+                    reactions_accessor.add_relationship(ont_reaction_id, parent_reaction, "is_a")
 
 
                 else:
-                    bad_relationships+=1
+                    bad_relationships += 1
                     file2.write(reaction_id + "\t" + str(product))
 
         if len(product_children) != 0:
-            file.write(reaction_id +"\t" + str(bad_relationships) + "\t" + str(len(product_children)) + "\t" +
-                       str((bad_relationships/len(product_children))) + "\n")
+            file.write(reaction_id + "\t" + str(bad_relationships) + "\t" + str(len(product_children)) + "\t" +
+                       str((bad_relationships / len(product_children))) + "\n")
 
             print("bad_relationships: %d" % bad_relationships)
             print("ratio: %d" % (bad_relationships / len(product_children)))
@@ -747,8 +752,8 @@ def add_generic_reaction_and_generate_other(reaction_id,onto_stoichiometry,
         file2.close()
 
 
-
-def check_if_reaction_in_model_seed(new_onto_stoich,new_ms_stoich,accessor:CompoundsDBAccessor,reactions_db: ModelSeedReactionsDB):
+def check_if_reaction_in_model_seed(new_onto_stoich, new_ms_stoich, accessor: CompoundsDBAccessor,
+                                    reactions_db: ModelSeedReactionsDB):
     reactants = []
     products = []
     for onto_compound in new_onto_stoich:
@@ -775,14 +780,12 @@ def check_if_reaction_in_model_seed(new_onto_stoich,new_ms_stoich,accessor:Compo
         else:
             products.append(ms_compound)
 
-    reactions = reactions_db.getReactionsByCompounds(reactants,products)
+    reactions = reactions_db.getReactionsByCompounds(reactants, products)
     return reactions
 
 
-
-def balance_reaction(eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db):
-
-    k,Ys = lp_to_balance_reaction(eq)
+def balance_reaction(eq, onto_stoichiometry, ms_stoichiometry, accessor, ms_db):
+    k, Ys = lp_to_balance_reaction(eq)
 
     hydrogen = "cpd00067"
 
@@ -790,16 +793,16 @@ def balance_reaction(eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db):
     if hydrogen in ms_stoichiometry:
         isHydrogenInReaction = True
 
-
     if len(k) == len(Ys):
 
         try:
-            new_onto_stoich,new_ms_stoich = \
-                process_result_of_new_balanced_reaction(k,Ys,eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db)
-            return new_onto_stoich,new_ms_stoich
+            new_onto_stoich, new_ms_stoich = \
+                process_result_of_new_balanced_reaction(k, Ys, eq, onto_stoichiometry, ms_stoichiometry, accessor,
+                                                        ms_db)
+            return new_onto_stoich, new_ms_stoich
 
         except:
-            return None,None
+            return None, None
         # print('->'.join('+'.join(pM(N.pop(0)) + str(t) for t in p.split('+')) for p in eq.split('->')))
 
     elif not isHydrogenInReaction:
@@ -816,12 +819,13 @@ def balance_reaction(eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db):
 
             try:
                 new_onto_stoich, new_ms_stoich = \
-                    process_result_of_new_balanced_reaction(k, Ys, new_eq, onto_stoichiometry, ms_stoichiometry, accessor,
+                    process_result_of_new_balanced_reaction(k, Ys, new_eq, onto_stoichiometry, ms_stoichiometry,
+                                                            accessor,
                                                             ms_db)
                 return new_onto_stoich, new_ms_stoich
 
             except:
-                return None,None
+                return None, None
         else:
 
             reactants_products = eq.split("->")
@@ -842,7 +846,7 @@ def balance_reaction(eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db):
                     return new_onto_stoich, new_ms_stoich
 
                 except:
-                    return None,None
+                    return None, None
 
     else:
 
@@ -855,7 +859,7 @@ def balance_reaction(eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db):
             reactants.remove("H")
 
             new_reactants = "+".join(reactants)
-            new_eq = "->".join([new_reactants,reactants_products[1]])
+            new_eq = "->".join([new_reactants, reactants_products[1]])
 
             k, Ys = lp_to_balance_reaction(new_eq)
 
@@ -871,7 +875,7 @@ def balance_reaction(eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db):
 
                 except:
 
-                    return None,None
+                    return None, None
 
         else:
             products.remove("H")
@@ -892,14 +896,12 @@ def balance_reaction(eq,onto_stoichiometry,ms_stoichiometry,accessor,ms_db):
                                                                 ms_db)
                     return new_onto_stoich, new_ms_stoich
                 except:
-                    return None,None
+                    return None, None
 
-
-    return None,None
+    return None, None
 
 
 def lp_to_balance_reaction(eq):
-
     Ls = list('abcdefghijklmnopqrstuvwxyz')
 
     Ss, Os, Es, a, i = defaultdict(list), Ls[:], [], 1, 1
@@ -919,10 +921,11 @@ def lp_to_balance_reaction(eq):
     Qs = [eval('+'.join('%d*%s' % (c[1], c[0]) for c in Ss[s]), {}, Ys) for s in Ss] + [Ys['a'] - a]
 
     k = solve(Qs, *Ys)
-    return k,Ys
+    return k, Ys
 
-def process_result_of_new_balanced_reaction(k,Ys,eq,onto_stoichiometry,ms_stoich,accessor,ms_db: ModelSeedCompoundsDB):
 
+def process_result_of_new_balanced_reaction(k, Ys, eq, onto_stoichiometry, ms_stoich, accessor,
+                                            ms_db: ModelSeedCompoundsDB):
     N = []
     for s in sorted(Ys):
         value = k[Ys[s]]
@@ -1009,13 +1012,11 @@ def process_result_of_new_balanced_reaction(k,Ys,eq,onto_stoichiometry,ms_stoich
                         res_ms_stoich[product3] = coef
                         break
 
+    return res_onto_stoichiometry, res_ms_stoich
 
-    return res_onto_stoichiometry,res_ms_stoich
 
-
-def get_equation(onto_stoichiometry: dict,ms_stoichiometry: dict,
-                 ms_comp_database: ModelSeedCompoundsDB ,accessor: CompoundsDBAccessor):
-
+def get_equation(onto_stoichiometry: dict, ms_stoichiometry: dict,
+                 ms_comp_database: ModelSeedCompoundsDB, accessor: CompoundsDBAccessor):
     reactants_formulas = []
     products_formulas = []
     for compound in onto_stoichiometry:
@@ -1033,7 +1034,6 @@ def get_equation(onto_stoichiometry: dict,ms_stoichiometry: dict,
             reactants_formulas.append(ms_compound.getFormula())
         else:
             products_formulas.append(ms_compound.getFormula())
-
 
     eq = ""
 
@@ -1056,12 +1056,9 @@ def get_equation(onto_stoichiometry: dict,ms_stoichiometry: dict,
     return eq
 
 
-
 ############################################################# pipeline #######################################################
 def pipeline():
 
-    uri = "bolt://palsson.di.uminho.pt:6094"
-    driver = GraphDatabase.driver(uri, auth=("neo4j", "Tuning999"), encrypted=False)
 
     read_swiss_lipids_database()
 
@@ -1072,18 +1069,18 @@ def pipeline():
     targets = get_targets("Phospholipid-Biosynthesis")
 
     establish_relationship_between_generic_and_lipid_maps_compounds(driver, targets=targets, core=core)
+    #
+    # generator = OntologyGeneratorDA()
+    #
+    # #### CARDIOLIPIN BIOSYNTHESIS TRANSFORMATION AND RELATIONSHIPS #####################
+    # transformations = TransformationsHandler()
+    # transformations.choose_transformations_from_pathway("Cardiolipin-Biosynthesis")
+    # transformations.save_transformations("transformations_cardiolipin")
+    #
+    # generator("Cardiolipin-Biosynthesis", core, "transformations_cardiolipin")
 
-    generator = OntologyGeneratorDA()
-
-    #### CARDIOLIPIN BIOSYNTHESIS TRANSFORMATION AND RELATIONSHIPS #####################
-    transformations = TransformationsHandler()
-    transformations.choose_transformations_from_pathway("Cardiolipin-Biosynthesis")
-    transformations.save_transformations("transformations_cardiolipin")
-
-    generator("Cardiolipin-Biosynthesis", core, "transformations_cardiolipin")
 
 def integrate_all_model_seed_compounds(driver):
-
     ms_compounds_db = ModelSeedCompoundsDB()
 
     accessor = CompoundsDBAccessor()
@@ -1092,8 +1089,8 @@ def integrate_all_model_seed_compounds(driver):
     i = 0
     for smiles in ms_compounds_db.isomer_smiles_database:
 
-        printProgressBar(i,len(ms_compounds_db.isomer_smiles_database))
-        i+=1
+        printProgressBar(i, len(ms_compounds_db.isomer_smiles_database))
+        i += 1
         if "*" in smiles:
             if len(ms_compounds_db.isomer_smiles_database[smiles]) > 1:
 
@@ -1104,29 +1101,22 @@ def integrate_all_model_seed_compounds(driver):
                     node = accessor.get_node_from_model_seed_id(iso)
 
                     if node:
-
                         chosen_boimmg_id = node.id
                         break
 
                 if chosen_boimmg_id:
                     for iso in isomer_list:
-
-                        j +=1
+                        j += 1
                         with driver.session() as session:
                             session.run("match (c:Compound) where id(c) = $node_id "
                                         "merge (c)<-[:is_db_link_of]-(:ModelSeedCompound {model_seed_id: $iso})",
-                                        node_id = chosen_boimmg_id, iso = iso)
+                                        node_id=chosen_boimmg_id, iso=iso)
     print(j)
 
 
+if __name__ == "__main__":
+    pipeline()
 
-
-
-if __name__=="__main__":
-    uri = "bolt://palsson.di.uminho.pt:6094"
-    driver = GraphDatabase.driver(uri, auth=("neo4j", "Tuning999"), encrypted=False)
-    #
-    # core = "C(=O)O"
     # targets = get_targets("Sphingolipid-Biosynthesis")
     # establish_relationship_between_generic_and_lipid_maps_compounds(driver, targets=targets, core=core)
 
@@ -1134,10 +1124,11 @@ if __name__=="__main__":
     # reaction = reactions_db.getReaction("rxn23713")
     # add_generic_reaction_and_generate_other()
 
-    reactions_ontology_generation(["RXN-10462","RXN-1623","RXN-9591","1-ACYLGLYCEROL-3-P-ACYLTRANSFER-RXN", "RXN-9590",
-                                   "CDPDIGLYSYN-RXN", "RXN0-7012", "RXN-8141","CARDIOLIPSYN-RXN","CARDIOLIPSYN-RXN", "PHOSPHASERDECARB-RXN",
-                                   "ETHANOLAMINEPHOSPHOTRANSFERASE-RXN","PHOSPHAGLYPSYN-RXN","PGPPHOSPHA-RXN", "2.3.1.23-RXN",
-                                   "RXN-15380","RXN4FS-1", "2.1.1.17-RXN", "2.1.1.71-RXN", "RXN4FS-4", "RXN4FS-2",
-                                   "RXN-5781","2.7.8.24-RXN"])
+    reactions_ontology_generation(
+        ["RXN-10462", "RXN-1623", "RXN-9591", "1-ACYLGLYCEROL-3-P-ACYLTRANSFER-RXN", "RXN-9590",
+         "CDPDIGLYSYN-RXN", "RXN0-7012", "RXN-8141", "CARDIOLIPSYN-RXN", "CARDIOLIPSYN-RXN", "PHOSPHASERDECARB-RXN",
+         "ETHANOLAMINEPHOSPHOTRANSFERASE-RXN", "PHOSPHAGLYPSYN-RXN", "PGPPHOSPHA-RXN", "2.3.1.23-RXN",
+         "RXN-15380", "RXN4FS-1", "2.1.1.17-RXN", "2.1.1.71-RXN", "RXN4FS-4", "RXN4FS-2",
+         "RXN-5781", "2.7.8.24-RXN"])
 
     # integrate_all_model_seed_compounds(driver)

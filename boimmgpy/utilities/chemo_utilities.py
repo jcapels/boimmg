@@ -228,7 +228,7 @@ def _InitialiseNeutralisationReactions():
 _reactions = None
 
 
-def NeutraliseCharges(smiles, reactions=None):
+def neutralise_charges(smiles, reactions=None):
     global _reactions
     if reactions is None:
         if _reactions is None:
