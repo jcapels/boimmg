@@ -3,22 +3,49 @@ import re
 from tqdm import tqdm
 from collections import defaultdict
 from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
+from joblib import Parallel, delayed
+
 
 driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
 session = driver.session()
 
 
 class LipidNameAnnotator:
-    def __init__(self, model) -> None:
-        self.model = model
-        self.lipid_class_dict = defaultdict(int)
-        self.check_annotation_dict = {}
-        self.side_chain = []
+    def __init__(self) -> None:
         self.backbone = None
-        self.counter = defaultdict(int)
+        self.converted_lipid_class_dict = {}
+        self.check_annotation_dict = {}
         self.results = {}
+        self.counter = {}
 
-    def model_lipids_finder(self):
+
+
+    def treat_data(self,dict_list):
+        res = {}
+        
+        for converted_lipid_class_dict, check_annotation_dict, counter, results in dict_list:
+            if isinstance(converted_lipid_class_dict, defaultdict):
+                converted_lipid_class_dict = dict(converted_lipid_class_dict)
+            if isinstance(counter, defaultdict):
+                counter = dict(counter)
+
+            
+
+            self.converted_lipid_class_dict.update(converted_lipid_class_dict)
+            self.check_annotation_dict.update(check_annotation_dict)
+            self.counter.update(counter)
+            self.results.update(results)
+
+
+    def model_lipids_finder(self,model):
+        n_iterations = len(model.metabolites)
+        parallel_callback = Parallel(-1)
+        resultados = parallel_callback(delayed(self._model_lipids_finder)(model.metabolites[i]) for i in tqdm(range(n_iterations)))
+        self.treat_data(resultados)
+        print(self.converted_lipid_class_dict)
+        return resultados 
+
+    def _model_lipids_finder(self,metabolite):
         """Method that searchs for lipid metabolites in model and finds their synonyms in the BOIMMG database
 
         Returns:
@@ -26,41 +53,43 @@ class LipidNameAnnotator:
             with the classes that the algorithm can annotate.
         """
 
-        count = 0
-        for metabolite in tqdm(self.model.metabolites):
-            matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
-            metabolite_original_name = metabolite.name
-            metabolite_name = metabolite.name
-            backbone = None
-            found = False
-            self.side_chain = []
-            for match in matches:
-                found = True
-                metabolite_name = metabolite_name.replace(
-                    match.string[match.start() : match.end()], ""
-                )
-                self.side_chain.append(match.string[match.start() : match.end()])
+        matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
+        metabolite_original_name = metabolite.name
+        metabolite_name = metabolite.name
+        backbone = None
+        found = False
+        lipid_class_dict = defaultdict(int)
+        check_annotation_dict={}
+        counter = {}
+        results = {}
+        side_chain = []
+        for match in matches:
+            found = True
+            metabolite_name = metabolite_name.replace(
+                match.string[match.start() : match.end()], ""
+            )
+            side_chain.append(match.string[match.start() : match.end()])
 
-            if found:
-                self.annotation_checker(lipid=metabolite)
-                backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
-                if len(self.side_chain) != 1:
-                    for a in range(len(self.side_chain) - 1):
-                        backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", backbone)
-                self.lipid_class_dict[backbone] += 1
-                count += 1
-                self.backbone = backbone
-                self.search_lipid_synonyms(metabolite)
+        if found:
+            check_annotation_dict = self.annotation_checker(lipid=metabolite)
+            backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
+            if len(side_chain) != 1:
+                for a in range(len(side_chain) - 1):
+                    backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", backbone)
+            lipid_class_dict[backbone] += 1
+            #count += 1
+            self.backbone = backbone
+            counter,results = self.search_lipid_synonyms(metabolite,side_chain)
 
         sorted_lipid_class_dict = sorted(
-            self.lipid_class_dict.items(), key=lambda x: x[1], reverse=True
+            lipid_class_dict.items(), key=lambda x: x[1], reverse=True
         )
         converted_lipid_class_dict = dict(sorted_lipid_class_dict)
         return (
             converted_lipid_class_dict,
-            self.check_annotation_dict,
-            self.counter,
-            self.results,
+            check_annotation_dict,
+            counter,
+            results,
         )
 
     def annotation_checker(self, lipid):
@@ -69,22 +98,26 @@ class LipidNameAnnotator:
         Args:
             lipid (_type_): Given lipid metabolite from the model
         """
+        check_annotation_dict = {}
         annotation = lipid.annotation.keys()
         annotated = False
-        self.check_annotation_dict[lipid.id] = annotated
+        check_annotation_dict[lipid.id] = annotated
         if "slm" in annotation or "lipidmaps" in annotation:
             annotated = True
-            self.check_annotation_dict[lipid.id] = annotated
+            check_annotation_dict[lipid.id] = annotated
+        return check_annotation_dict
 
-    def search_lipid_synonyms(self, metabolite):
+    def search_lipid_synonyms(self, metabolite,side_chain):
         """Method that implements the screening in the database for accurate lipid structure.
         This method calls all StaticMethods to do the screening in the database.
 
         Args:
             metabolite (_type_): Lipid metabolit of the model.
         """
+        results={}
+        counter = defaultdict(int)
         is_compound = False
-        lipid_id = self.get_synonym_id(self.backbone, self.side_chain)
+        lipid_id = self.get_synonym_id(self.backbone, side_chain)
         if lipid_id != None and not lipid_id[2]:
             for backbone in lipid_id[0]:
                 lipid_compound = self.get_coumpound(backbone, lipid_id[1], is_compound)
@@ -95,14 +128,14 @@ class LipidNameAnnotator:
                         )
                     )
                     if structurally_defined_lipids:
-                        if metabolite.id in self.results:
-                            self.results[metabolite.id] = (
-                                self.results[metabolite.id]
+                        if metabolite.id in results:
+                            results[metabolite.id] = (
+                                results[metabolite.id]
                                 + structurally_defined_lipids
                             )
                         else:
-                            self.results[metabolite.id] = structurally_defined_lipids
-                        self.counter[self.backbone] += 1
+                            results[metabolite.id] = structurally_defined_lipids
+                        counter[self.backbone] += 1
 
                 if lipid_compound != None and lipid_compound[0] == 0:
                     backbone_compound = self.get_compound_from_synonym(backbone)
@@ -112,14 +145,14 @@ class LipidNameAnnotator:
                         )
                     )
                     if structurally_defined_lipids:
-                        if metabolite.id in self.results:
-                            self.results[metabolite.id] = (
-                                self.results[metabolite.id]
+                        if metabolite.id in results:
+                            results[metabolite.id] = (
+                                results[metabolite.id]
                                 + structurally_defined_lipids
                             )
                         else:
-                            self.results[metabolite.id] = structurally_defined_lipids
-                        self.counter[self.backbone] += 1
+                            results[metabolite.id] = structurally_defined_lipids
+                        counter[self.backbone] += 1
 
         if lipid_id != None and lipid_id[2] == True:
             is_compound = True
@@ -132,15 +165,16 @@ class LipidNameAnnotator:
                         )
                     )
                     if structurally_defined_lipids:
-                        if metabolite.id in self.results:
-                            self.results[metabolite.id] = (
-                                self.results[metabolite.id]
+                        if metabolite.id in results:
+                            results[metabolite.id] = (
+                                results[metabolite.id]
                                 + structurally_defined_lipids
                             )
                         else:
-                            self.results[metabolite.id] = structurally_defined_lipids
-                        self.counter[self.backbone] += 1
-
+                            results[metabolite.id] = structurally_defined_lipids
+                        counter[self.backbone] += 1
+        return counter,results
+    
     @staticmethod
     def get_synonym_id(backbone: str, side_chain: list):
         """Method that searches for the synonyms of the backbone and side chains for each lipid in the model.

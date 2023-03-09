@@ -1,4 +1,4 @@
-from boimmgpy.read_model.case_study import LipidNameAnnotator
+from boimmgpy.model_annotation.model_annotator import LipidNameAnnotator
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,8 +9,8 @@ def get_info(path):
     model = read_sbml_model(path)
     #metabolite_names = [metabolite.name for metabolite in model.metabolites]
 
-    annotator = LipidNameAnnotator(model)
-    info = annotator.model_lipids_finder()
+    annotator = LipidNameAnnotator()
+    info = annotator.model_lipids_finder(model)
     model_id = model.id
     if model_id == '':
         model_id = "iBD1106"
@@ -38,6 +38,6 @@ def get_info(path):
 
 if __name__ == '__main__':
     get_info(r"models\iBD1106.xml")
-    get_info(r"models\chorella\PP2016-00593DR3_Data1Model_Heterotrophy.xml")
-    get_info(r"models\12918_2017_441_MOESM3_ESM.xml")
-    get_info(r"models\iLB1027_lipid.xml")
+    #get_info(r"models\chorella\PP2016-00593DR3_Data1Model_Heterotrophy.xml")
+    #get_info(r"models\12918_2017_441_MOESM3_ESM.xml")
+    #get_info(r"models\iLB1027_lipid.xml")
