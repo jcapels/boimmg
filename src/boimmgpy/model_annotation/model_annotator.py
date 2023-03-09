@@ -70,7 +70,7 @@ class LipidNameAnnotator:
             and finally a dictionary with the identifiers in the model for the lipids and their identifier in the Lipid Maps and/or Swiss Lipids database
         """
         n_iterations = len(model.metabolites)
-        parallel_callback = Parallel(-3)
+        parallel_callback = Parallel(-1)
         resultados = parallel_callback(delayed(self._model_lipids_finder)(model.metabolites[i]) for i in tqdm(range(n_iterations)))
         self.treat_data(resultados)
         print(sum(1 for v in self.check_annotation_dict.values() if v == True))
