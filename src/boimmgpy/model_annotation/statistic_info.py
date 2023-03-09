@@ -23,8 +23,7 @@ def get_info(path):
     original_annotations = pd.DataFrame(original_annotations)
     class_annotated = pd.Series(info[2])
     class_annotated = pd.DataFrame(class_annotated)
-    print(class_annotated)
-
+    
     with pd.ExcelWriter(path) as writer:
         lipids_class.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0 , startcol=0)
         original_annotations.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0 , startcol=8)

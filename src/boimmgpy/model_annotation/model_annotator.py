@@ -18,6 +18,7 @@ class LipidNameAnnotator:
         self.check_annotation_dict = {}
         self.results = {}
         self.counter = {}
+        self.final_checker = {}
 
 
     def login(self):
@@ -38,7 +39,7 @@ class LipidNameAnnotator:
             dict_list (List[tuple]): List of tuples containing 4 dictionaries in each tuple
         """
         
-        for converted_lipid_class_dict, check_annotation_dict, counter, results in dict_list:
+        for converted_lipid_class_dict, check_annotation_dict, counter, results, final_checker in dict_list:
             if isinstance(converted_lipid_class_dict, defaultdict):
                 converted_lipid_class_dict = Counter(converted_lipid_class_dict)
             if isinstance(counter, defaultdict):
@@ -51,6 +52,7 @@ class LipidNameAnnotator:
         
             self.check_annotation_dict.update(check_annotation_dict)
             self.results.update(results)
+            self.final_checker.update(final_checker)
 
 
     def model_lipids_finder(self,model:Model):
@@ -67,9 +69,12 @@ class LipidNameAnnotator:
             and finally a dictionary with the identifiers in the model for the lipids and their identifier in the Lipid Maps and/or Swiss Lipids database
         """
         n_iterations = len(model.metabolites)
-        parallel_callback = Parallel(-1)
+        parallel_callback = Parallel(-3)
         resultados = parallel_callback(delayed(self._model_lipids_finder)(model.metabolites[i]) for i in tqdm(range(n_iterations)))
         self.treat_data(resultados)
+        print(sum(1 for v in self.check_annotation_dict.values() if v == True))
+        print(sum(1 for v in self.final_checker.values() if v == True))
+
         return (
             self.converted_lipid_class_dict,
             self.check_annotation_dict,
@@ -86,7 +91,7 @@ class LipidNameAnnotator:
         """
 
         matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
-        metabolite_original_name = metabolite.name
+        session = self.login()
         metabolite_name = metabolite.name
         backbone = None
         found = False
@@ -95,6 +100,7 @@ class LipidNameAnnotator:
         counter = {}
         results = {}
         side_chain = []
+        final_checker={}
         for match in matches:
             found = True
             metabolite_name = metabolite_name.replace(
@@ -109,19 +115,22 @@ class LipidNameAnnotator:
                 for a in range(len(side_chain) - 1):
                     backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", backbone)
             lipid_class_dict[backbone] += 1
-            #count += 1
             self.backbone = backbone
             counter,results = self.search_lipid_synonyms(metabolite,side_chain)
+            self.set_annotation(session,results,metabolite)
+            final_checker=self.annotation_checker(metabolite)
 
         sorted_lipid_class_dict = sorted(
             lipid_class_dict.items(), key=lambda x: x[1], reverse=True
         )
         converted_lipid_class_dict = dict(sorted_lipid_class_dict)
+
         return (
             converted_lipid_class_dict,
             check_annotation_dict,
             counter,
             results,
+            final_checker,
         )
 
     def annotation_checker(self, lipid):
@@ -210,6 +219,8 @@ class LipidNameAnnotator:
                         else:
                             results[metabolite.id] = structurally_defined_lipids
                         counter[self.backbone] += 1
+        
+        
         return counter,results
     
     @staticmethod
@@ -364,8 +375,34 @@ class LipidNameAnnotator:
         if len(res) != 0:
             return res
         
-
-    def set_annotation():
+    @staticmethod
+    def set_annotation(session,dictionary_results,metabolite):
+        for key,value in dictionary_results.items():
+            lipid_maps_ids=[]
+            swiss_lipids_ids=[]
+            for id in value:
+                result=session.run("match(c:Compound)where id(c)=$boimmg_id return c.lipidmaps_id,c.swiss_lipids_id as ids", boimmg_id=id)
+                data= result.data()
+                for node in data:
+                    node_lipid_maps_id = node.get("c.lipidmaps_id")
+                    if node_lipid_maps_id != 0:
+                        lipid_maps_ids.append(node_lipid_maps_id)
+                    
+                    node_swiss_lipids_id = node.get("ids")
+                    if node_swiss_lipids_id!= None:
+                        matches = re.finditer(' *([0-9].*)',node_swiss_lipids_id)  
+                        for match in matches:
+                            node_swiss_lipids_id = match.string[match.start() : match.end()]
+                            swiss_lipids_ids.append(node_swiss_lipids_id)
+           
+            if len(lipid_maps_ids) != 0:
+                for values in lipid_maps_ids:
+                        metabolite.annotation["lipidmaps"] = values
+            if len(swiss_lipids_ids) != 0:
+                for values in swiss_lipids_ids:  
+                        metabolite.annotation["slm"] = values
         
-        pass
+            
+        
+
 
