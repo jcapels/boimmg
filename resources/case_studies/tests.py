@@ -4,8 +4,8 @@ import cobra
 from cobra import Reaction
 
 from boimmgpy import definitions
-from boimmgpy.boimmg.RepresentationRevisors.RepresentationRedundantCaseSolver import RepresentationRedundantCaseSolver
-from boimmgpy.boimmg.RepresentationRevisors.RepresentationSimpleCaseSolver import SimpleCaseSolver
+from boimmgpy import RepresentationRedundantCaseSolver
+from boimmgpy import SimpleCaseSolver
 
 # ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 from resources.case_studies.redundant_representation_case.map_ecoli_model import map_iJR904
@@ -114,7 +114,7 @@ def gap_fill_ecoli_model():
 
     # model.add_reactions(reactions[0])
     cobra.io.write_sbml_model(model,
-        definitions.ROOT_DIR + "/case_studies/enhanced_model_ecoli_without_components_gap_filled.xml")
+                              definitions.ROOT_DIR + "/case_studies/enhanced_model_ecoli_without_components_gap_filled.xml")
 
 def PLIPA1(model):
     s1 = {model.metabolites.get_by_id("C_BOIMMG_427_c"): -1,

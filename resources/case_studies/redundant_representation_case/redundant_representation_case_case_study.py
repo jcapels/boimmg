@@ -1,6 +1,5 @@
 import cobra
-from cobra import Reaction, Model
-from cobra.flux_analysis.gapfilling import GapFiller
+from cobra import Reaction
 
 from boimmgpy.representation_changers import LipidGranulator
 

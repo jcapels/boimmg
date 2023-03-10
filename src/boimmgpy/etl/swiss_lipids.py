@@ -1,10 +1,14 @@
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
 import multiprocessing
 from datetime import datetime
 
+========
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
 import gzip
 import io
 import pandas as pd
 import requests
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from joblib import Parallel, delayed
@@ -12,9 +16,16 @@ from neo4j import GraphDatabase
 from tqdm import tqdm
 
 from boimmgpy.etl.airflow_interfaces import AirflowExtractor, AirflowTransformer, AirflowLoader
+========
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
+from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
+from boimmgpy.etl._utils import insert_in_database_swiss_lipids
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
 
 
-class SwissLipidsExtractor(AirflowExtractor):
+class SwissLipidsExtractor:
     """
     Class to extract information from swiss lipids
     """
@@ -22,12 +33,23 @@ class SwissLipidsExtractor(AirflowExtractor):
     def extract(self) -> pd.DataFrame:
         """
         This class calls the scrape_data method and creates a pandas dataframe with the scraped data returned from
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
         scrape_data method.
         :return: Dataframe of the whole Swiss Lipids data :rtype: pd.DataFrame
         """
         return self._extract(self.scrape_data())
 
     def scrape_data(self):
+========
+            scrape_data method.
+        :return: Dataframe of the whole Swiss Lipids data
+        :rtype: pd.DataFrame
+        """
+        return self._extract(self.scrape_data())
+
+    @staticmethod
+    def scrape_data():
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
         """
         This class downloads the ZIP file and extracts the CSV files of SwissLipids.
 
@@ -42,7 +64,11 @@ class SwissLipidsExtractor(AirflowExtractor):
     def _extract(raw_file) -> pd.DataFrame:
         """
         Method to create a pandas dataframe with the scraped data.
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
         :param raw_file: csv file of the whole Swiss Lipids database
+========
+        raw_file: csv file of the whole Swiss Lipids database
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
         :type raw_file: csv file
         :return: Data frame of the whole Swiss Lipids database
         :rtype: pd.DataFrame
@@ -52,23 +78,33 @@ class SwissLipidsExtractor(AirflowExtractor):
         return sl_dataframe
 
 
-class SwissLipidsTransformer(AirflowTransformer):
+class SwissLipidsTransformer:
     """
     Class to transform the lipid maps dataframe
     """
 
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+========
+    def transform(self, df: pd.DataFrame,n_jobs=8) -> pd.DataFrame:
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
         """
         This method allows to transform the dataframe previously extracted into a desired data structure
-        :param df:  Whole pandas dataframe, previosly extracted in the extract class
+        :param df:  Whole pandas dataframe, previously extracted in the extract class
         :type df: pd.Dataframe
         :return: treated dataframe of Swiss Lipids, only with two columns, synonym and ID
         :rtype: pd.DataFrame
         """
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
         # data_treated=self.treat(data)
         iteration = len(df)
         cores = multiprocessing.cpu_count()
         parallel_callback = Parallel(cores)
+========
+
+        iteration = len(df)
+        parallel_callback = Parallel(n_jobs)
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
         data_treated = parallel_callback(delayed(self.treat)(df.iloc[[i]]) for i in tqdm(range(iteration)))
         data_treated = pd.concat(data_treated)
         return data_treated
@@ -77,12 +113,19 @@ class SwissLipidsTransformer(AirflowTransformer):
     def treat(data: pd.DataFrame) -> pd.DataFrame:
         """
         This method uses the whole Swiss Lipids dataframe and creates another with only two desirable columns,
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
         ID and Synonym, the last one englobes the abbreviation too
         :param data:  Whole pandas dataframe, previously
             extracted in the extract class
         :type data: pd.DataFrame
         :return: Dataframe with two columns of the initial
             data, ID and Synonym
+========
+        ID and Synonym, the last one encompasses the abbreviation too :param data:  Whole pandas dataframe,
+        previously extracted in the extract class
+        :type data: pd.DataFrame
+        :return: Dataframe with two columns of the initial data, ID and Synonym
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
         :rtype: pd.DataFrame
         """
         new_df = pd.DataFrame(columns=['Lipid ID', 'Synonym'])
@@ -109,14 +152,16 @@ class SwissLipidsTransformer(AirflowTransformer):
         return new_df
 
 
-class SwissLipidsLoader(AirflowLoader):
+class SwissLipidsLoader:
     """
     Class that loads the treated data into the database
     """
+    
 
     def load(self, treated_df: pd.DataFrame):
         """
         This method connects and loads the treated data into the database
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
         :param treated_df: Treated pandas dataframe
             with a column for ID and another column for synonym and abbreviation to be load
         :type treated_df: pd.DataFrame
@@ -161,12 +206,37 @@ dag = DAG(dag_id="dag_etl_lm", schedule_interval="@once",
           catchup=False,
           )
 
+========
+        :param treated_df: Treated pandas dataframe with a column for ID and another column for synonym and abbreviation to be load
+        :type treated_df: pd.DataFrame
+        """
+        self.load_multiprocessing(treated_df)
+
+    @staticmethod
+    def load_multiprocessing(df: pd.DataFrame,n_jobs=8):
+        itera = len(df)
+        parallel_callback = Parallel(n_jobs)
+        parallel_callback(delayed(insert_in_database_swiss_lipids)(df.iloc[[i]]) for i in tqdm(range(itera)))
+
+    
+
+
+
+
+
+
+"""
+dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
+        start_date=datetime(2022, 1, 1),
+        catchup=False,
+        )
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
 
 def extract(**kwargs):
-    """
+    
     Function where the extract method will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     extractor = SwissLipidsExtractor()
     raw_df = extractor.extract()
@@ -174,10 +244,10 @@ def extract(**kwargs):
 
 
 def transform(**kwargs):
-    """
+
     Function where the transform method will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     extract_df = ti.xcom_pull(task_ids='extract', key='order_data')
     transformer = SwissLipidsTransformer()
@@ -185,10 +255,10 @@ def transform(**kwargs):
 
 
 def load(**kwargs):
-    """
+    
     Function where the load method will be called.
     :param kwargs:
-    """
+    
     ti = kwargs['ti']
     transformed_df = ti.xcom_pull(task_ids='transform', key='order_data')
     loader = SwissLipidsLoader()
@@ -212,3 +282,7 @@ with dag:
         python_callable=load,
     )
     extract_task >> transform_task >> load_task
+<<<<<<<< HEAD:src/boimmgpy/etl/swiss_lipids/swiss_lipids.py
+========
+    """
+>>>>>>>> origin/dev:src/boimmgpy/etl/swiss_lipids.py
