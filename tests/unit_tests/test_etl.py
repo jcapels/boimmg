@@ -1,5 +1,5 @@
 import unittest
-from boimmgpy.etl.lipid_maps import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
+from boimmgpy.etl.lipid_maps.lipid_maps_synonyms import LipidMapsExtractor, LipidMapsTransformer, LipidMapsLoader
 from boimmgpy import SwissLipidsExtractor, SwissLipidsTransformer, SwissLipidsLoader
 
 
