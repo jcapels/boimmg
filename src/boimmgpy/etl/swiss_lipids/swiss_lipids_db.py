@@ -1,9 +1,7 @@
-
-from joblib import Parallel, delayed
 import pandas as pd
 from tqdm import tqdm
 from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles, MolFromSmarts
-from boimmgpy.etl.model_seed.compounds.ModelSeedCompoundsDB import ModelSeedCompoundsDB
+from boimmgpy.etl.model_seed.compounds.model_seed_compounds_DB import ModelSeedCompoundsDB
 from boimmgpy.etl.swiss_lipids.swiss_lipids_synonyms import SwissLipidsExtractor
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
 
@@ -11,23 +9,37 @@ from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
 
 
 class SwissLipidsDb:
-    
+
+
     def treat_dataframe(self):
-        data = self.extract_database()   
+        self.__modelSeedDB = ModelSeedCompoundsDB()
+        self.__idConverter = CompoundsIDConverter()
+        header = ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge:int", "mass:float",
+              "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
+              "metacyc_id", "generic", "model_seed_id"]
+        data = self.extract_database()
+        #df1 = data.iloc[:1000,:]
+        #df1.to_csv("all_swl_db.csv")
+        #data = pd.read_csv("all_swl_db.csv") 
+        new_data = [] 
         iteration = len(data)
-        data_treated = []
         for i in tqdm(range(iteration)):
-            data_ = self._treat_dataframe(data.iloc[[i]])
-            data_treated.append(data_)
-        data_treated = pd.concat(data_treated)
+            new_line = self._treat_dataframe(data.iloc[[i]])
+            if new_line is not None:
+                new_data.append(new_line)
+        
+        data_frame = pd.DataFrame(new_data)
+        data_frame.to_csv("entities.csv", sep=",", header=header, index=False)
+        
+        
 
 
     def _treat_dataframe(self,data):
-        modelSeedDB = ModelSeedCompoundsDB()
-        idConverter = CompoundsIDConverter()
+        modelSeedDB = self.__modelSeedDB
+        idConverter = self.__idConverter
         flag = False
         inchikey,smiles,level = self.get_df_info(data,flag)
-        if "*" not in smiles or "Class" in level:
+        if "*" not in str(smiles) or "Class" in str(level):
             flag = True
             canonical_smiles,swisslipids_id,name,formula,inchi,hmdb_id,chebi_id,lipidmaps_id,pubchem_cid,charge,mass = self.get_df_info(data,flag,smiles)
             if not pd.isna(hmdb_id):
@@ -73,7 +85,7 @@ class SwissLipidsDb:
 
                 kegg_id, bigg_id, metanetx_id, metacyc_id = self.integrate_model_ids(idConverter, model_seed_compound)
 
-                return [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
+                new_line = [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
                             chebi_id, lipidmaps_id, pubchem_cid, kegg_id, bigg_id, metanetx_id, metacyc_id, generic,
                             model_seed_compound.getDbId()]
 
@@ -83,10 +95,10 @@ class SwissLipidsDb:
                 metanetx_id = None
                 metacyc_id = None
 
-                return [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
+                new_line = [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
                             chebi_id, lipidmaps_id, pubchem_cid, kegg_id, bigg_id, metanetx_id, metacyc_id, generic,
                             None]
-
+            return new_line
 
 
     @staticmethod
@@ -171,6 +183,6 @@ class SwissLipidsDb:
         return dataframe
 
 
-
-db = SwissLipidsDb()
-db.treat_dataframe()
+if __name__ =='__main__':   
+    db = SwissLipidsDb()
+    db.treat_dataframe()
