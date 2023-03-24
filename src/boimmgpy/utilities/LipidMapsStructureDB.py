@@ -1,14 +1,10 @@
-from .Lipid import Lipid
-from .LipidMapsScraper import LipidMapsScraper
+from boimmgpy.utilities.Lipid import Lipid
 import pandas as pd
-
+from boimmgpy.etl.lipid_maps.lipid_maps_synonyms import LipidMapsExtractor
 
 class LipidMapsStructureDB:
-
-    def __init__(self):
-        scraper = LipidMapsScraper()
-        path = scraper()
-        self.__read_database(path)
+    def __init__(self) -> None:
+        self.read_database()
 
     def getDatabase(self):
         return self.__database
@@ -39,29 +35,27 @@ class LipidMapsStructureDB:
 
         else:
             return None
-
-    def __read_database(self, path):
+    
+    def read_database(self):
+        scraper = LipidMapsExtractor()
+        lipid_maps_db = scraper.extract()
         self.__database = {}
         self.__inchikey_database = {}
         self.__smiles_database = {}
-        data = pd.read_csv(path, header=0, delimiter="\t", encoding='ISO-8859-1')
-
-        for i in range(data.shape[0]):
-
-            inchikey = data.loc[:, "inchi_key"].iloc[i]
-            smiles = data.loc[:, "smiles"].iloc[i]
-
-            id = data.loc[:, "regno"].iloc[i]
-            sys_name = data.loc[:, "sys_name"].iloc[i]
-            name = data.loc[:, "name"].iloc[i]
-            formula = data.loc[:, "formula"].iloc[i]
-            inchi = data.loc[:, "inchi"].iloc[i]
-            mass = data.loc[:, "exactmass"].iloc[i]
-            kegg_id = data.loc[:, "kegg_id"].iloc[i]
-            hmdb_id = data.loc[:, "hmdb_id"].iloc[i]
-            chebi_id = data.loc[:, "chebi_id"].iloc[i]
-            lipidbank_id = data.loc[:, "lipidbank_id"].iloc[i]
-            pubchem_cid = data.loc[:, "pubchem_cid"].iloc[i]
+        for i,row in lipid_maps_db.iterrows():
+            inchikey = row["INCHI_KEY"]
+            smiles = row["SMILES"]
+            lipid_id = row["LM_ID"]
+            sys_name = row["SYSTEMATIC_NAME"]
+            name = row["NAME"]
+            formula = row["FORMULA"]
+            inchi = row["INCHI"]
+            mass = row["EXACT_MASS"]
+            kegg_id = row["KEGG_ID"]
+            hmdb_id = row["HMDB_ID"]
+            chebi_id = row["CHEBI_ID"]
+            lipidbank_id = row["LIPIDBANK_ID"]
+            pubchem_cid = row["PUBCHEM_CID"]
 
             aliases = {}
 
@@ -88,3 +82,4 @@ class LipidMapsStructureDB:
 
             if not pd.isna(smiles):
                 self.__smiles_database[smiles] = new_lipid
+
