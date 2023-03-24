@@ -1,6 +1,10 @@
+import re
+from typing import List
 import pandas as pd
 from tqdm import tqdm
+from joblib import Parallel, delayed
 from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles, MolFromSmarts
+from boimmgpy.etl.model_seed.compounds.ModelSeedCompound import ModelSeedCompound
 from boimmgpy.etl.model_seed.compounds.model_seed_compounds_DB import ModelSeedCompoundsDB
 from boimmgpy.etl.swiss_lipids.swiss_lipids_synonyms import SwissLipidsExtractor
 from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
@@ -14,27 +18,41 @@ class SwissLipidsDb:
     def treat_dataframe(self):
         self.__modelSeedDB = ModelSeedCompoundsDB()
         self.__idConverter = CompoundsIDConverter()
-        header = ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge:int", "mass:float",
-              "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
-              "metacyc_id", "generic", "model_seed_id"]
         data = self.extract_database()
-        #df1 = data.iloc[:1000,:]
-        #df1.to_csv("all_swl_db.csv")
-        #data = pd.read_csv("all_swl_db.csv") 
-        new_data = [] 
+        new_data = []
+        rel_data = [] 
         iteration = len(data)
         for i in tqdm(range(iteration)):
             new_line = self._treat_dataframe(data.iloc[[i]])
             if new_line is not None:
                 new_data.append(new_line)
+            new_relations = self.set__relationships(data.iloc[[i]]) 
+            if new_relations is not None:
+                rel_data.append(new_relations)       
         
-        data_frame = pd.DataFrame(new_data)
+       
+        self.create_entities_file(new_data)
+        self.create_realationships_file(rel_data)
+    
+    def create_realationships_file(self,data:List[pd.DataFrame]):
+        data_frame = pd.concat(data)
+        data_frame.to_csv("rel.csv", sep=",", index=False)
+    
+        
+    def create_entities_file(self,data:List[list]):
+        """Method to create Swiss Lipids entities files
+
+        Args:
+            data (List[list]): List of lists to create entities file
+        """
+        header = ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge:int", "mass:float",
+              "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
+              "metacyc_id", "generic", "model_seed_id"]
+        data_frame = pd.DataFrame(data)
         data_frame.to_csv("entities.csv", sep=",", header=header, index=False)
-        
-        
 
 
-    def _treat_dataframe(self,data):
+    def _treat_dataframe(self,data:pd.DataFrame):
         modelSeedDB = self.__modelSeedDB
         idConverter = self.__idConverter
         flag = False
@@ -100,9 +118,35 @@ class SwissLipidsDb:
                             None]
             return new_line
 
+    def set__relationships(self,data:pd.DataFrame)->List:
+        rel_list = pd.DataFrame(columns=[":START_ID",":END_ID",":TYPE"])
+        counter = 0
+        for i,row in data.iterrows():
+            compound_id = row["Lipid ID"]
+            component = row["Components*"]
+            if component is not None and not pd.isnull(component):
+                component_splits = component.split("/")
+                for split in component_splits:
+                    split = re.sub(" *\((.*?)\)", "", split)
+                    split = split.replace(" ", "")
+                    rel_list.at[counter,":START_ID"] = split
+                    rel_list.at[counter,":END_ID"] = compound_id
+                    rel_list.at[counter,":TYPE"] = "component_of"
+                    counter += 1
+            parent = row["Lipid class*"]
+            if parent is not None and not pd.isnull(parent):
+                parent_splits = parent.split("|")
+                for split in parent_splits:
+                    split = split.replace(" ", "")
+                    rel_list.at[counter,":START_ID"] = compound_id
+                    rel_list.at[counter,":END_ID"] = split
+                    rel_list.at[counter,":TYPE"] = "is_a"
+                    counter += 1
+        return rel_list
+
 
     @staticmethod
-    def get_df_info(data,flag,smile=None):
+    def get_df_info(data:pd.DataFrame,flag:bool,smile=None):
         smiles = None
         if flag == False:
             for i, row in data.iterrows():
@@ -143,7 +187,7 @@ class SwissLipidsDb:
 
 
     @staticmethod
-    def integrate_model_ids(idConverter, model_seed_compound):
+    def integrate_model_ids(idConverter, model_seed_compound:ModelSeedCompound):
         kegg_ids = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "KEGG")
         bigg_ids = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "BiGG")
         metanetxs = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "metanetx.chemical")
