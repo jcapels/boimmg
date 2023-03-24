@@ -1,3 +1,4 @@
+from typing import List
 from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles
 from boimmgpy.etl.model_seed.compounds.ModelSeedCompound import ModelSeedCompound
 from boimmgpy.etl.model_seed.compounds.model_seed_db_scraper import ModelSeedCompoundsDBScraper,ModelSeedStructuresDBScraper
@@ -14,28 +15,69 @@ class ModelSeedCompoundsDB:
         
 
     def _set_compounds_db(self):
+        """Method that implements all necessary methods to set the Model SEED database
+        """
         self.read_model_seed_compounds()
         self.read_model_seed_structures()
         self.set_inchi_key_and_smiles_database()
     
-    def get_compound_by_id(self, id):
+    def get_compound_by_id(self, id:str)->ModelSeedCompound:
+        """ Method that search for a compound by a given id
+
+        Args:
+            id (str): id to be search
+
+        Returns:
+            ModelSeedCompound: Model Seed compound object with given id
+        """
+        
         return self.__compounds_database[id]
 
-    def get_compound_by_inchi_key(self, inchikey):
+    def get_compound_by_inchi_key(self, inchikey:str)->ModelSeedCompound:
+        """Method that search for a Model Seed compound by a given inchi key
+
+        Args:
+            inchikey (str): inchikey to be search
+
+        Returns:
+            ModelSeedCompound: Model Seed compound object with given inchi key
+        """
         if inchikey[:-1] in self.__inchikey_database.keys():
             return self.__inchikey_database[inchikey[:-1]]
         return None
 
-    def get_compound_by_canonical_smiles(self, smiles):
+    def get_compound_by_canonical_smiles(self, smiles:str)->ModelSeedCompound:
+        """Method to search for a Model Seed compound by a given smiles
+
+        Args:
+            smiles (str): smiles to be search
+
+        Returns:
+            ModelSeedCompound: Model Seed compound object with given smiles
+        """
         if smiles in self.__smiles_database.keys():
             return self.__smiles_database[smiles]
         return None
 
-    def get_compounds(self):
+    def get_compounds(self)->List:
+        """Method to acess all Model Seed compounds 
+
+        Returns:
+            List: List with all Model Seed compounds objects
+        """
         return self.__compounds
     
 
-    def find_compound_by_inchikey(self, inchikey):
+    def find_compound_by_inchikey(self, inchikey:str)->ModelSeedCompound:
+        """ Method to acess a compound with a given inchikey
+
+        Args:
+            inchikey (str): inchikey to be searched
+
+        Returns:
+            ModelSeedCompound: Model Seed compound object with given inchikey
+        """
+
         for compound in self.__compounds_database:
             compound_container = self.__compounds_database[compound]
             db_compound_inchikey = compound_container.getInchikey()
@@ -46,6 +88,8 @@ class ModelSeedCompoundsDB:
 
 
     def read_model_seed_structures(self):
+        """Method to read and set model seed structures
+        """
         extractor = ModelSeedStructuresDBScraper()
         structure_dataframe = extractor.extract()
         mapped_features = {}
@@ -66,6 +110,8 @@ class ModelSeedCompoundsDB:
             previous_id = _id
 
     def read_model_seed_compounds(self):
+        """Method to read and set Model Seed compounds database
+        """
         self.__compounds_database = {}
         extractor = ModelSeedCompoundsDBScraper()
         compound_dataframe = extractor.extract()
@@ -83,6 +129,8 @@ class ModelSeedCompoundsDB:
 
 
     def set_inchi_key_and_smiles_database(self):
+        """Method to set Model Seed compounds inchi key and smiles databases
+        """
         self.isomer_smiles_database = {}
         for compound in self.__compounds:
             inchikey = compound.getInchikey()
