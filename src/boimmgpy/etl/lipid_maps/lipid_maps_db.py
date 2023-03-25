@@ -1,13 +1,18 @@
 import pandas as pd
 from tqdm import tqdm
 from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from neo4j import GraphDatabase
 from boimmgpy.utilities.LipidMapsStructureDB import LipidMapsStructureDB
+from boimmgpy.database.databases_babel import BOIMMGDatabases
 from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles, MolFromSmarts
+
 
 
 class LipidMapsDB:
 
     def treat_dataframe():
+        data_base_connection = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        session = data_base_connection.session()
         lipids_db = LipidMapsStructureDB()
         lipid_maps_db = lipids_db.getDatabase()
         accessor = CompoundsDBAccessor()
@@ -55,7 +60,7 @@ class LipidMapsDB:
 
             if not res:
 
-                with tx.session() as session:
+                with driver.session() as session:
                     session.run("MERGE (c:Compound { lipidmaps_id: $lipid_maps_id}) "
                                 "ON CREATE SET c.lipid_maps_id = $lipid_maps_id, "
                                 "c.smiles = $smiles, c.generic = False, c.inchikey = $inchikey, "
@@ -77,7 +82,7 @@ class LipidMapsDB:
             else:
                 to_merge_node = res[0]
                 if BOIMMGDatabases.LIPID_MAPS.value not in to_merge_node.aliases.keys():
-                    with tx.session() as session:
+                    with driver.session() as session:
                         session.run("MATCH (c:Compound) "
                                     "where id(c) = $ont_id "
                                     "set c.lipid_maps_id = $lipid_maps_id,"
@@ -86,6 +91,6 @@ class LipidMapsDB:
                                     lipid_maps_id=lipid_container.getDbId(),
                                     kegg_id=kegg_id)
 
-
-
-        pass
+if __name__ == "__main__":
+    set = LipidMapsDB()
+    set.treat_dataframe()
