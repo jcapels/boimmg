@@ -45,7 +45,7 @@ class SwissLipidsDb:
         Args:
             data (List[list]): List of lists to create entities file
         """
-        header = ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge:int", "mass:float",
+        header = ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge", "mass",
               "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
               "metacyc_id", "generic", "model_seed_id"]
         data_frame = pd.DataFrame(data)
