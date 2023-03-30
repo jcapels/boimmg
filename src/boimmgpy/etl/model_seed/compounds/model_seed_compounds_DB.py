@@ -1,9 +1,11 @@
+import re
 from typing import List
+import pandas as pd
 from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles
 from boimmgpy.etl.model_seed.compounds.ModelSeedCompound import ModelSeedCompound
 from boimmgpy.etl.model_seed.compounds.model_seed_db_scraper import ModelSeedCompoundsDBScraper,ModelSeedStructuresDBScraper
 from boimmgpy.utilities import chemo_utilities
-
+from tqdm import tqdm
 
 class ModelSeedCompoundsDB:
 
@@ -67,6 +69,14 @@ class ModelSeedCompoundsDB:
         """
         return self.__compounds
     
+    def get_transformed_ID(self)->pd.DataFrame:
+        """Method to acess modelseed transformation to kegg id
+
+        Returns:
+            pd.DataFrame: Dataframe with kegg id and referent model_seed id
+        """
+        return self.__kegg_to_modelseed
+    
 
     def find_compound_by_inchikey(self, inchikey:str)->ModelSeedCompound:
         """ Method to acess a compound with a given inchikey
@@ -112,20 +122,40 @@ class ModelSeedCompoundsDB:
     def read_model_seed_compounds(self):
         """Method to read and set Model Seed compounds database
         """
+        kegg_dataframe = []
         self.__compounds_database = {}
         extractor = ModelSeedCompoundsDBScraper()
         compound_dataframe = extractor.extract()
-        for i,row in compound_dataframe.iterrows():
+        for i,row in tqdm(compound_dataframe.iterrows()):
             name = row["name"]
             formula = row["formula"]
             charge = int(row["charge"])
             inchikey = row["inchikey"]
             smiles = row["smiles"]
             _id = row["id"]
+            aliases = row["aliases"]
+            if not pd.isna(aliases):
+                match = re.search(r"KEGG:\s*([^|]+)",aliases)
+                if match:
+                    kegg_id = match.group()
+                    kegg_id=re.sub("KEGG: ","",kegg_id)
+                    kegg_dataframe.append(self.set_kegg_modelseed_id(kegg_id,_id))
             modelseed_compound = ModelSeedCompound(_id, name, charge, formula)
             modelseed_compound.setStructures(smiles, inchikey)
             self.__compounds_database[_id] = modelseed_compound
             self.__compounds.append(modelseed_compound)
+        self.__kegg_to_modelseed = pd.concat(kegg_dataframe)
+
+    @staticmethod
+    def set_kegg_modelseed_id (kegg_ids,modelseed_id):
+        kegg_ids = kegg_ids.split(";")
+        kegg_to_modelseed = pd.DataFrame(columns=["kegg_id","modelseed_id"])
+        counter = 0
+        for kegg_id in kegg_ids:
+            kegg_to_modelseed.at[counter,"kegg_id"] = kegg_id.strip()
+            kegg_to_modelseed.at[counter,"modelseed_id"] = modelseed_id
+            counter += 1
+        return kegg_to_modelseed
 
 
     def set_inchi_key_and_smiles_database(self):
@@ -166,4 +196,3 @@ class ModelSeedCompoundsDB:
 
 if __name__ == '__main__':
     teste = ModelSeedCompoundsDB()
-    teste._set_compounds_db()
