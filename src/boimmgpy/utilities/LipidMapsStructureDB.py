@@ -74,12 +74,11 @@ class LipidMapsStructureDB:
             if not pd.isna(pubchem_cid):
                 aliases["PubChem"] = [str(pubchem_cid)]
 
-            new_lipid = Lipid(id, name, sys_name, mass, formula, inchi, inchikey, smiles, aliases)
+            new_lipid = Lipid(lipid_id, name, sys_name, mass, formula, inchi, inchikey, smiles, aliases)
 
-            self.__database[id] = new_lipid
+            self.__database[lipid_id] = new_lipid
             if not pd.isna(inchikey):
                 self.__inchikey_database[inchikey[:-1]] = new_lipid
 
             if not pd.isna(smiles):
                 self.__smiles_database[smiles] = new_lipid
-
