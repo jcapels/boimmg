@@ -165,33 +165,38 @@ class ModelSeedCompoundsDB:
         for compound in self.__compounds:
             inchikey = compound.getInchikey()
             smiles = compound.getSmiles()
-        if inchikey or smiles:
-                self.__inchikey_database[inchikey[:-1]] = compound
-                mol = MolFromSmiles(smiles)
+            if inchikey or smiles:
+                    if not pd.isna(inchikey):
+                        self.__inchikey_database[inchikey[:-1]] = compound
+                    
+                    mol = None
+                    
+                    if not pd.isna(smiles):
+                        mol = MolFromSmiles(smiles)
 
-                if mol:
-                    canonical_smiles_not_isomer = MolToSmiles(mol, isomericSmiles=False)
-                    canonical_smiles = MolToSmiles(mol)
+                    if mol:
+                        canonical_smiles_not_isomer = MolToSmiles(mol, isomericSmiles=False)
+                        canonical_smiles = MolToSmiles(mol)
 
-                    try:
-                        neutralized, _ = chemo_utilities.neutralise_charges(canonical_smiles)
-                        neutralized_not_isomer, _ = chemo_utilities.neutralise_charges(canonical_smiles_not_isomer)
+                        try:
+                            neutralized, _ = chemo_utilities.neutralise_charges(canonical_smiles)
+                            neutralized_not_isomer, _ = chemo_utilities.neutralise_charges(canonical_smiles_not_isomer)
 
-                        if neutralized in self.__smiles_database:
-                            self.__smiles_database[neutralized].append(compound)
+                            if neutralized in self.__smiles_database:
+                                self.__smiles_database[neutralized].append(compound)
 
-                        else:
-                            self.__smiles_database[neutralized] = [compound]
+                            else:
+                                self.__smiles_database[neutralized] = [compound]
 
-                        if neutralized_not_isomer in self.isomer_smiles_database:
-                            self.isomer_smiles_database[neutralized_not_isomer].append(compound)
+                            if neutralized_not_isomer in self.isomer_smiles_database:
+                                self.isomer_smiles_database[neutralized_not_isomer].append(compound)
 
-                        else:
-                            self.isomer_smiles_database[neutralized_not_isomer] = [compound]
+                            else:
+                                self.isomer_smiles_database[neutralized_not_isomer] = [compound]
 
 
-                    except:
-                        pass
+                        except:
+                            pass
 
 
 if __name__ == '__main__':
