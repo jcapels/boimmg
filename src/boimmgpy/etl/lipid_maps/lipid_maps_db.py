@@ -96,19 +96,19 @@ class LipidMapsDB:
 
         if inchikey_wlast:
             res = accessor.get_compound_by_inchikey(inchikey)
-
-            if not res:
+            node_smiles = accessor.get_compound_by_smiles(smiles)
+            if not res and not node_smiles:
 
                 with driver.session() as session:
                     session.run("MERGE (c:Compound:LipidMapsCompound { lipidmaps_id: $lipid_maps_id}) "
-                                "ON CREATE SET c.lipid_maps_id = $lipid_maps_id, "
+                                "ON CREATE SET c.lipidmaps_id = $lipid_maps_id, "
                                 "c.smiles = $smiles, c.generic = False, c.inchikey = $inchikey, "
                                 "c.formula = $formula, c.charge = 0, c.kegg_id = $kegg_id, c.inchi = $inchi, "
                                 "c.chebi_id = $chebi_id, c.lipid_bank_id = $lipid_bank_id,"
                                 "c.name = $name,"
                                 "c.pubchem_cid = $pubchem_id, c.hmdb_id = $hmdb_id "
                                 ,
-                                lipid_maps_id=lipid_container.getDbId(),
+                                lipidmaps_id=lipid_container.getDbId(),
                                 smiles=canonical_smiles,
                                 inchikey=lipid_container.getInchiKey(),
                                 formula=lipid_container.getFormula(),
@@ -117,17 +117,20 @@ class LipidMapsDB:
                                 pubchem_id=pubchem_id, hmdb_id=hmdb_id,
                                 inchi=lipid_container.getInchi(), name=name
                                 )
+            
 
             else:
                 if BOIMMGDatabases.LIPID_MAPS.value not in res.aliases.keys():
                     with driver.session() as session:
                         session.run("MATCH (c:Compound) "
                                     "where id(c) = $ont_id "
-                                    "set c.lipid_maps_id = $lipid_maps_id,"
+                                    "set c.lipidmaps_id = $lipid_maps_id,"
                                     "c.kegg_id = $kegg_id",
                                     ont_id=res.id,
-                                    lipid_maps_id=lipid_container.getDbId(),
+                                    lipidmaps_id=lipid_container.getDbId(),
                                     kegg_id=kegg_id)
+
+
 
 
 if __name__ == "__main__":
