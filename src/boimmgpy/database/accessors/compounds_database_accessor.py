@@ -48,13 +48,13 @@ def set_database_information(uri, user, password):
 
 class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
-    def __init__(self):
+    #def __init__(self):
 
-        uri, user, password = self.read_config_file()
+        #uri, user, password = self.read_config_file()
 
-        self.__uri = uri
-        self.__user = user
-        self.__password = password
+        #self.__uri = uri
+        #self.__user = user
+        #self.__password = password
 
     @staticmethod
     def read_config_file():
@@ -171,10 +171,10 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                 return None
 
     def get_all_aliases(self, node_id):
-        self.login()
-        with self.tx.session() as session:
+        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        with driver.session() as session:
             result = session.run("MATCH (c)-[:is_db_link_of]->(d:Compound) "
-                                 "WHERE d.boimmg_id = $node_id "
+                                 "WHERE id(d) = $node_id "
                                  "RETURN c",
                                  node_id=node_id)
 
@@ -207,11 +207,11 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                 return None
 
     def get_node_from_lipid_maps_id(self, lipid_maps_id: str) -> CompoundNode:
-        self.login()
-        with self.tx.session() as session:
+        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        with driver.session() as session:
             result = session.run("MATCH (c:Compound) "
-                                 "WHERE c.lipidmaps_id = $lipid_maps_id "
-                                 "RETURN c, c.boimmg_id as id",
+                                 "WHERE c.lipid_maps_id = $lipid_maps_id "
+                                 "RETURN c, id(c) as id",
                                  lipid_maps_id=lipid_maps_id)
 
             data = result.single()
@@ -276,6 +276,23 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         res.extend(conjugated_acids)
 
         return res
+    
+    def get_node_id_from_smiles(self,smiles:str)-> Union[int, None]:
+        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        with driver.session() as session:
+            result = session.run("MATCH (c:SwissLipidsCompound)"
+                                 "WHERE c.smiles = $smiles "
+                                 "RETURN id(c) as id",
+                                 smiles=smiles)
+
+            data = result.single()
+            if data:
+                node_id = data.get("id")
+
+                return node_id
+
+            else:
+                return None
 
     def get_predecessors_by_ont_id(self, ont_id: int) -> list:
         """Get predecessors using as parameter the ontology identifier"""
@@ -413,10 +430,11 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         return predecessors
 
     def get_all_successors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str) -> list:
-        self.login()
+    
 
-        parent_container = self.get_node_by_ont_id(ont_id)
-        l = [ont_id]
+        parent_container = self.get_node_from_lipid_maps_id(ont_id)
+        
+        l = [parent_container.id]
         res = []
         while len(l) > 0:
             node = l.pop(0)
@@ -446,11 +464,11 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         return res
 
     def get_compound_by_inchikey(self, inchikey):
-        self.login()
-        with self.tx.session() as session:
+        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        with driver.session() as session:
             result = session.run("MATCH (c:Compound) "
                                  "WHERE c.inchikey contains $inchikey "
-                                 "RETURN c, c.boimmg_id as id "
+                                 "RETURN c, id(c) as id "
                                  ,
                                  inchikey=inchikey[:-1])
             data = result.single()
@@ -488,8 +506,8 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
                 return None
 
     def get_compound_by_smiles(self, smiles):
-        self.login()
-        with self.tx.session() as session:
+        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        with driver.session() as session:
             result = session.run("MATCH (c:Compound) "
                                  "WHERE c.smiles = $smiles "
                                  "RETURN c, c.boimmg_id as id "
@@ -560,21 +578,23 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
 
     def get_node_by_ont_id(self, ont_id: int) -> CompoundNode:
         """Get node container by ontology identifier"""
-        self.login()
-        with self.tx.session() as session:
+        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        with driver.session() as session:
             result = session.run("MATCH (c:Compound) "
                                  "WHERE c.boimmg_id = $ont_id "
                                  "RETURN c, c.boimmg_id as id",
                                  ont_id=ont_id)
 
-            data = result.single()
-            node_properties = data.get("c")
-            node_id = data.get("id")
+            data = result.data()
+            for node in data:
+                node_id = node.get("id")
+                node_properties = node.get("c")
 
-            other_aliases = self.get_all_aliases(node_id)
-            node = CompoundNode(node_id, node_properties, other_aliases)
+                other_aliases = self.get_all_aliases(node_id)
+                node = CompoundNode(node_id, node_properties, other_aliases)
 
-        return node
+                return node
+            
 
     def get_compounds_with_specific_parent_within_set_of_components(self, parent, components, sources):
 
@@ -708,13 +728,13 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         return node
 
     def get_successors_by_ont_id_rel_type(self, ont_id: int, relationship_type: str) -> list:
-        self.login()
+        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
         successors = []
-        with self.tx.session() as session:
+        with driver.session() as session:
 
             result = session.run("MATCH (c:Compound)<-[r]-(p:Compound) "
-                                 "WHERE p.boimmg_id = $ont_id AND TYPE(r) = $rel_type "
-                                 "RETURN c.boimmg_id as id",
+                                 "WHERE id(p) = $ont_id AND TYPE(r) = $rel_type "
+                                 "RETURN id(c) as id",
                                  ont_id=ont_id,
                                  rel_type=relationship_type)
 
