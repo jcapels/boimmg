@@ -1,8 +1,20 @@
-
+from typing import List,Dict
 import re
+from cobra import Model,Metabolite
+from neo4j import GraphDatabase
 
 
-def set_annotation(session,dictionary_results,model):
+def set_metabolite_annotation_in_model(session:GraphDatabase.driver,dictionary_results:Dict,model:Model)->Model:
+    """Function to anotate lipid metabolites in a user chossen model
+
+    Args:
+        session (GraphDatabase.driver): Neo4j driver to acess the database 
+        dictionary_results (Dict): Python Dictionary with Lipid metabolites IDs from the BOIMMG the database
+        model (Model): GSM model to be annotated
+
+    Returns:
+        Model: Gsm model with defined Lipids annotated
+    """
     for key,value in dictionary_results.items():
         lipid_maps_ids=[]
         swiss_lipids_ids=[]
