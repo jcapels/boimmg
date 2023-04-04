@@ -1,11 +1,12 @@
 import re
 from tqdm import tqdm
+from neo4j import GraphDatabase
 from collections import defaultdict
 from collections import Counter
 from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
-from boimmgpy.model_annotation._utils import set_annotation
+from boimmgpy.model_annotation._utils import set_metabolite_annotation_in_model
 from joblib import Parallel, delayed
-from typing import List
+from typing import List,Tuple,Dict
 from cobra import Model,Metabolite
 
 
@@ -22,24 +23,25 @@ class LipidNameAnnotator:
 
 
 
-    def login(self):
+    def login(self)->GraphDatabase.driver:
         """Method to create the connection to the database
 
-        Returns:
-            _type_: _description_
+        :return: session linkage to remote database
+        :rtype: 
         """
         driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
         session = driver.session()
         return session
 
+
     def treat_data(self,dict_list:List[tuple]):
         """Method responsible for handling the dictionary fractions originating from the multiprocessing of the medel_lipids_finder method.
          Here all partitions are assigned to a corresponding final dictionary.
 
-        Args:
-            dict_list (List[tuple]): List of tuples containing 4 dictionaries in each tuple
+        :param dict_list: List of tuples containing 4 dictionaries in each tuple
+        :type dict_list: List[tuple]
         """
-        
+
         for converted_lipid_class_dict, check_annotation_dict, counter, results in dict_list:
             if isinstance(converted_lipid_class_dict, defaultdict):
                 converted_lipid_class_dict = Counter(converted_lipid_class_dict)
@@ -55,27 +57,26 @@ class LipidNameAnnotator:
             self.results.update(results)
 
 
+      
+    def find_model_lipids(self,model:Model, n_jobs:int=-1)->Tuple(Dict):
+        """ Method responsible for multiprocessing the metabolites of the model, thus accelerating the whole annotation procedure.
 
-    def model_lipids_finder(self,model:Model):
-        """
-        Method responsible for multiprocessing the metabolites of the model, thus accelerating the whole annotation procedure.
-
-        Args:
-            model (Model): Cobrapy metabolic model
-
-        Returns:
-            _type_: A tuple with four dictionaries first one refers to the extent of the lipid classes present in the model, 
+        :param model: Cobrapy metabolic model
+        :type model: Model
+        :param n_jobs: Number of CPU cores to be used for multiprocessing, defaults to -1
+        :type n_jobs: int, optional
+        :return:  A tuple with four dictionaries first one refers to the extent of the lipid classes present in the model, 
             the second one refers to the pre-presence of annotation on the lipids, 
             third for the extent of the classes that the algorithm was able to annotate 
             and finally a dictionary with the identifiers in the model for the lipids and their identifier in the Lipid Maps and/or Swiss Lipids database
+        :rtype: Tuple(Dict)
         """
         n_iterations = len(model.metabolites)
-        parallel_callback = Parallel(-1)
-        resultados = parallel_callback(delayed(self._model_lipids_finder)(model.metabolites[i]) for i in tqdm(range(n_iterations)))
+        parallel_callback = Parallel(n_jobs)
+        resultados = parallel_callback(delayed(self._find_model_lipids)(model.metabolites[i]) for i in tqdm(range(n_iterations)))
         self.treat_data(resultados)
-        print(sum(1 for v in self.check_annotation_dict.values() if v == True))
         session = self.login()
-        final_model = set_annotation(session,self.results,model)
+        final_model = set_metabolite_annotation_in_model(session,self.results,model)
 
         return (
             self.converted_lipid_class_dict,
@@ -85,17 +86,21 @@ class LipidNameAnnotator:
             final_model
         )
 
-    def _model_lipids_finder(self,metabolite):
-        """Method that searchs for lipid metabolites in model and finds their synonyms in the BOIMMG database
 
-        Returns:
-            _type_: A tuple with three dictionaries, first one with sorted information about lipid class present in the model, second one with the annotation information of lipids in the model (False or True for the presence of annotation) an the last
+    def _find_model_lipids(self,metabolite:Metabolite)->Tuple(Dict):
+        """Method that searchs for lipid metabolites in model and finds their synonyms in the BOIMMG database.
+        Firstly Lipids are separeted from another model Metabolites by the regex [0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))* that searches for patterns similar to the lipids side chains representatation distinct from all other metabolites
+        The second Regex  *(\([\-a-zA-Z0-9/|, ]*\)) is used to delete the side chain part of the name to get only the backbone part of the lipid
+
+        :param metabolite: Lipid metabolite from GSM model
+        :type metabolite: Metabolite
+        :return: A tuple with three dictionaries, first one with sorted information about lipid class present in the model, second one with the annotation information of lipids in the model (False or True for the presence of annotation) an the last
             with the classes that the algorithm can annotate.
+        :rtype: Tuple(Dict)
         """
 
         matches = re.finditer("[0-9]+:[0-9]+(\([a-zA-Z0-9,]*\))*", metabolite.name)
         metabolite_name = metabolite.name
-        backbone = None
         found = False
         lipid_class_dict = defaultdict(int)
         check_annotation_dict={}
@@ -110,7 +115,7 @@ class LipidNameAnnotator:
             side_chain.append(match.string[match.start() : match.end()])
 
         if found:
-            check_annotation_dict = self.annotation_checker(lipid=metabolite)
+            check_annotation_dict = self.check_annotation(lipid=metabolite)
             backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", metabolite_name)
             if len(side_chain) != 1:
                 for a in range(len(side_chain) - 1):
@@ -133,11 +138,14 @@ class LipidNameAnnotator:
             
         )
 
-    def annotation_checker(self, lipid):
+
+    def check_annotation(self, lipid:Metabolite)->Dict:
         """Method that checks if a given lipid is annotated in the model
 
-        Args:
-            lipid (_type_): Given lipid metabolite from the model
+        :param lipid: given lipid from the model
+        :type lipid: Metabolite
+        :return: dictionary with lipid model ID as key and bool for the annotation as values
+        :rtype: Dict
         """
         check_annotation_dict = {}
         annotation = lipid.annotation.keys()
@@ -148,16 +156,17 @@ class LipidNameAnnotator:
             check_annotation_dict[lipid.id] = annotated
         return check_annotation_dict
 
-    def search_lipid_synonyms(self, metabolite:Metabolite,side_chain:List[str]):
+    def search_lipid_synonyms(self, metabolite:Metabolite,side_chain:List[str])->Tuple(Dict):
         """Method that implements the screening in the database for accurate lipid structure.
         This method calls all StaticMethods to do the screening in the database.
 
-        Args:
-            metabolite (Metabolite): Given Metabolite of the cobra model
-            side_chain (List[str]): List of the side chains referent to the given Metavolite
 
-        Returns:
-            _type_: tuple with two dictionaries, first one for the extend of the lipid classes that the algorithm caugth and second one for the identifiers to do the annotation
+        :param metabolite: Given Metabolite of the cobra model
+        :type metabolite: Metabolite
+        :param side_chain: List of the side chains referent to the given Metavolite
+        :type side_chain: List[str]
+        :return: tuple with two dictionaries, first one for the extend of the lipid classes that the algorithm caugth and second one for the identifiers to do the annotation
+        :rtype: Tuple(Dict)
         """
         session = self.login()
         results={}
@@ -223,9 +232,7 @@ class LipidNameAnnotator:
         
         return counter,results
     
-    @staticmethod
-    def get_synonym_id(session,backbone: str, side_chain: list):
-        """Method that searches for the synonyms of the backbone and side chains for each lipid in the model.
+     """Method that searches for the synonyms of the backbone and side chains for each lipid in the model.
         In cases where the synonym for the backbone doesnt exist it will search for the generic compound with the same name as the backbone:
 
         Args:
@@ -233,6 +240,20 @@ class LipidNameAnnotator:
             side_chain (list): List of side chains from the lipid name
         Returns:
             _type_: Tuple with two lists and a Boolean. First list refers to the backbone ID, second for the side_chains ID's. Lastly the Bolean is True when the backbone ID is from a compound.
+        """
+    @staticmethod
+    def get_synonym_id(session:GraphDatabase.driver,backbone: str, side_chain: list)->Tuple:
+        """Method that searches for the synonyms of the backbone and side chains for each lipid in the model.
+        In cases where the synonym for the backbone doesnt exist it will search for the generic compound with the same name as the backbone:
+
+        :param session: driver linkage to database
+        :type session: GraphDatabase.driver
+        :param backbone: Backbone portion of the lipid name
+        :type backbone: str
+        :param side_chain: List of side chains from the lipid name
+        :type side_chain: list
+        :return: Tuple with two lists and a Boolean. First list refers to the backbone ID, second for the side_chains ID's. Lastly the Bolean is True when the backbone ID is from a compound.
+        :rtype: Tuple
         """
         sidechain_id = []
         backbone_id = []
