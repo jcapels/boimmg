@@ -209,7 +209,7 @@ class CompoundsDBAccessor(BOIMMGDatabaseAccessor):
         
         with self.tx.session() as session:
             result = session.run("MATCH (c:Compound) "
-                                 "WHERE c.lipid_maps_id = $lipid_maps_id "
+                                 "WHERE c.lipidmaps_id = $lipid_maps_id "
                                  "RETURN c, id(c) as id",
                                  lipid_maps_id=lipid_maps_id)
 

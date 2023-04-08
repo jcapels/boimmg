@@ -2,6 +2,7 @@ from neo4j import GraphDatabase
 import pandas as pd
 from tqdm import tqdm
 from boimmgpy.database.accessors.compounds_database_accessor import CompoundsDBAccessor
+from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 from boimmgpy.utilities import chemo_utilities
 from boimmgpy.utilities.LipidMapsStructureDB import LipidMapsStructureDB
 from boimmgpy.utilities.chemo_utilities import neutralise_charges
@@ -13,7 +14,7 @@ from rdkit import Chem
 
 class LipidMapsRelationships:
     def establish_relationships(self,core=None):
-        driver = GraphDatabase.driver(uri="bolt://localhost:7687",auth=("neo4j","potassio19"))
+        driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
         accessor = CompoundsDBAccessor()
         generic_targets = self.get_swiss_generics()
         lipid_maps_db = LipidMapsStructureDB()
