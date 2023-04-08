@@ -140,11 +140,7 @@ class LipidMapsDB:
                             "set c.lipidmaps_id = $lipid_maps_id,"
                             "c.kegg_id = $kegg_id",
                             ont_id=res.id,
-                            lipidmaps_id=lipid_container.getDbId(),
+                            lipid_maps_id=lipid_container.getDbId(),
                             kegg_id=kegg_id,
                         )
 
-
-if __name__ == "__main__":
-    set = LipidMapsDB()
-    set.treat_dataframe()
