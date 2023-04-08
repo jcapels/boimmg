@@ -48,12 +48,11 @@ class LipidMapsDB:
         """
         lipids_db = LipidMapsStructureDB()
         lipid_maps_db = lipids_db.getDatabase()
-        parallel_callback = Parallel(4)
+        parallel_callback = Parallel(6)
         data_treated = parallel_callback(
             delayed(self.insert_lm_database)(value)
             for key, value in tqdm(lipid_maps_db.items())
         )
-        data_treated = pd.concat(data_treated)
 
     def insert_lm_database(self, lipid_container: List):
         """Method that receives a lipid container, acesses its information and sets a new node for each lipid with all relevant information

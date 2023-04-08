@@ -52,7 +52,7 @@ class SwissLipidsTransformer:
     Class to transform the lipid maps dataframe
     """
 
-    def transform(self, df: pd.DataFrame,n_jobs=8) -> pd.DataFrame:
+    def transform(self, df: pd.DataFrame,n_jobs=6) -> pd.DataFrame:
         """
         This method allows to transform the dataframe previously extracted into a desired data structure
         :param df:  Whole pandas dataframe, previously extracted in the extract class
@@ -116,7 +116,7 @@ class SwissLipidsLoader:
         self.load_multiprocessing(treated_df)
 
     @staticmethod
-    def load_multiprocessing(df: pd.DataFrame,n_jobs=8):
+    def load_multiprocessing(df: pd.DataFrame,n_jobs=6):
         itera = len(df)
         parallel_callback = Parallel(n_jobs)
         parallel_callback(delayed(insert_in_database_swiss_lipids)(df.iloc[[i]]) for i in tqdm(range(itera)))

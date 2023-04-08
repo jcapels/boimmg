@@ -63,7 +63,7 @@ class LipidMapsTransformer:
         :rtype: pd.DataFrame
         """
         iteration = len(df)
-        parallel_callback = Parallel(8)
+        parallel_callback = Parallel(6)
         data_treated = parallel_callback(delayed(self.treat_lm_dataframe)(df.iloc[[i]]) for i in tqdm(range(iteration)))
         data_treated = pd.concat(data_treated)
         return data_treated
@@ -116,7 +116,7 @@ class LipidMapsLoader:
         self.load_multiprocessing(df)
 
     @staticmethod
-    def load_multiprocessing(df: pd.DataFrame, n_jobs: int = 8):
+    def load_multiprocessing(df: pd.DataFrame, n_jobs: int = 6):
         n_iterations = len(df)
         parallel_callback = Parallel(n_jobs)
         parallel_callback(delayed(insert_in_database_lipid_maps)(df.iloc[[i]]) for i in tqdm(range(n_iterations)))
