@@ -110,7 +110,7 @@ class LipidMapsDB:
 
                 with driver.session() as session:
                     session.run(
-                        "MERGE (c:Compound:LipidMapsCompound { lipidmaps_id: $lipid_maps_id}) "
+                        "MERGE (c:Compound { lipidmaps_id: $lipid_maps_id}) "
                         "ON CREATE SET c.lipidmaps_id = $lipid_maps_id, "
                         "c.smiles = $smiles, c.generic = False, c.inchikey = $inchikey, "
                         "c.formula = $formula, c.charge = 0, c.kegg_id = $kegg_id, c.inchi = $inchi, "
@@ -143,3 +143,7 @@ class LipidMapsDB:
                             kegg_id=kegg_id,
                         )
 
+
+
+set_lm_db = LipidMapsDB()
+set_lm_db.treat_dataframe()

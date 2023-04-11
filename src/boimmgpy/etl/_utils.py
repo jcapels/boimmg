@@ -22,7 +22,7 @@ def insert_in_database_lipid_maps(df: pd.Series):
             lm_synonym = row["SYNONYMS"]
             session.run('MERGE (s: Synonym {synonym:"%s"})' % str(lm_synonym))
             session.run(
-                "match (l:Compound),(s:Synonym) where l.lipid_maps_id=$lipid_maps_id and s.synonym=$synonym "
+                "match (l:Compound),(s:Synonym) where l.lipidmaps_id=$lipid_maps_id and s.synonym=$synonym "
                 "merge (s)-[:is_synonym_of]->(l)",
                 synonym=lm_synonym, lipid_maps_id=lipid_maps_id)
 

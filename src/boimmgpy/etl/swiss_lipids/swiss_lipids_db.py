@@ -57,65 +57,65 @@ class SwissLipidsDb:
         idConverter = self.__idConverter
         flag = False
         inchikey,smiles,level = self.get_df_info(data,flag)
-        if "*" not in str(smiles) or "Class" in str(level):
-            flag = True
-            canonical_smiles,swisslipids_id,name,formula,inchi,hmdb_id,chebi_id,lipidmaps_id,pubchem_cid,charge,mass = self.get_df_info(data,flag,smiles)
-            if not pd.isna(hmdb_id):
-                hmdb_id = hmdb_id.split("|")
-                if hmdb_id:
-                    hmdb_id = hmdb_id[0]
-                else:
-                    hmdb_id = None
-
-            if not pd.isna(chebi_id):
-                chebi_id = chebi_id.split("|")
-                if chebi_id:
-                    chebi_id = chebi_id[0]
-                else:
-                    chebi_id = None
-
-            if not pd.isna(lipidmaps_id):
-                lipidmaps_id = lipidmaps_id.split("|")
-                if lipidmaps_id:
-                    lipidmaps_id = lipidmaps_id[0]
-                else:
-                    lipidmaps_id = None
-
-            if not pd.isna(pubchem_cid):
-                pubchem_cid = pubchem_cid.split("|")
-                if pubchem_cid:
-                    pubchem_cid = pubchem_cid[0]
-                else:
-                    pubchem_cid = None
-            
-            generic = False
-
-            model_seed_compound = None
-            if pd.isna(inchikey):
-                generic = True
-                if pd.isna(smiles) and canonical_smiles:
-                    model_seed_compound = modelSeedDB.get_compound_by_canonical_smiles(canonical_smiles)
-
+        flag = True
+        canonical_smiles,swisslipids_id,name,formula,inchi,hmdb_id,chebi_id,lipidmaps_id,pubchem_cid,charge,mass = self.get_df_info(data,flag,smiles)
+        if not pd.isna(hmdb_id):
+            hmdb_id = hmdb_id.split("|")
+            if hmdb_id:
+                hmdb_id = hmdb_id[0]
             else:
-                model_seed_compound = modelSeedDB.get_compound_by_inchi_key(inchikey)
+                hmdb_id = None
 
-            if model_seed_compound:
-
-                kegg_id, bigg_id, metanetx_id, metacyc_id = self.integrate_model_ids(idConverter, model_seed_compound)
-
-                new_line = [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
-                            chebi_id, lipidmaps_id, pubchem_cid, kegg_id, bigg_id, metanetx_id, metacyc_id, generic,
-                            model_seed_compound.getDbId()]
-
+        if not pd.isna(chebi_id):
+            chebi_id = chebi_id.split("|")
+            if chebi_id:
+                chebi_id = chebi_id[0]
             else:
-                kegg_id = None
-                bigg_id = None
-                metanetx_id = None
-                metacyc_id = None
+                chebi_id = None
 
-                new_line = [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
-                            chebi_id, lipidmaps_id, pubchem_cid, kegg_id, bigg_id, metanetx_id, metacyc_id, generic,
-                            None]
+        if not pd.isna(lipidmaps_id):
+            lipidmaps_id = lipidmaps_id.split("|")
+            if lipidmaps_id:
+                lipidmaps_id = lipidmaps_id[0]
+            else:
+                lipidmaps_id = None
+
+        if not pd.isna(pubchem_cid):
+            pubchem_cid = pubchem_cid.split("|")
+            if pubchem_cid:
+                pubchem_cid = pubchem_cid[0]
+            else:
+                pubchem_cid = None
+        
+        generic = False
+
+        model_seed_compound = None
+        if pd.isna(inchikey):
+            generic = True
+            if pd.isna(smiles) and canonical_smiles:
+                model_seed_compound = modelSeedDB.get_compound_by_canonical_smiles(canonical_smiles)
+
+        else:
+            model_seed_compound = modelSeedDB.get_compound_by_inchi_key(inchikey)
+
+        if model_seed_compound:
+
+            kegg_id, bigg_id, metanetx_id, metacyc_id = self.integrate_model_ids(idConverter, model_seed_compound)
+
+            new_line = [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
+                        chebi_id, lipidmaps_id, pubchem_cid, kegg_id, bigg_id, metanetx_id, metacyc_id, generic,
+                        model_seed_compound.getDbId()]
+            return new_line
+
+        else:
+            kegg_id = None
+            bigg_id = None
+            metanetx_id = None
+            metacyc_id = None
+
+            new_line = [swisslipids_id, name, canonical_smiles, inchi, inchikey, formula, charge, mass, hmdb_id,
+                        chebi_id, lipidmaps_id, pubchem_cid, kegg_id, bigg_id, metanetx_id, metacyc_id, generic,
+                        None]
             return new_line
 
     def set__relationships(self,data:pd.DataFrame)->List:
