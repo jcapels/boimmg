@@ -4,16 +4,18 @@ from cobra import Model,Metabolite
 from neo4j import GraphDatabase
 
 
+
 def set_metabolite_annotation_in_model(session:GraphDatabase.driver,dictionary_results:Dict,model:Model)->Model:
     """Function to anotate lipid metabolites in a user chossen model
 
-    Args:
-        session (GraphDatabase.driver): Neo4j driver to acess the database 
-        dictionary_results (Dict): Python Dictionary with Lipid metabolites IDs from the BOIMMG the database
-        model (Model): GSM model to be annotated
-
-    Returns:
-        Model: Gsm model with defined Lipids annotated
+    :param session: driver linkage to database
+    :type session: GraphDatabase.driver
+    :param dictionary_results: Python Dictionary with Lipid metabolites IDs from the BOIMMG the database
+    :type dictionary_results: Dict
+    :param model: GSM model to be annotated
+    :type model: Model
+    :return: Gsm model with defined Lipids annotated
+    :rtype: Model
     """
     for metabolite_ids,boimmg_ids in dictionary_results.items():
         lipid_maps_ids=[]
