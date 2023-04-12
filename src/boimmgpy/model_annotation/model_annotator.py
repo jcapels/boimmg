@@ -20,6 +20,7 @@ class LipidNameAnnotator:
         self.check_annotation_dict = {}
         self.results = {}
         self.counter = {}
+        self.session = self.login()
 
 
 
@@ -75,7 +76,7 @@ class LipidNameAnnotator:
         parallel_callback = Parallel(n_jobs)
         resultados = parallel_callback(delayed(self._find_model_lipids)(model.metabolites[i]) for i in tqdm(range(n_iterations)))
         self.treat_data(resultados)
-        session = self.login()
+        session = self.session
         final_model = set_metabolite_annotation_in_model(session,self.results,model)
 
         return (
@@ -168,18 +169,17 @@ class LipidNameAnnotator:
         :return: tuple with two dictionaries, first one for the extend of the lipid classes that the algorithm caugth and second one for the identifiers to do the annotation
         :rtype: Tuple(Dict)
         """
-        session = self.login()
         results={}
         counter = defaultdict(int)
-        backbone_id, sidechain_id, compound = self.get_synonym_id(session,self.backbone, side_chain)
+        backbone_id, sidechain_id, compound = self.get_synonym_id(self.backbone, side_chain)
         if backbone_id != None and not compound:
             for backbone in backbone_id:
-                get_compound = self.get_coumpound(session,backbone, sidechain_id, compound)
+                get_compound = self.get_compound(backbone, sidechain_id, compound)
                 backbone_coumpound, side_chains_compound = get_compound[0],get_compound[1]
                 if  get_compound != None and backbone_coumpound != 0:
                     structurally_defined_lipids = (
                         self.get_compounds_with_specific_parent_set_of_components(
-                        session, backbone_coumpound, side_chains_compound
+                         backbone_coumpound, side_chains_compound
                         )
                     )
                     if structurally_defined_lipids:
@@ -192,20 +192,18 @@ class LipidNameAnnotator:
                             results[metabolite.id] = structurally_defined_lipids
                         counter[self.backbone] += 1
                 if get_compound != None and backbone_coumpound == 0:
-                    results,counter = self.get_id_from_compound_with_no_backbone(session,backbone,side_chains_compound,metabolite,results,counter)
+                    results,counter = self.get_id_from_compound_with_no_backbone(backbone,side_chains_compound,metabolite,results,counter)
 
         if backbone_id != None and compound:
-            results,counter = self.get_id_from_compound_entitie(session,backbone_id,sidechain_id,compound,metabolite)
+            results,counter = self.get_id_from_compound_entitie(backbone_id,sidechain_id,compound,metabolite)
         
         
         return counter,results
     
-    def get_id_from_compound_with_no_backbone(self,session:GraphDatabase.driver,backbone:str,side_chains_compound:List,metabolite:Metabolite,results:Dict,counter:Dict)->Tuple(Dict):
+    def get_id_from_compound_with_no_backbone(self,backbone:str,side_chains_compound:List,metabolite:Metabolite,results:Dict,counter:Dict)->Tuple(Dict):
         """Method to handle compounds that have synonyms ID's for sidechains and backbone but only sidechains ID's for compound in database. This Method will implement a search directly for the 
         generic compound with the same synonym as the backbone
 
-        :param session: driver linkage to database
-        :type session: GraphDatabase.driver
         :param backbone: backbone sinonym id
         :type backbone: str
         :param sidechain_id: sidechain synonym id
@@ -215,9 +213,9 @@ class LipidNameAnnotator:
         :return: tuple with two dictionaries,  first one for the extend of the lipid classes that the algorithm caugth and second one for the identifiers to do the annotation
         :rtype: Tuple(Dict)
         """
-        backbone_compound = self.get_compound_from_synonym(session,backbone)
+        backbone_compound = self.get_compound_from_synonym(backbone)
         structurally_defined_lipids = (
-            self.get_compounds_with_specific_parent_set_of_components(session,
+            self.get_compounds_with_specific_parent_set_of_components(
                 backbone_compound, side_chains_compound
             )
         )
@@ -232,11 +230,9 @@ class LipidNameAnnotator:
             counter[self.backbone] += 1
         return results,counter 
     
-    def get_id_from_compound_entitie(self,session:GraphDatabase.driver,backbone_id:List,sidechain_id:List,compound:bool,metabolite:Metabolite)->Tuple(Dict):
+    def get_id_from_compound_entitie(self,backbone_id:List,sidechain_id:List,compound:bool,metabolite:Metabolite)->Tuple(Dict):
         """Method to handle compounds were the backbone id is already a compound id
 
-        :param session: driver linkage to database
-        :type session: GraphDatabase.driver
         :param backbone_id: backbone sinonym id
         :type backbone_id: List
         :param sidechain_id: sidechain synonym id
@@ -251,12 +247,12 @@ class LipidNameAnnotator:
         results={}
         counter = defaultdict(int)
         for backbone in backbone_id:
-            get_compound = self.get_coumpound(session,backbone, sidechain_id, compound)
+            get_compound = self.get_compound(backbone, sidechain_id, compound)
             backbone_coumpound, side_chains_coumpound = get_compound[0],get_compound[1]
             if  get_compound != None and backbone_coumpound != 0:
                 structurally_defined_lipids = (
                     self.get_compounds_with_specific_parent_set_of_components(
-                        session, backbone_coumpound, side_chains_coumpound
+                        backbone_coumpound, side_chains_coumpound
                     )
                 )
                 if structurally_defined_lipids:
@@ -273,13 +269,10 @@ class LipidNameAnnotator:
 
 
 
-    @staticmethod
-    def get_synonym_id(session:GraphDatabase.driver,backbone: str, side_chain: list)->Tuple:
+    def get_synonym_id(self,backbone: str, side_chain: list)->Tuple:
         """Method that searches for the synonyms of the backbone and side chains for each lipid in the model.
         In cases where the synonym for the backbone doesnt exist it will search for the generic compound with the same name as the backbone:
 
-        :param session: driver linkage to database
-        :type session: GraphDatabase.driver
         :param backbone: Backbone portion of the lipid name
         :type backbone: str
         :param side_chain: List of side chains from the lipid name
@@ -287,6 +280,7 @@ class LipidNameAnnotator:
         :return: Tuple with two lists and a Boolean. First list refers to the backbone ID, second for the side_chains ID's. Lastly the Bolean is True when the backbone ID is from a compound.
         :rtype: Tuple
         """
+        session = self.session
         sidechain_id = []
         backbone_id = []
         backbone = backbone.replace("'", "")
@@ -333,12 +327,10 @@ class LipidNameAnnotator:
 
 
     
-    def get_coumpound(self,session:GraphDatabase.driver,backbone: str, sidechains: list, flag: bool)->Tuple:
+    def get_compound(self,backbone: str, sidechains: list, flag: bool)->Tuple:
         """Method that search for the the specific compounds attached for the side chain and backbone synonym's.
         In case that the ID from the backbone is already from a compound it will search only for the side chains compounds.
 
-        :param session: driver linkage to database
-        :type session: GraphDatabase.driver
         :param backbone: Backbone's ID
         :type backbone: str
         :param sidechains: List of side chains ID's
@@ -349,6 +341,7 @@ class LipidNameAnnotator:
         :rtype: Tuple
         """
         backbone_coumpound = None
+        session = self.session
 
         if not flag:
             side_chains_coumpound = self.get_side_chain_compounds(session,sidechains)
@@ -365,16 +358,14 @@ class LipidNameAnnotator:
             side_chains_coumpound = self.get_side_chain_compounds(session,sidechains)
             if len(side_chains_coumpound) != 0:
                 return backbone_coumpound, side_chains_coumpound
-               
-    @staticmethod        
-    def get_side_chain_compounds(session:GraphDatabase.driver,sidechains)->List(int):
+        
+    def get_side_chain_compounds(self,sidechains)->List(int):
         """Method responsible to get database componds from the side_chains id's
 
-        :param session: driver linkage to database
-        :type session: GraphDatabase.driver
         :return: list of sidechains compounds id's 
         :rtype: List(int)
         """
+        session = self.session
         side_chains_compound = []
         for v in sidechains:
             result = session.run(
@@ -388,9 +379,7 @@ class LipidNameAnnotator:
         return side_chains_compound
 
 
-
-    @staticmethod
-    def get_compound_from_synonym(session:GraphDatabase.driver,synonym_ID: int)->int:
+    def get_compound_from_synonym(self,synonym_ID: int)->int:
         """Method to get the generic compound directly connected to the backbone synonnym.
 
         :param session: driver linkage to database
@@ -400,6 +389,7 @@ class LipidNameAnnotator:
         :return: _description_
         :rtype: int
         """
+        session = self.session
         node = session.run(
             "match(s:Synonym)-[:is_synonym_of]->(t:Compound) where id(s)=$backbone and exists(t.boimmg_id) return t.boimmg_id as boimmg_id",
             backbone=synonym_ID,
@@ -409,14 +399,12 @@ class LipidNameAnnotator:
             backbone_coumpound = value.get("boimmg_id")
         return backbone_coumpound
     
-    @staticmethod
+
     def get_compounds_with_specific_parent_set_of_components(
-        session:GraphDatabase.driver,parent: str, components: list
+        self,parent: str, components: list
     )->List(str):
         """Get all non genericall compounds with the specific set of components
 
-        :param session: driver linkage to database
-        :type session: GraphDatabase.driver
         :param parent: Backbone compound id
         :type parent: str
         :param components: List of side chains compound ID's
@@ -424,6 +412,7 @@ class LipidNameAnnotator:
         :return: List with all the componds found to the specific pack of components
         :rtype: List(str)
         """
+        session = self.session 
         result = session.run(
             "match (e:Compound)<-[:is_a]-(c:Compound)<-[:component_of]-(d:Compound) "
             "with collect(id(d)) as components,e,c "
