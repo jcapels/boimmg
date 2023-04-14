@@ -45,14 +45,15 @@ class LipidMapsExtractor:
         :return: sdf file of the whole lipid maps database
         :rtype: Sdf file
         """
-        raw_file = requests.get("https://www.lipidmaps.org/files/?file=LMSD&ext=sdf.zip")
+        raw_file = requests.get(
+            "https://www.lipidmaps.org/files/?file=LMSD&ext=sdf.zip"
+        )
         file_unziped = zipfile.ZipFile(io.BytesIO(raw_file.content))
-        return file_unziped.open('structures.sdf')
+        return file_unziped.open("structures.sdf")
 
 
 class LipidMapsTransformer:
-    """Class to transform the lipid maps dataframe
-    """
+    """Class to transform the lipid maps dataframe"""
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -64,7 +65,10 @@ class LipidMapsTransformer:
         """
         iteration = len(df)
         parallel_callback = Parallel(6)
-        data_treated = parallel_callback(delayed(self.treat_lm_dataframe)(df.iloc[[i]]) for i in tqdm(range(iteration)))
+        data_treated = parallel_callback(
+            delayed(self.treat_lm_dataframe)(df.iloc[[i]])
+            for i in tqdm(range(iteration))
+        )
         data_treated = pd.concat(data_treated)
         return data_treated
 
@@ -77,14 +81,14 @@ class LipidMapsTransformer:
         columns of the initial data, ID and Synonym
         :rtype: pd.DataFrame
         """
-        new_df = pd.DataFrame(columns=['LM_ID', 'SYNONYMS'])
+        new_df = pd.DataFrame(columns=["LM_ID", "SYNONYMS"])
         counter = 0
         for i, row in lm_dataframe.iterrows():
             lipid_id = row["LM_ID"]
             abbreviation = row["ABBREVIATION"]
             synonyms = row["SYNONYMS"]
             if abbreviation is not None and not pd.isnull(abbreviation):
-                abbreviation_splits = abbreviation.split(';')
+                abbreviation_splits = abbreviation.split(";")
                 for split in abbreviation_splits:
                     new_df.at[counter, "LM_ID"] = lipid_id
                     split = split.replace(" ", "")
@@ -92,7 +96,7 @@ class LipidMapsTransformer:
                     counter += 1
 
             if synonyms is not None and not pd.isnull(synonyms):
-                synonyms_splits = synonyms.split(';')
+                synonyms_splits = synonyms.split(";")
                 for split in synonyms_splits:
                     new_df.at[counter, "LM_ID"] = lipid_id
                     split = split.replace(" ", "")
@@ -119,9 +123,11 @@ class LipidMapsLoader:
     def load_multiprocessing(df: pd.DataFrame, n_jobs: int = 6):
         n_iterations = len(df)
         parallel_callback = Parallel(n_jobs)
-        parallel_callback(delayed(insert_in_database_lipid_maps)(df.iloc[[i]]) for i in tqdm(range(n_iterations)))
+        parallel_callback(
+            delayed(insert_in_database_lipid_maps)(df.iloc[[i]])
+            for i in tqdm(range(n_iterations))
+        )
 
-    
 
 """
 dag=DAG(dag_id="dag_etl_lm",schedule_interval="@once",
