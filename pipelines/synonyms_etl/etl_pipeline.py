@@ -1,15 +1,6 @@
-from boimmgpy.etl.lipid_maps.lipid_maps_db import LipidMapsDB
-from boimmgpy.etl.lipid_maps.lipid_maps_relationships import LipidMapsRelationships
-from boimmgpy.etl.lipid_maps.lipid_maps_synonyms import (
-    LipidMapsExtractor,
-    LipidMapsTransformer,
-    LipidMapsLoader,
-)
-from boimmgpy.etl.swiss_lipids.swiss_lipids_synonyms import (
-    SwissLipidsExtractor,
-    SwissLipidsTransformer,
-    SwissLipidsLoader,
-)
+from boimmgpy.etl.lipid_maps.lipid_maps_synonyms import LipidMapsExtractor,LipidMapsTransformer,LipidMapsLoader
+
+from boimmgpy.etl.swiss_lipids.swiss_lipids_synonyms import SwissLipidsExtractor,SwissLipidsTransformer,SwissLipidsLoader
 
 
 def run_lm_pipeline():

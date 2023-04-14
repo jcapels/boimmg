@@ -5,8 +5,6 @@ import zipfile
 from joblib import Parallel, delayed
 from rdkit.Chem import PandasTools
 from tqdm import tqdm
-
-from boimmgpy.database.accessors.database_access_manager import DatabaseAccessManager
 from boimmgpy.etl._utils import insert_in_database_lipid_maps
 
 
