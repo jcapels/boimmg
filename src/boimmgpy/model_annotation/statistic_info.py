@@ -1,6 +1,6 @@
 from boimmgpy.model_annotation.model_annotator import LipidNameAnnotator
 import pandas as pd
-from cobra.io import read_sbml_model,write_sbml_model
+from cobra.io import read_sbml_model, write_sbml_model
 
 
 def get_info(path):
@@ -23,19 +23,20 @@ def get_info(path):
     original_annotations = pd.DataFrame(original_annotations)
     class_annotated = pd.Series(info[2])
     class_annotated = pd.DataFrame(class_annotated)
-    
+
     ########## Set annotations #############
-    path = (f"models/model_case_study/{model_id}.xml")
-    model_final = info[4]  
+    path = f"models/model_case_study/{model_id}.xml"
+    model_final = info[4]
     write_sbml_model(model_final, path)
 
     ######### Set statistical information ##########
-    path = (f"models/results/{model_id}.xlsx")
-    
+    path = f"models/results/{model_id}.xlsx"
+
     with pd.ExcelWriter(path) as writer:
-        lipids_class.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0 , startcol=0)
-        original_annotations.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0 , startcol=8)
-        class_annotated.to_excel(writer, sheet_name=str(model_id), index=True,startrow=0, startcol=4)
+        lipids_class.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=0)
+        original_annotations.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=8)
+        class_annotated.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=4)
+
 
 if __name__ == '__main__':
     get_info(r"models/iBD1106.xml")
