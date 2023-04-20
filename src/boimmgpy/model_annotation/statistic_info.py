@@ -13,7 +13,7 @@ def get_info(path):
     model = read_sbml_model(path)
     print(model.id)
     annotator = LipidNameAnnotator()
-    info = annotator.model_lipids_finder(model)
+    info = annotator.find_model_lipids(model)
     model_id = model.id
     if model_id == '':
         model_id = "iBD1106"
