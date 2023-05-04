@@ -22,3 +22,7 @@ setup_database_credentials.py
 boimmg.egg-info
 *.egg
 build
+my_database.conf
+/*.xlsx
+models/results
+models/model_case_study
