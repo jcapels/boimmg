@@ -4,11 +4,11 @@ from cobra.io import read_sbml_model, write_sbml_model
 
 
 def get_info(path):
-    """ Function that gets all statisticall information from LipidNameAnnotator class relative to lipids class caugth and number of lipids annotated.
+    """Function that gets all statisticall information from LipidNameAnnotator class relative to lipids class caugth and number of lipids annotated.
     This data is stored in a spreadsheet specific for each model analised.
 
-    Args:
-        path (_type_): Path to the model to be analised
+    :param path: Path to the model to be analised
+    :type path: _type_
     """
     model = read_sbml_model(path)
     print(model.id)
