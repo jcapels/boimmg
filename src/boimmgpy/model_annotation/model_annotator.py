@@ -428,11 +428,11 @@ class LipidNameAnnotator:
         """
         session = self.login()
         result = session.run("match (e:Compound)<-[:is_a]-(c:Compound)<-[:component_of]-(d:Compound) "
-                             "with collect(id(d)) as components,e,c "
-                             "where e.boimmg_id = $parent and "
-                             "all(id IN $components_par WHERE id IN components)"
-                             "return c.boimmg_id as id ",
-                             components_par=components,
+                            "with apoc.coll.sort(collect(id(d))) as components,e,c "
+                            "where e.boimmg_id = $parent and "
+                            "components = $components_par "
+                            "return c.boimmg_id as id",
+                             components_par=sorted(components),
                              parent=parent
                              )
 

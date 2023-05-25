@@ -1,6 +1,7 @@
 from boimmgpy.model_annotation.model_annotator import LipidNameAnnotator
 import pandas as pd
 from cobra.io import read_sbml_model, write_sbml_model
+from boimmgpy.model_annotation._utils import transform_boimmg_id_in_annotation_id
 
 
 def get_info(path):
@@ -23,6 +24,7 @@ def get_info(path):
     original_annotations = pd.DataFrame(original_annotations)
     class_annotated = pd.Series(info[2])
     class_annotated = pd.DataFrame(class_annotated)
+    sugested_annotations = info[3]
 
     ########## Set annotations #############
     path = f"models/model_case_study/{model_id}.xml"
@@ -36,7 +38,13 @@ def get_info(path):
         lipids_class.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=0)
         original_annotations.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=8)
         class_annotated.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=4)
-
+    
+    ######## Annotations to be curated ########
+    sugested_annotations = transform_boimmg_id_in_annotation_id(sugested_annotations)
+    path_txt= f"models/results/{model_id}.txt"
+    output = open(path_txt, "w")
+    for k, v in sugested_annotations.items():
+        output.writelines(f'{k} {v}\n')
 
 if __name__ == '__main__':
     get_info(r"models/iBD1106.xml")
