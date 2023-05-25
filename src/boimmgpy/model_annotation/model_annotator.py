@@ -184,28 +184,29 @@ class LipidNameAnnotator:
         get_synonym = self.get_synonym_id(self.backbone, side_chain)
         if get_synonym is not None and not get_synonym[2]:
             backbone_id, sidechain_id, compound = get_synonym[0], get_synonym[1], get_synonym[2]
-            for backbone in backbone_id:
-                get_compound = self.get_compound(backbone, sidechain_id, compound)
-                if get_compound is not None and get_compound[0] != 0:
-                    backbone_coumpound, side_chains_compound = get_compound[0], get_compound[1]
-                    structurally_defined_lipids = (
-                        self.get_compounds_with_specific_parent_set_of_components(
-                            backbone_coumpound, side_chains_compound
-                        )
-                    )
-                    if structurally_defined_lipids:
-                        if metabolite.id in results:
-                            results[metabolite.id] = (
-                                    results[metabolite.id]
-                                    + structurally_defined_lipids
+            if False not in sidechain_id:
+                for backbone in backbone_id:
+                    get_compound = self.get_compound(backbone, sidechain_id, compound)
+                    if get_compound is not None and get_compound[0] != 0:
+                        backbone_coumpound, side_chains_compound = get_compound[0], get_compound[1]
+                        structurally_defined_lipids = (
+                            self.get_compounds_with_specific_parent_set_of_components(
+                                backbone_coumpound, side_chains_compound
                             )
-                        else:
-                            results[metabolite.id] = structurally_defined_lipids
-                        counter[self.backbone] += 1
-                if get_compound is not None and get_compound[0] == 0:
-                    backbone_coumpound, side_chains_compound = get_compound[0], get_compound[1]
-                    results, counter = self.get_id_from_compound_with_no_backbone(backbone, side_chains_compound,
-                                                                                  metabolite, results, counter)
+                        )
+                        if structurally_defined_lipids:
+                            if metabolite.id in results:
+                                results[metabolite.id] = (
+                                        results[metabolite.id]
+                                        + structurally_defined_lipids
+                                )
+                            else:
+                                results[metabolite.id] = structurally_defined_lipids
+                            counter[self.backbone] += 1
+                    if get_compound is not None and get_compound[0] == 0:
+                        backbone_coumpound, side_chains_compound = get_compound[0], get_compound[1]
+                        results, counter = self.get_id_from_compound_with_no_backbone(backbone, side_chains_compound,
+                                                                                    metabolite, results, counter)
 
         if get_synonym is not None and get_synonym[2]:
             backbone_id, sidechain_id, compound = get_synonym[0], get_synonym[1], get_synonym[2]
@@ -322,8 +323,11 @@ class LipidNameAnnotator:
                 + "' return ID(s) as boimmg_id"
             )
             data = result.data()
-            for value in data:
-                sidechain_id.append(value.get("boimmg_id"))
+            if data:
+                for value in data:
+                    sidechain_id.append(value.get("boimmg_id"))
+            else:
+                sidechain_id.append(False)
 
         if len(backbone_id) != 0 and len(sidechain_id) != 0:
             return backbone_id, sidechain_id, compound
