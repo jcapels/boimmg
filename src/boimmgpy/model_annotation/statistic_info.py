@@ -12,11 +12,10 @@ def get_info(path):
     :type path: _type_
     """
     model = read_sbml_model(path)
-    print(model.id)
     annotator = LipidNameAnnotator()
     info = annotator.find_model_lipids(model)
     model_id = model.id
-    if model_id == '':
+    if model_id == "":
         model_id = "iBD1106"
     lipids_class = pd.Series(info[0])
     lipids_class = pd.DataFrame(lipids_class)
@@ -35,18 +34,25 @@ def get_info(path):
     path = f"models/results/{model_id}.xlsx"
 
     with pd.ExcelWriter(path) as writer:
-        lipids_class.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=0)
-        original_annotations.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=8)
-        class_annotated.to_excel(writer, sheet_name=str(model_id), index=True, startrow=0, startcol=4)
-    
+        lipids_class.to_excel(
+            writer, sheet_name=str(model_id), index=True, startrow=0, startcol=0
+        )
+        original_annotations.to_excel(
+            writer, sheet_name=str(model_id), index=True, startrow=0, startcol=8
+        )
+        class_annotated.to_excel(
+            writer, sheet_name=str(model_id), index=True, startrow=0, startcol=4
+        )
+
     ######## Annotations to be curated ########
     sugested_annotations = transform_boimmg_id_in_annotation_id(sugested_annotations)
-    path_txt= f"models/results/{model_id}.txt"
+    path_txt = f"models/results/{model_id}.txt"
     output = open(path_txt, "w")
     for k, v in sugested_annotations.items():
-        output.writelines(f'{k} {v}\n')
+        output.writelines(f"{k} {v}\n")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     get_info(r"models/iBD1106.xml")
     get_info(r"models/chorella/PP2016-00593DR3_Data1Model_Heterotrophy.xml")
     get_info(r"models/12918_2017_441_MOESM3_ESM.xml")

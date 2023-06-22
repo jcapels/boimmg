@@ -42,7 +42,6 @@ class LipidNameAnnotator:
         :param dict_list: List of tuples containing 4 dictionaries in each tuple
         :type dict_list: List[tuple]
         """
-
         for converted_lipid_class_dict, check_annotation_dict, counter, results in dict_list:
             if isinstance(converted_lipid_class_dict, defaultdict):
                 converted_lipid_class_dict = Counter(converted_lipid_class_dict)
@@ -131,6 +130,7 @@ class LipidNameAnnotator:
                     backbone = re.sub(" *(\([\-a-zA-Z0-9/|, ]*\))", "", backbone)
             lipid_class_dict[backbone] += 1
             self.backbone = backbone
+            
             counter, results = self.search_lipid_synonyms(metabolite, side_chain)
 
         sorted_lipid_class_dict = sorted(
@@ -210,7 +210,8 @@ class LipidNameAnnotator:
 
         if get_synonym is not None and get_synonym[2]:
             backbone_id, sidechain_id, compound = get_synonym[0], get_synonym[1], get_synonym[2]
-            results, counter = self.get_id_from_compound_entity(backbone_id, sidechain_id, compound, metabolite)
+            if False not in sidechain_id:
+                results, counter = self.get_id_from_compound_entity(backbone_id, sidechain_id, compound, metabolite)
 
         return counter, results
 
