@@ -13,7 +13,20 @@ from rdkit import Chem
 
 
 class LipidMapsRelationships:
-    def establish_relationships(self,core=None):
+    def establish_relationships(self,core=str):
+        """Establishes relationships between compounds in a Neo4j database.
+
+        The method establishes relationships between compounds in a Neo4j database based on specific criteria.
+        The method retrieves a list of generic targets and lipid maps entities from respective sources. For each generic
+        target, it checks if it exists and hasn't been seen before. Then, it performs a series of operations
+        involving the generic target and lipid maps compounds to determine if a relationship should be established.
+        If the conditions are met, a relationship "is_a" is created in the database using a Cypher query.
+
+
+        :param core: Core parameter (optional)
+        :type core: str
+
+        """
         driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
         accessor = CompoundsDBAccessor()
         generic_targets = self.get_swiss_generics()
@@ -28,9 +41,7 @@ class LipidMapsRelationships:
                     lm_compound_mol = MolFromSmiles(lm_compound.getSmiles())
                     parent_neutralised_smiles,replaced = neutralise_charges(parent_smile)
                     smarts = MolFromSmarts(parent_neutralised_smiles)
-                    
                     lm_compound_sidechains = AllChem.DeleteSubstructs(lm_compound_mol,smarts)
-                    #check_sidechain = self.process_and_check_side_chain(sidechains=lm_compound_sidechains, compound_mol=lm_compound_mol, core_smart = core)
                     sidechain, sidechains_smiles_list = chemo_utilities.retrieve_fragments(lm_compound_sidechains)
                     compound_chains_counter = len(sidechain)
                     parent_chains_counter = parent_smile.count("*")
@@ -38,8 +49,6 @@ class LipidMapsRelationships:
                         compound_node = accessor.get_node_from_lipid_maps_id(lm_compound.getDbId())
                         if compound_node and 'SWISS_LIPIDS' not in compound_node.aliases.keys():
                             compound_id = compound_node.id
-                            #successors = accessor.get_all_successors_by_ont_id_rel_type(lm_compound.getDbId(), "is_a")
-                            #if parent_id not in successors:
                             with driver.session() as session:
                                 session.run("MATCH (c:Compound),(d:Compound) "
                                                     "WHERE ID(c)=$target and ID(d) = $origin "

@@ -17,75 +17,81 @@ class ModelSeedCompoundsDB:
         
 
     def _set_compounds_db(self):
-        """Method that implements all necessary methods to set the Model SEED database
+        """Implements all necessary methods to set the Model SEED database
         """
         self.read_model_seed_compounds()
         self.read_model_seed_structures()
         self.set_inchi_key_and_smiles_database()
     
     def get_compound_by_id(self, id:str)->ModelSeedCompound:
-        """ Method that search for a compound by a given id
+        """
+        Searches for a compound by the given ID.
 
-        Args:
-            id (str): id to be search
+        :param id: The ID to be searched.
+        :type id: str
 
-        Returns:
-            ModelSeedCompound: Model Seed compound object with given id
+        :return: The Model Seed compound object with the given ID.
+        :rtype: ModelSeedCompound
         """
         
         return self.__compounds_database[id]
 
     def get_compound_by_inchi_key(self, inchikey:str)->ModelSeedCompound:
-        """Method that search for a Model Seed compound by a given inchi key
+        """
+        Searches for a Model Seed compound by the given InChIKey.
 
-        Args:
-            inchikey (str): inchikey to be search
+        :param inchikey: The InChIKey to be searched.
+        :type inchikey: str
 
-        Returns:
-            ModelSeedCompound: Model Seed compound object with given inchi key
+        :return: The Model Seed compound object with the given InChIKey, or None if not found.
+        :rtype: ModelSeedCompound or None
         """
         if inchikey[:-1] in self.__inchikey_database.keys():
             return self.__inchikey_database[inchikey[:-1]]
         return None
 
     def get_compound_by_canonical_smiles(self, smiles:str)->ModelSeedCompound:
-        """Method to search for a Model Seed compound by a given smiles
+        """
+        Searches for a Model Seed compound by the given canonical SMILES.
 
-        Args:
-            smiles (str): smiles to be search
+        :param smiles: The canonical SMILES to be searched.
+        :type smiles: str
 
-        Returns:
-            ModelSeedCompound: Model Seed compound object with given smiles
+        :return: The Model Seed compound object with the given canonical SMILES, or None if not found.
+        :rtype: ModelSeedCompound or None
         """
         if smiles in self.__smiles_database.keys():
             return self.__smiles_database[smiles]
         return None
 
-    def get_compounds(self)->List:
-        """Method to acess all Model Seed compounds 
+    def get_compounds(self) -> List[ModelSeedCompound]:
+        """
+        Method to access all Model Seed compounds.
 
-        Returns:
-            List: List with all Model Seed compounds objects
+        :return: List containing all Model Seed compound objects.
+        :rtype: List[ModelSeedCompound]
         """
         return self.__compounds
-    
-    def get_transformed_ID(self)->pd.DataFrame:
-        """Method to acess modelseed transformation to kegg id
 
-        Returns:
-            pd.DataFrame: Dataframe with kegg id and referent model_seed id
+
+    def get_transformed_ID(self) -> pd.DataFrame:
+        """
+        Method to access Model Seed transformations to KEGG IDs.
+
+        :return: DataFrame with KEGG IDs and their corresponding Model Seed IDs.
+        :rtype: pd.DataFrame
         """
         return self.__kegg_to_modelseed
-    
 
     def find_compound_by_inchikey(self, inchikey:str)->ModelSeedCompound:
-        """ Method to acess a compound with a given inchikey
+        """
+        Method to access a compound with a given InChIKey.
 
-        Args:
-            inchikey (str): inchikey to be searched
+        :param inchikey: The InChIKey to be searched.
+        :type inchikey: str
 
-        Returns:
-            ModelSeedCompound: Model Seed compound object with given inchikey
+        :return: The Model Seed compound object with the given InChIKey, or None if not found.
+        :rtype: ModelSeedCompound or None
         """
 
         for compound in self.__compounds_database:
@@ -120,7 +126,7 @@ class ModelSeedCompoundsDB:
             previous_id = _id
 
     def read_model_seed_compounds(self):
-        """Method to read and set Model Seed compounds database
+        """Method to read and set Model Seed compounds database with usefull information such as name, formula, charge, inchikey, smiles and id.
         """
         kegg_dataframe = []
         self.__compounds_database = {}
@@ -147,7 +153,18 @@ class ModelSeedCompoundsDB:
         self.__kegg_to_modelseed = pd.concat(kegg_dataframe)
 
     @staticmethod
-    def set_kegg_modelseed_id (kegg_ids,modelseed_id):
+    def set_kegg_modelseed_id (kegg_ids:str,modelseed_id:str)->pd.DataFrame:
+        """
+        Set KEGG ID to ModelSeed ID relationships.
+
+        :param kegg_ids: The KEGG IDs separated by semicolons.
+        :type kegg_ids: str
+        :param modelseed_id: The ModelSeed ID.
+        :type modelseed_id: str
+
+        :return: A DataFrame containing the KEGG ID to ModelSeed ID mappings.
+        :rtype: pd.DataFrame
+        """
         kegg_ids = kegg_ids.split(";")
         kegg_to_modelseed = pd.DataFrame(columns=["kegg_id","modelseed_id"])
         counter = 0

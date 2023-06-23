@@ -2,11 +2,16 @@ from boimmgpy.utilities import file_utilities
 import pathlib
 import os
 
-print(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs/my_database_settings.conf"))
 class ManageAcess:
-
+    """Class for managing access to a database.
+    """
     def __init__(self):
+        """
+        Initializes the class.
 
+        :param: None
+        :return: None
+        """
         uri, user, password = self.read_config_file()
 
         self.__uri = uri
@@ -14,8 +19,14 @@ class ManageAcess:
         self.__password = password
 
     @staticmethod
-    def read_config_file():
+    def read_config_file()->tuple(str):
+        """
+        Reads the configuration file and returns the database settings.
 
+        :raises Exception: If the configuration file is missing or does not contain the required information.
+        :return: A tuple containing the URI, user, and password for the database.
+        :rtype: tuple[str]
+        """
         if pathlib.Path(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs/my_database_settings.conf")).exists():
             configs = file_utilities.read_conf_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs/my_database_settings.conf"))
 
@@ -31,5 +42,3 @@ class ManageAcess:
             raise Exception("Please insert the required database information using set_database_information function")
 
 
-acess=ManageAcess
-print(acess.read_config_file())

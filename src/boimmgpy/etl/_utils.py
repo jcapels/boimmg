@@ -50,6 +50,8 @@ def insert_in_database_swiss_lipids(df: pd.Series):
                 sl_id=swiss_lipids_id,
             )
 
+#---------------------------------------------------############################_-----------------------------------------------------------#
+##                                               CREATE IS_DB_LINK_OF RELATIONSHIP                                                         ##
 
 """CALL apoc.periodic.iterate(
   "match (c:Compound) where c.swiss_lipids_id is not null return c",

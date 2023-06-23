@@ -13,9 +13,13 @@ from boimmgpy.id_converters.compounds_id_converter import CompoundsIDConverter
 
 
 class SwissLipidsDb:
-
+    """
+    Class for managing the SwissLipids database. It will create the necessary files to be used in neo4j-adim import tool.
+    """
 
     def treat_dataframe(self):
+        """Method to process all the database, calling the necessary methods to process and create entities file and relationship files.
+        """
         self.__modelSeedDB = ModelSeedCompoundsDB()
         self.__idConverter = CompoundsIDConverter()
         data = self.extract_database()
@@ -35,15 +39,29 @@ class SwissLipidsDb:
         self.create_realationships_file(rel_data)
     
     def create_realationships_file(self,data:List[pd.DataFrame]):
+        """
+        Creates the relationships file from a given list with pandas Dataframes with the relationships. These dataframes contain the start id, the relationship type and the end id of a given entity relationship.
+
+        :param data: List of dataframes containing the relationship data.
+        :type data: List[pd.DataFrame]
+        :return: None
+        """
         data_frame = pd.concat(data)
         data_frame.to_csv("rel.csv", sep=",", index=False)
     
         
     def create_entities_file(self,data:List[list]):
-        """Method to create Swiss Lipids entities files
+        """
+        Aggregates all Dataframes given in a list to form a final one with all Swiss Lipids entities and relevant information. These Dataframes contain the necessary information to create the final Dataframe that will be allocated in a csv file. 
 
-        Args:
-            data (List[list]): List of lists to create entities file
+        The dataframes contained in the list given (data) and the final one are formed with the given header:
+        ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge", "mass",
+              "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
+              "metacyc_id", "generic", "model_seed_id"]
+
+        :param data: List of lists to create the entities file.
+        :type data: List[list]
+        :return: None
         """
         header = ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge", "mass",
               "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
@@ -53,6 +71,18 @@ class SwissLipidsDb:
 
 
     def _treat_dataframe(self,data:pd.DataFrame):
+        """
+        Process a dataframe row and extract relevant information. This information is stored in a pandas Dataframe with the following header:
+
+        ["swiss_lipids_id:ID", "name", "smiles", "inchi", "inchikey", "formula", "charge", "mass",
+              "hmdb_id", "chebi_id", "lipidmaps_id", "pubchem_cid", "kegg_id", "bigg_id", "metanetx_id",
+              "metacyc_id", "generic", "model_seed_id"]
+
+        :param data: The dataframe containing the row data.
+        :type data: pd.DataFrame
+        :return: A list of processed data for the row.
+        :rtype: list
+        """
         modelSeedDB = self.__modelSeedDB
         idConverter = self.__idConverter
         flag = False
@@ -119,6 +149,15 @@ class SwissLipidsDb:
             return new_line
 
     def set__relationships(self,data:pd.DataFrame)->List:
+        """
+        Create a list of relationships based on the provided dataframe information from the Components and Parent rows. In the final a new Dataframe is created with only the starting_ID, 
+        relationship type and the end_id of that relationship for each given lipid in the pandas Data Frame (data)
+
+        :param data: The dataframe containing the relationship data.
+        :type data: pd.DataFrame
+        :return: A list of relationships.
+        :rtype: List
+        """
         rel_list = pd.DataFrame(columns=[":START_ID",":END_ID",":TYPE"])
         counter = 0
         for i,row in data.iterrows():
@@ -147,6 +186,18 @@ class SwissLipidsDb:
 
     @staticmethod
     def get_df_info(data:pd.DataFrame,flag:bool,smile=None):
+        """
+        Get information from the dataframe based on the provided flag.
+
+        :param data: The dataframe containing the data.
+        :type data: pd.DataFrame
+        :param flag: A flag indicating the purpose of the data retrieval.
+        :type flag: bool
+        :param smile: The SMILES data (optional, used when flag is True).
+        :type smile: str, optional
+        :return: Information extracted from the dataframe based on the flag.
+        :rtype: tuple
+        """
         smiles = None
         if flag == False:
             for i, row in data.iterrows():
@@ -188,6 +239,16 @@ class SwissLipidsDb:
 
     @staticmethod
     def integrate_model_ids(idConverter, model_seed_compound:ModelSeedCompound):
+        """
+        Integrate the ModelSeed compound IDs into other database IDs using the ID converter.
+
+        :param idConverter: The ID converter instance.
+        :type idConverter: CompoundsIDConverter
+        :param model_seed_compound: The ModelSeed compound object.
+        :type model_seed_compound: ModelSeedCompound
+        :return: The integrated IDs from different databases (KEGG, BiGG, MetaNetX, MetaCyc).
+        :rtype: tuple
+        """
         kegg_ids = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "KEGG")
         bigg_ids = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "BiGG")
         metanetxs = idConverter.convert_modelSeedId_into_other_dbID(model_seed_compound.getDbId(), "metanetx.chemical")
@@ -222,6 +283,12 @@ class SwissLipidsDb:
 
     @staticmethod
     def extract_database():
+        """
+        Extract the SwissLipids database using the SwissLipidsExtractor.
+
+        :return: The extracted database as a pandas DataFrame.
+        :rtype: pd.DataFrame
+        """
         extractor = SwissLipidsExtractor()
         dataframe = extractor.extract()
         return dataframe

@@ -11,13 +11,21 @@ from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles, MolFromSmarts
 
 
 class Wrapper(object):
-    """Wrapper class to get functions that cannot be picklized
+    """Wrapper class to enable pickling of functions that cannot be pickled in multiprocessing.
 
-    Args:
-        object (_type_): _description_
+    This class acts as a wrapper for calling functions that may not be picklable when using
+    multiprocessing methods. It dynamically imports the module and retrieves the specified
+    method to execute it.
+    
+    :param method_name: The name of the method to be called.
+    :type method_name: str
+    :param module_name: The name of the module containing the method.
+    :type module_name: str
+        
     """
 
     def __init__(self, method_name, module_name):
+        
         self.method_name = method_name
         self.module_name = module_name
 
@@ -43,8 +51,14 @@ class Wrapper(object):
 
 class LipidMapsDB:
     def treat_dataframe(self):
-        """Method that iterates through all lipid maps lipids dictionary and gives it to insert_lm_database method be inserted in a neo4j database.
-        This process is done using joblib multiprocessing
+        """Iterates through all LipidMaps lipids in a dictionary and inserts them into a Neo4j database using joblib multiprocessing.
+
+        This method retrieves the LipidMaps lipids from a database, and then uses joblib's Parallel function to
+        parallelize the insertion process into a Neo4j database. The lipids are processed in parallel, with a
+        maximum of 6 concurrent processes.
+
+
+        :return: None
         """
         lipids_db = LipidMapsStructureDB()
         lipid_maps_db = lipids_db.getDatabase()
@@ -55,10 +69,18 @@ class LipidMapsDB:
         )
 
     def insert_lm_database(self, lipid_container: List):
-        """Method that receives a lipid container, acesses its information and sets a new node for each lipid with all relevant information
+        """Inserts lipid information into a Neo4j database by creating a new node for each lipid.
 
-        Args:
-            lipid_container (_type_): Lipid container
+        The method receives a lipid container and accesses its information to create a new node in the Neo4j database.
+        Relevant information such as lipidmaps_id, smiles, inchikey, formula, kegg_id, chebi_id, lipid_bank_id,
+        pubchem_cid, hmdb_id, and name are used to set the attributes of the new node.
+
+        If a compound with the same inchikey or smiles already exists in the database, the method updates the
+        existing compound with the lipidmaps_id and kegg_id if they are available.
+
+        :param lipid_container: Lipid container
+        :type lipid_container: List
+
         """
         driver = DatabaseAccessManager(conf_file_path="my_database.conf").connect()
 
@@ -143,7 +165,3 @@ class LipidMapsDB:
                             kegg_id=kegg_id,
                         )
 
-
-
-set_lm_db = LipidMapsDB()
-set_lm_db.treat_dataframe()
