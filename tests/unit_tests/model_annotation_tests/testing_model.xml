@@ -18,8 +18,8 @@
       <species id="M_M_12dgr140160_h" name="1,2-Diacyl-sn-glycerol(14:0/16:0)" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="M_M_pc205n3203n6_c" name="Phosphatidylcholine(20:5(5Z,8Z,11Z,14Z,17Z)/20:3(8Z,11Z,14Z))" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="M_M_12dgr182n6183n6_c" name="1,2-Diacyl-sn-glycerol(18:2(9Z,12Z)/18:3(6Z,9Z,12Z))" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="M_M_clpn182_m" name="Triacylglycerol (20:4/20:3/21:0)" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="M_M_pe140180_c" name="Phosphatidylethanolamine(14:0/18:0)" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="M_TG_200200210_c" name="Triacylglycerol (20:0/20:0/21:0)" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="M_M_pe140181_c" name="Phosphatidylethanolamine(14:0/18:0)" compartment="c" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
       <parameter sboTerm="SBO:0000626" id="cobra_default_lb" value="-1000" constant="true"/>
